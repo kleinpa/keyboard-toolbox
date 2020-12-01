@@ -1,0 +1,3 @@
+#!/bin/bash -ue
+
+ibazel --run_command_after 'bash -c "mkdir -p dist && rm -rf dist/* && cp -f  bazel-bin/*{.zip,.kicad_pcb,.dxf,.svg} dist"' build //...

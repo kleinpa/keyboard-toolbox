@@ -1,0 +1,54 @@
+load("@rules_foreign_cc//tools/build_defs:cmake.bzl", "cmake_external")
+load("@rules_python//python:defs.bzl", "py_library")
+
+filegroup(name = "all", srcs = glob(["**"], exclude = ["bitmaps_png/sources/**"]))
+
+cmake_external(
+    name = "kicad_build",
+    cache_entries = {
+        "CMAKE_BUILD_TYPE": "Release",
+        "KICAD_SPICE": "OFF",
+        "KICAD_USE_OCE": "OFF",
+        "KICAD_SCRIPTING_PYTHON3": "ON",
+        "KICAD_SCRIPTING_WXPYTHON": "OFF",
+    },
+    lib_source = ":all",
+    make_commands = [
+        "make -j8 install",
+    ],
+    binaries = [
+        "pcbnew",
+    ],
+)
+
+filegroup(
+    name = "pcbnew",
+    srcs = [":kicad_build"],
+    output_group = "pcbnew",
+)
+
+filegroup(
+    name = "kicad_build_gen_dir",
+    srcs = [":kicad_build"],
+    output_group = "gen_dir",
+)
+genrule(
+    name = "pcbnew_py",
+    srcs = [":kicad_build_gen_dir"],
+    outs = ["pcbnew.py"],
+    cmd = "cp \"$(location :kicad_build_gen_dir)/lib/python3/dist-packages/pcbnew.py\" \"$@\"",
+)
+
+genrule(
+    name = "pcbnew_so",
+    srcs = [":kicad_build_gen_dir"],
+    outs = ["_pcbnew.so"],
+    cmd = "cp \"$(location :kicad_build_gen_dir)/lib/python3/dist-packages/_pcbnew.so\" \"$@\"",
+)
+
+py_library(
+    name = "pcbnew_python",
+    srcs = [":pcbnew_py"],
+    data = [":pcbnew_so"],
+    visibility = ["//visibility:public"],
+)

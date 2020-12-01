@@ -1,0 +1,19 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Bazel Build All",
+      "type": "process",
+      "command": "bazel",
+      "args": [
+        "build",
+        "//...",
+        "--keep_going"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    }
+  ]
+}

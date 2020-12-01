@@ -1,0 +1,93 @@
+load("@rules_python//python:defs.bzl", "py_binary")
+load("@my_deps//:requirements.bzl", "requirement")
+
+py_binary(
+    name = "make_plate",
+    srcs = [
+        "kicad_utils.py",
+        "layout.py",
+        "make_plate.py",
+        "utils.py",
+    ],
+    deps = [
+        "@com_gitlab_kicad_kicad//:pcbnew_python",
+        requirement("absl-py"),
+        requirement("ezdxf"),
+        requirement("shapely"),
+    ],
+)
+
+genrule(
+    name = "keyboard_plate_dxf",
+    outs = ["keyboard-plate.dxf"],
+    cmd = "./$(location //:make_plate) --format=dxf --output=\"$@\"",
+    tools = [":make_plate"],
+)
+
+genrule(
+    name = "keyboard_plate_svg",
+    outs = ["keyboard-plate.svg"],
+    cmd = "./$(location //:make_plate) --format=svg --output=\"$@\"",
+    tools = [":make_plate"],
+)
+
+genrule(
+    name = "keyboard_plate_kicad",
+    outs = ["keyboard-plate.kicad_pcb"],
+    cmd = "./$(location //:make_plate) --format=kicad_pcb --output=\"$@\"",
+    tools = [":make_plate"],
+)
+
+py_binary(
+    name = "make_pcb",
+    srcs = [
+        "kicad_utils.py",
+        "layout.py",
+        "make_pcb.py",
+        "utils.py",
+    ],
+    data = ["@com_github_keebio_keebio_parts//:all"],
+    deps = [
+        "@com_gitlab_kicad_kicad//:pcbnew_python",
+        requirement("absl-py"),
+        requirement("shapely"),
+    ],
+)
+
+genrule(
+    name = "keyboard_pcb_kicad",
+    srcs = [
+        "@com_github_keebio_keebio_parts//:all",
+        "@com_gitlab_kicad_libraries_kicad_footprints//:all",
+    ],
+    outs = ["keyboard-pcb.kicad_pcb"],
+    cmd = "./$(location //:make_pcb) --output=\"$@\"",
+    tools = [":make_pcb"],
+)
+
+py_binary(
+    name = "make_gerbers",
+    srcs = [
+        "make_gerbers.py",
+    ],
+    deps = [
+        requirement("absl-py"),
+        "@com_gitlab_kicad_kicad//:pcbnew_python",
+    ],
+)
+
+genrule(
+    name = "quine_mk1_main_gerbers",
+    srcs = ["quine-mk1-main-routed.kicad_pcb"],
+    outs = ["quine-mk1-main-gerbers.zip"],
+    cmd = "./$(location //:make_gerbers) --input=\"$<\" --output=\"$@\"",
+    tools = [":make_gerbers"],
+)
+
+genrule(
+    name = "keyboard_plate_gerbers",
+    srcs = [":keyboard_plate_kicad"],
+    outs = ["keyboard-plate-gerbers.zip"],
+    cmd = "./$(location //:make_gerbers) --input=\"$<\" --output=\"$@\"",
+    tools = [":make_gerbers"],
+)

@@ -1,0 +1,35 @@
+{
+	"name": "music-on-zircon-dev",
+	"build": {
+		"dockerfile": "Dockerfile",
+	},
+	// Set *default* container specific settings.json values on container create.
+	"settings": {
+		"terminal.integrated.shell.linux": "/bin/bash",
+		// "go.alternateTools": {
+		// 	"go": "bazel run --ui_event_filters= --noshow_progress @go_sdk//:bin/go --",
+		// 	"go-outline": "bazel run --ui_event_filters= --noshow_progress @go_sdk//:bin/go-outline --",
+		// 	"gocode": "bazel run --ui_event_filters= --noshow_progress @go_sdk//:bin/gocode --",
+		// 	"gopkgs": "bazel run --ui_event_filters= --noshow_progress @go_sdk//:bin/gopkgs --",
+		// 	"gopls": "bazel run --ui_event_filters= --noshow_progress @go_sdk//:bin/gopls --",
+		// 	"guru": "bazel run --ui_event_filters= --noshow_progress @go_sdk//:bin/guru --"
+		// }
+	},
+	// Add the IDs of extensions you want installed when the container is created.
+	"extensions": [
+		"bazelbuild.vscode-bazel",
+		"golang.go",
+		"ms-python.python"
+	]
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	"forwardPorts": [
+		8080
+	],
+	// For ptrace-based debuggers like C++, Go, and Rust
+	"runArgs": [
+		"--cap-add=SYS_PTRACE",
+		"--security-opt",
+		"seccomp=unconfined"
+	],
+	// "postCreateCommand": "/usr/local/bin/bazel build @go_sdk//:bin/go"
+}
