@@ -7,26 +7,22 @@ import shapely.geometry
 from absl import app, flags
 
 import pcbnew
-from utils import *
-from kicad_utils import *
-from layout import *
-
-from absl import app, flags
-
-FLAGS = flags.FLAGS
-flags.DEFINE_string('output', '', 'Output path')
+from utils import pose, generate_outline, pose_to_xyr
+from kicad_utils import kicad_text, kicad_polygon, kicad_circle
 
 
 def generate_kicad_pcb(output_path, kb):
-    keys = list(kb.keys)
+    keys = [pose(k.x, k.y, k.r) for k in kb.key_poses]
+    holes = [shapely.geometry.Point(h.x, h.y) for h in kb.hole_positions]
 
-    x_min, y_min, x_max, y_max = shapely.affinity.scale(generate_outline(
-        keys, fill=outline_fill, round=outline_round, pad=outline_pad),
+    outline = generate_outline(kb)
+    x_min, y_min, x_max, y_max = shapely.affinity.scale(outline,
                                                         yfact=-1,
                                                         origin=(0, 0)).bounds
 
     margin = 16
-    block_margin = 48
+
+    # block_margin = 48 # TODO: use bounds to set page size
 
     # Transform geometry into kicad coordinate system (top-left origin)
     def page_transform(geom):
@@ -36,23 +32,17 @@ def generate_kicad_pcb(output_path, kb):
                                           yoff=-y_min + margin)
         return geom
 
-    # Set page size from pcb outline plus margin
-    #                      page_size=(x_max - x_min + margin + margin,
-    #                                 y_max - y_min + margin + block_margin))
-
     board = pcbnew.BOARD()
 
-    # Set default track width to 0.5mm
+    # TODO: Is there a good way to set default track width to 0.5mm
 
     board.Add(
         kicad_text(page_transform(pose(79, 43, 180 - 39)),
                    "quine mk1\npeterklein.dev"))
 
-    # TODO: add trace width settings
-
     import inspect
     item = kicad_text(page_transform(pose(-x_min, 60, 180)),
-                      inspect.getsource(quine_1_keyboard), pcbnew.FromMM(4),
+                      "inspect.getsource(quine_1_keyboard)", pcbnew.FromMM(4),
                       pcbnew.B_SilkS)
     item.SetHorizJustify(pcbnew.GR_TEXT_HJUSTIFY_LEFT)
     board.Add(item)
@@ -60,11 +50,7 @@ def generate_kicad_pcb(output_path, kb):
     ground_net = pcbnew.NETINFO_ITEM(board, f"GND")
     board.Add(ground_net)
 
-    outline = page_transform(
-        generate_outline(keys,
-                         fill=outline_fill,
-                         round=outline_round,
-                         pad=outline_pad))
+    outline = page_transform(generate_outline(kb))
     for x in kicad_polygon(outline):
         board.Add(x)
 
@@ -127,7 +113,10 @@ def generate_kicad_pcb(output_path, kb):
 
     mcu_offset = 8.5
 
-    x, y, r = pose_to_xyr(page_transform(keys[mcu_key_index]))
+    x, y, r = pose_to_xyr(
+        page_transform(
+            pose(kb.controller_pose.x, kb.controller_pose.y,
+                 kb.controller_pose.r)))
     item = pcbnew.FootprintLoad("external/com_github_keebio_keebio_parts",
                                 "ArduinoProMicro")
     item.MoveAnchorPosition(pcbnew.wxPointMM(mcu_offset, 0))
@@ -172,8 +161,8 @@ def generate_kicad_pcb(output_path, kb):
     item.FindPadByName(6).SetNet(col_net[11])
 
     # Add holes
-    for h in kb.holes:
-        board.Add(kicad_circle(page_transform(h), hole_diameter))
+    for h in holes:
+        board.Add(kicad_circle(page_transform(h), kb.hole_diameter))
 
     # Add ground plane
     item = pcbnew.ZONE(board, False)
@@ -200,12 +189,3 @@ def generate_kicad_pcb(output_path, kb):
     # pcbnew.ZONE_FILLER(board).Fill(board.Zones())
 
     board.Save(output_path)
-
-
-def main(argv):
-    kb = quine_1_keyboard()
-    generate_kicad_pcb(FLAGS.output, kb)
-
-
-if __name__ == "__main__":
-    app.run(main)

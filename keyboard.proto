@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+message Pose {
+    double x = 1;
+    double y = 2;
+    double r = 3;
+}
+
+message Position {
+    double x = 1;
+    double y = 2;
+}
+
+message Keyboard {
+  repeated Pose key_poses = 1;
+  repeated Position hole_positions = 2;
+
+  enum Footprint {
+    FOOTPRINT_UNKNOWN = 0;
+    FOOTPRINT_CHERRY_MX = 1;
+  }
+  Footprint footprint = 3;
+
+  enum Outline {
+    OUTLINE_UNKNOWN = 0;
+    OUTLINE_TIGHT = 1;
+  }
+  Outline outline = 4;
+
+  enum Controller {
+    CONTROLLER_UNKNOWN = 0;
+    CONTROLLER_PROMICRO = 1;
+  }
+  Controller controller = 5;
+
+  Pose controller_pose = 6;
+  // mcu type, position, matrix mapping
+
+  // TODO: move elsewhere
+  double outline_concave = 10000;
+  double outline_convex = 10001;
+  double hole_diameter = 10002;
+}

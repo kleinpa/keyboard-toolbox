@@ -2,12 +2,6 @@ import pcbnew
 from utils import pose_to_xyr
 
 
-def kicad_pcb_init(title="", revision="", page_size=(100, 100)):
-    import pcbnew
-    pcb = pcbnew.BOARD()
-    return pcb
-
-
 def kicad_polygon(geom):
     points = geom.exterior.coords
     for (x1, y1), (x2, y2) in [(points[i], points[(i + 1) % len(points)])

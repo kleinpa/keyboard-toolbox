@@ -59,3 +59,14 @@ http_archive(
     strip_prefix = "kicad-footprints-15ffd67e01257d4d8134dbd6708cb58977eeccbe",
     url = "https://gitlab.com/kicad/libraries/kicad-footprints/-/archive/15ffd67e01257d4d8134dbd6708cb58977eeccbe/kicad-footprints-15ffd67e01257d4d8134dbd6708cb58977eeccbe.tar.gz",
 )
+
+http_archive(
+    name = "com_google_protobuf",
+    sha256 = "0075c64cef80524b1d855df5f405845ded9b8d055022cc17b94e1589eb946b90",
+    strip_prefix = "protobuf-4.0.0-rc2",
+    url = "https://github.com/protocolbuffers/protobuf/archive/v4.0.0-rc2.zip",
+)
+
+load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
+
+protobuf_deps()
