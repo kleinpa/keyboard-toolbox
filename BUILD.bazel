@@ -10,17 +10,27 @@ py_proto_library(
 py_library(
     name = "keyboard_lib",
     srcs = [
-        "kicad_utils.py",
         "layout.py",
-        "make_pcb.py",
-        "make_plate.py",
+        "matrix.py",
         "utils.py",
     ],
     deps = [
-        requirement("shapely"),
         ":keyboard_py_proto",
-        "@com_gitlab_kicad_kicad//:pcbnew_python",
         requirement("ezdxf"),
+        requirement("shapely"),
+    ],
+)
+
+py_library(
+    name = "keyboard_pcb_lib",
+    srcs = [
+        "kicad_utils.py",
+        "make_pcb.py",
+        "make_plate.py",
+    ],
+    deps = [
+        ":keyboard_lib",
+        "@com_gitlab_kicad_kicad//:pcbnew_python",
     ],
 )
 
@@ -36,6 +46,18 @@ py_binary(
 )
 
 py_binary(
+    name = "processor",
+    srcs = [
+        "make_qmk_header.py",
+        "processor.py",
+    ],
+    deps = [
+        requirement("absl-py"),
+        ":keyboard_pcb_lib",
+    ],
+)
+
+py_binary(
     name = "quine_mk1",
     srcs = [
         "quine_mk1.py",
@@ -47,24 +69,34 @@ py_binary(
 )
 
 genrule(
-    name = "quine_mk1_svg",
-    outs = ["quine_mk1.svg"],
-    cmd = "./$(location //:quine_mk1) --format=svg --output=\"$@\"",
+    name = "quine_mk1_pb",
+    outs = ["quine_mk1.pb"],
+    cmd = "./$(location //:quine_mk1) --output=\"$@\"",
     tools = [":quine_mk1"],
+)
+
+genrule(
+    name = "quine_mk1_svg",
+    srcs = [":quine_mk1_pb"],
+    outs = ["quine_mk1.svg"],
+    cmd = "./$(location //:processor) --input=\"$<\" --format=svg --output=\"$@\"",
+    tools = [":processor"],
 )
 
 genrule(
     name = "quine_mk1_plate_dxf",
+    srcs = [":quine_mk1_pb"],
     outs = ["quine_mk1_plate.dxf"],
-    cmd = "./$(location //:quine_mk1) --format=plate_dxf --output=\"$@\"",
-    tools = [":quine_mk1"],
+    cmd = "./$(location //:processor) --input=\"$<\" --format=plate_dxf --output=\"$@\"",
+    tools = [":processor"],
 )
 
 genrule(
     name = "quine_mk1_plate_kicad",
+    srcs = [":quine_mk1_pb"],
     outs = ["quine_mk1_plate.kicad_pcb"],
-    cmd = "./$(location //:quine_mk1) --format=plate_kicad_pcb --output=\"$@\"",
-    tools = [":quine_mk1"],
+    cmd = "./$(location //:processor) --input=\"$<\" --format=plate_kicad_pcb --output=\"$@\"",
+    tools = [":processor"],
 )
 
 genrule(
@@ -77,11 +109,12 @@ genrule(
 
 genrule(
     name = "quine_mk1_board_kicad",
-    srcs = [
+    srcs = [":quine_mk1_pb"],
+    outs = ["quine_mk1_board.kicad_pcb"],
+    cmd = "./$(location //:processor) --input=\"$<\" --format=main_kicad_pcb --output=\"$@\"",
+    tools = [
+        ":processor",
         "@com_github_keebio_keebio_parts//:all",
         "@com_gitlab_kicad_libraries_kicad_footprints//:all",
     ],
-    outs = ["quine_mk1_board.kicad_pcb"],
-    cmd = "./$(location //:quine_mk1) --format=main_kicad_pcb --output=\"$@\"",
-    tools = [":quine_mk1"],
 )

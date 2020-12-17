@@ -1,14 +1,14 @@
+import itertools
 import sys
 from math import atan, atan2, cos, degrees, radians, sin, sqrt
 
-import itertools
+import pcbnew
 import shapely
 import shapely.geometry
 from absl import app, flags
 
-import pcbnew
-from utils import pose, generate_outline, pose_to_xyr
-from kicad_utils import kicad_text, kicad_polygon, kicad_circle
+from kicad_utils import kicad_circle, kicad_polygon, kicad_text
+from utils import generate_outline, pose, pose_to_xyr
 
 
 def generate_kicad_pcb(output_path, kb):
@@ -54,19 +54,17 @@ def generate_kicad_pcb(output_path, kb):
     for x in kicad_polygon(outline):
         board.Add(x)
 
-    # TODO: un-hardcode
-    col_net = [pcbnew.NETINFO_ITEM(board, f"col-{i}") for i in range(12)]
-    for x in col_net:
-        board.Add(x)
-    row_net = [pcbnew.NETINFO_ITEM(board, f"row-{i}") for i in range(4)]
-    for x in row_net:
+    mcu_io = 18
+
+    io_net = [pcbnew.NETINFO_ITEM(board, f"io-{i}") for i in range(mcu_io)]
+    for x in io_net:
         board.Add(x)
 
+    import matrix
+    mat = matrix.make_matrix(kb, mcu_io)
+
     for i, key in enumerate(keys):
-        # TODO: un-hardcode
-        col = i % 12
-        row = i // 12
-        if row == 3: col += 3
+        net1, net2 = io_net[mat[i][0]], io_net[mat[i][1]]
 
         net = pcbnew.NETINFO_ITEM(board, f"switch-diode-{i}")
         board.Add(net)
@@ -84,7 +82,7 @@ def generate_kicad_pcb(output_path, kb):
         item.SetOrientationDegrees(180 - r)
         item.SetReference(f"SW{i}")
         item.FindPadByName(2).SetNet(net)
-        item.FindPadByName(1).SetNet(row_net[row])
+        item.FindPadByName(1).SetNet(net1)
         item.Reference().SetKeepUpright(False)
         for g in item.GraphicalItems():
             if isinstance(g, pcbnew.EDA_TEXT):
@@ -104,7 +102,7 @@ def generate_kicad_pcb(output_path, kb):
         item.SetReference(f"D{i}")
         item.Flip(pcbnew.wxPointMM(x, y), True)
         item.FindPadByName(1).SetNet(net)
-        item.FindPadByName(2).SetNet(col_net[col])
+        item.FindPadByName(2).SetNet(net2)
         item.Reference().SetKeepUpright(False)
         for g in item.GraphicalItems():
             if isinstance(g, pcbnew.EDA_TEXT):
@@ -134,31 +132,26 @@ def generate_kicad_pcb(output_path, kb):
     for i in [3, 4, 23]:
         item.FindPadByName(i).SetNet(ground_net)
 
-    # io_pins = [
-    #     m.FindPadByName(i) for i in (1, 2, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
-    #                                  15, 16, 17, 18, 19, 20)  # clockwise
-    # ]
-    # for mcu_pin, net in zip(io_pins, reversed(itertools.chain(col_net, row_net))):
-    #     mcu_pin.SetNet(net)
+    item.FindPadByName(1).SetNet(io_net[0])
+    item.FindPadByName(2).SetNet(io_net[1])
 
-    # TODO: un-hardcode
-    item.FindPadByName(1).SetNet(row_net[0])
-    item.FindPadByName(10).SetNet(row_net[1])
-    item.FindPadByName(11).SetNet(row_net[2])
-    item.FindPadByName(12).SetNet(row_net[3])
+    item.FindPadByName(5).SetNet(io_net[2])
+    item.FindPadByName(6).SetNet(io_net[3])
+    item.FindPadByName(7).SetNet(io_net[4])
+    item.FindPadByName(8).SetNet(io_net[5])
+    item.FindPadByName(9).SetNet(io_net[6])
+    item.FindPadByName(10).SetNet(io_net[7])
+    item.FindPadByName(11).SetNet(io_net[8])
+    item.FindPadByName(12).SetNet(io_net[9])
 
-    item.FindPadByName(20).SetNet(col_net[0])
-    item.FindPadByName(19).SetNet(col_net[1])
-    item.FindPadByName(18).SetNet(col_net[2])
-    item.FindPadByName(17).SetNet(col_net[3])
-    item.FindPadByName(16).SetNet(col_net[4])
-    item.FindPadByName(15).SetNet(col_net[5])
-    item.FindPadByName(14).SetNet(col_net[6])
-    item.FindPadByName(13).SetNet(col_net[7])
-    item.FindPadByName(9).SetNet(col_net[8])
-    item.FindPadByName(8).SetNet(col_net[9])
-    item.FindPadByName(7).SetNet(col_net[10])
-    item.FindPadByName(6).SetNet(col_net[11])
+    item.FindPadByName(13).SetNet(io_net[10])
+    item.FindPadByName(14).SetNet(io_net[11])
+    item.FindPadByName(15).SetNet(io_net[12])
+    item.FindPadByName(16).SetNet(io_net[13])
+    item.FindPadByName(17).SetNet(io_net[14])
+    item.FindPadByName(18).SetNet(io_net[15])
+    item.FindPadByName(19).SetNet(io_net[16])
+    item.FindPadByName(20).SetNet(io_net[17])
 
     # Add holes
     for h in holes:
