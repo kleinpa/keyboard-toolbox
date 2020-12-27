@@ -131,3 +131,111 @@ genrule(
         "@com_gitlab_kicad_libraries_kicad_footprints//:all",
     ],
 )
+
+genrule(
+    name = "quine_mk1_qmk_header",
+    srcs = [":quine_mk1_pb"],
+    outs = ["quine_mk1_qmk_header.h"],
+    cmd = "./$(location //:processor) --input=\"$<\" --format=h --output=\"$@\"",
+    tools = [":processor"],
+)
+
+# genrule(
+#     name = "quine_mk1_board_gerbers",
+#     srcs = ["quine_mk1_board_routed.kicad_pcb"],
+#     outs = ["quine_mk1_board_gerbers.zip"],
+#     cmd = "./$(location //:make_gerbers) --input=\"$<\" --output=\"$@\"",
+#     tools = [":make_gerbers"],
+# )
+
+py_binary(
+    name = "planckish",
+    srcs = [
+        "planckish.py",
+    ],
+    deps = [
+        requirement("absl-py"),
+        ":keyboard_lib",
+    ],
+)
+
+genrule(
+    name = "planckish_pb",
+    outs = ["planckish.pb"],
+    cmd = "./$(location //:planckish) --output=\"$@\"",
+    tools = [":planckish"],
+)
+
+genrule(
+    name = "planckish_svg",
+    srcs = [":planckish_pb"],
+    outs = ["planckish.svg"],
+    cmd = "./$(location //:processor) --input=\"$<\" --format=svg --output=\"$@\"",
+    tools = [":processor"],
+)
+
+genrule(
+    name = "planckish_board_kicad",
+    srcs = [":planckish_pb"],
+    outs = ["planckish_board.kicad_pcb"],
+    cmd = "./$(location //:processor_kicad) --input=\"$<\" --format=main_kicad_pcb --output=\"$@\"",
+    tools = [
+        ":processor_kicad",
+        "@com_github_keebio_keebio_parts//:all",
+        "@com_gitlab_kicad_libraries_kicad_footprints//:all",
+    ],
+)
+
+genrule(
+    name = "planckish_header",
+    srcs = [":planckish_pb"],
+    outs = ["planckish_qmk_header.h"],
+    cmd = "./$(location //:processor) --input=\"$<\" --format=h --output=\"$@\"",
+    tools = [":processor"],
+)
+
+py_binary(
+    name = "pumnad",
+    srcs = [
+        "pumnad.py",
+    ],
+    deps = [
+        requirement("absl-py"),
+        ":keyboard_lib",
+    ],
+)
+
+genrule(
+    name = "pumnad_pb",
+    outs = ["pumnad.pb"],
+    cmd = "./$(location //:pumnad) --output=\"$@\"",
+    tools = [":pumnad"],
+)
+
+genrule(
+    name = "pumnad_svg",
+    srcs = [":pumnad_pb"],
+    outs = ["pumnad.svg"],
+    cmd = "./$(location //:processor) --input=\"$<\" --format=svg --output=\"$@\"",
+    tools = [":processor"],
+)
+
+genrule(
+    name = "pumnad_board_kicad",
+    srcs = [":pumnad_pb"],
+    outs = ["pumnad_board.kicad_pcb"],
+    cmd = "./$(location //:processor_kicad) --input=\"$<\" --format=main_kicad_pcb --output=\"$@\"",
+    tools = [
+        ":processor_kicad",
+        "@com_github_keebio_keebio_parts//:all",
+        "@com_gitlab_kicad_libraries_kicad_footprints//:all",
+    ],
+)
+
+genrule(
+    name = "pumnad_header",
+    srcs = [":pumnad_pb"],
+    outs = ["pumnad_qmk_header.h"],
+    cmd = "./$(location //:processor) --input=\"$<\" --format=h --output=\"$@\"",
+    tools = [":processor"],
+)
