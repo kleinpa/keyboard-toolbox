@@ -1,0 +1,75 @@
+load("@rules_python//python:defs.bzl", "py_binary", "py_library")
+load("@my_deps//:requirements.bzl", "requirement")
+load("@com_google_protobuf//:protobuf.bzl", "py_proto_library")
+
+py_proto_library(
+    name = "keyboard_py_proto",
+    srcs = ["keyboard.proto"],
+)
+
+py_library(
+    name = "keyboard_lib",
+    srcs = [
+        "layout.py",
+        "matrix.py",
+        "utils.py",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":keyboard_py_proto",
+        requirement("ezdxf"),
+        requirement("shapely"),
+    ],
+)
+
+py_library(
+    name = "keyboard_pcb_lib",
+    srcs = [
+        "kicad_utils.py",
+        "make_pcb.py",
+        "make_plate.py",
+    ],
+    deps = [
+        ":keyboard_lib",
+        "@com_gitlab_kicad_kicad//:pcbnew_python",
+    ],
+)
+
+py_binary(
+    name = "make_gerbers",
+    srcs = [
+        "make_gerbers.py",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        requirement("absl-py"),
+        "@com_gitlab_kicad_kicad//:pcbnew_python",
+    ],
+)
+
+py_binary(
+    name = "processor_kicad",
+    srcs = [
+        "make_qmk_header.py",
+        "processor.py",
+    ],
+    main = "processor.py",
+    visibility = ["//visibility:public"],
+    deps = [
+        requirement("absl-py"),
+        ":keyboard_pcb_lib",
+    ],
+)
+
+py_binary(
+    name = "processor",
+    srcs = [
+        "make_qmk_header.py",
+        "processor.py",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        requirement("absl-py"),
+        ":keyboard_lib",
+    ],
+)

@@ -1,8 +1,8 @@
-import keyboard_pb2
 import shapely
 import shapely.geometry
 
-from utils import pose, pose_to_xyr
+from toolbox.keyboard_pb2 import Keyboard
+from toolbox.utils import pose, pose_to_xyr
 
 # Polygon describing the shape of an individual key cutout
 cutout_geom_square = shapely.geometry.polygon.Polygon([
@@ -130,5 +130,5 @@ def mirror_keys(keys, middle_space):
 
 
 def make_key(x, y, r=0):
-    k = keyboard_pb2.Keyboard.Key(pose={"x": x, "y": y, "r": r})
+    k = Keyboard.Key(pose={"x": x, "y": y, "r": r})
     return k

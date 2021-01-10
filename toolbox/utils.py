@@ -39,11 +39,16 @@ def generate_placeholders(kb):
 
 def generate_outline(kb):
     placeholders = generate_placeholders(kb)
+    resolution = 64
     return placeholders.buffer(kb.outline_concave,
-                               join_style=1).buffer(
+                               join_style=1,
+                               resolution=resolution).buffer(
                                    -kb.outline_concave - kb.outline_convex,
-                                   join_style=1).buffer(kb.outline_convex,
-                                                        join_style=1)
+                                   join_style=1,
+                                   resolution=resolution).buffer(
+                                       kb.outline_convex,
+                                       join_style=1,
+                                       resolution=resolution)
 
 
 def generate_hole_shape(hole, diameter):

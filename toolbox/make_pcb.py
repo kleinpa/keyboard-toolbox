@@ -85,8 +85,6 @@ def generate_kicad_pcb(output_path, kb):
         for g in item.GraphicalItems():
             if isinstance(g, pcbnew.EDA_TEXT):
                 g.SetKeepUpright(False)
-            else:
-                g.DeleteStructure()
         board.Add(item)
 
         item = pcbnew.FootprintLoad(

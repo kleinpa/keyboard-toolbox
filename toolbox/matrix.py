@@ -1,6 +1,6 @@
 import itertools
 
-import keyboard_pb2
+import toolbox.keyboard_pb2
 
 
 def fill_matrix(kb, io=18):

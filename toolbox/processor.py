@@ -1,15 +1,14 @@
 import sys
 from math import atan, atan2, cos, degrees, radians, sin, sqrt
 
-import keyboard_pb2
+from toolbox.keyboard_pb2 import Keyboard
 import shapely
 import shapely.geometry
 from absl import app, flags
 
 import make_qmk_header
 from layout import holes_between_keys, mirror_keys, rotate_keys
-from make_plate import (generate_dxf, generate_plate,
-                        generate_svg)
+from make_plate import (generate_dxf, generate_plate, generate_svg)
 from utils import pose, pose_to_xyr
 
 FLAGS = flags.FLAGS
@@ -23,7 +22,7 @@ flags.DEFINE_string('input', '', 'Input path')
 
 def main(argv):
     with open(FLAGS.input, "rb") as fn:
-        kb = keyboard_pb2.Keyboard()
+        kb = Keyboard()
         kb.ParseFromString(fn.read())
 
     if FLAGS.format == 'svg':
