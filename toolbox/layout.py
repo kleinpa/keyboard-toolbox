@@ -109,7 +109,7 @@ def generate_key_placeholders(keys):
         placeholder(key) for key in keys)
 
 
-def mirror_keys(keys, middle_space):
+def mirror_keys(keys, middle_space=0, only_flip=False):
     keys = list(keys)
     x_min, y_min, _, _ = generate_key_placeholders(keys).bounds
 
@@ -124,7 +124,7 @@ def mirror_keys(keys, middle_space):
                                            yoff=-y_min)
             p2 = shapely.affinity.scale(p, -1, origin=(0, 0))
             full_row.insert(0, make_key(*pose_to_xyr(p2)))
-            full_row.append(make_key(*pose_to_xyr(p)))
+            if not only_flip: full_row.append(make_key(*pose_to_xyr(p)))
 
         yield from full_row
 

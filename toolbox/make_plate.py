@@ -21,20 +21,19 @@ def generate_cutouts(kb):
         cutout(key) for key in kb.keys)
 
 
-def generate_plate(kb):
-
-    holes = [shapely.geometry.Point(h.x, h.y) for h in kb.hole_positions]
+def generate_plate(kb, mounting_holes=False):
+    features = [*(x.exterior for x in generate_cutouts(kb))]
+    if mounting_holes:
+        features += [
+            *(generate_hole_shape(shapely.geometry.Point(h.x, h.y),
+                                  kb.hole_diameter).exterior
+              for h in kb.hole_positions)
+        ]
     outline = generate_outline(kb)
-    return shapely.geometry.polygon.Polygon(
-        outline.exterior,
-        holes=[
-            *(x.exterior for x in generate_cutouts(kb)),
-            *(generate_hole_shape(x, kb.hole_diameter).exterior for x in holes)
-        ])
+    return shapely.geometry.polygon.Polygon(outline.exterior, holes=features)
 
 
 def generate_svg(f, kb):
-
     # Transform geometry into svg coordinate system (top-left origin)
     def page_transform(geom):
         return shapely.affinity.scale(geom, yfact=-1, origin=(0, 0))
@@ -49,7 +48,8 @@ def generate_svg(f, kb):
             "viewBox":
             f"{x_min-1} {y_min-1} {x_max - x_min + 2} {y_max - y_min + 2}",
             "xmlns": "http://www.w3.org/2000/svg",
-            "xmlns:xlink": "http://www.w3.org/1999/xlink"
+            "xmlns:xlink": "http://www.w3.org/1999/xlink",
+            "style": "stroke: black; stroke-width: 0.2; fill: none;"
         })
     root.append(
         ET.Comment(
@@ -65,7 +65,7 @@ def generate_svg(f, kb):
     g_holes = ET.SubElement(g_plate, "g", {"id": "holes"})
     g_keycaps = ET.SubElement(root, "g", {
         "id": "keycaps",
-        "style": "fill: #73b3d1;"
+        "style": "fill: white;"
     })
 
     # Add outline
@@ -113,13 +113,13 @@ def generate_svg(f, kb):
                 "xlink:href": "#keycap",
                 "transform": f"translate({x} {y}) rotate({r}) "
             })
-        ET.SubElement(
-            g_keycaps, "text", {
-                "style": "fill: black; font-family: sans-serif; font-size: 5;",
-                "transform": f"translate({x} {y}) rotate({180+r}) ",
-                "alignment-baseline": "middle",
-                "text-anchor": "middle",
-            }).text = f"{i}"
+        # ET.SubElement(
+        #     g_keycaps, "text", {
+        #         "style": "stroke: black; font-family: sans-serif; font-size: 5;",
+        #         "transform": f"translate({x} {y}) rotate({180+r}) ",
+        #         "alignment-baseline": "middle",
+        #         "text-anchor": "middle",
+        #     }).text = f"{i}"
 
     tree = ET.ElementTree(root)
     tree.write(f, encoding='unicode')
