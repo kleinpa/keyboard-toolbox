@@ -73,3 +73,29 @@ py_binary(
         ":keyboard_lib",
     ],
 )
+
+py_binary(
+    name = "test_layout",
+    srcs = [
+        "test_layout.py",
+    ],
+    deps = [
+        requirement("absl-py"),
+        "//toolbox:keyboard_lib",
+    ],
+)
+
+genrule(
+    name = "test_layout_pb",
+    outs = ["test_layout.pb"],
+    cmd = "./$(location :test_layout) --output=\"$@\"",
+    tools = [":test_layout"],
+)
+
+genrule(
+    name = "test_layout_svg",
+    srcs = [":test_layout_pb"],
+    outs = ["test_layout.svg"],
+    cmd = "./$(location //toolbox:processor) --input=\"$<\" --format=svg --output=\"$@\"",
+    tools = ["//toolbox:processor"],
+)
