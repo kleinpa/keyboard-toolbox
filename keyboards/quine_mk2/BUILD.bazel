@@ -70,3 +70,11 @@ genrule(
     cmd = "./$(location //toolbox:processor) --input=\"$<\" --format=h --output=\"$@\"",
     tools = ["//toolbox:processor"],
 )
+
+genrule(
+    name = "board_gerbers",
+    srcs = ["board_routed.kicad_pcb"],
+    outs = ["board_gerbers.zip"],
+    cmd = "./$(location //toolbox:make_gerbers) --input=\"$<\" --output=\"$@\"",
+    tools = ["//toolbox:make_gerbers"],
+)
