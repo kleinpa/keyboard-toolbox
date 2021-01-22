@@ -39,7 +39,7 @@ def generate_svg(f, kb):
         return shapely.affinity.scale(geom, yfact=-1, origin=(0, 0))
 
     # Generate the outline first to properly set the svg viewbox
-    outline = page_transform(generate_outline(kb))
+    outline = page_transform(generate_plate(kb))
     x_min, y_min, x_max, y_max = outline.bounds
 
     # Create the empty svg tree
@@ -49,7 +49,6 @@ def generate_svg(f, kb):
             f"{x_min-1} {y_min-1} {x_max - x_min + 2} {y_max - y_min + 2}",
             "xmlns": "http://www.w3.org/2000/svg",
             "xmlns:xlink": "http://www.w3.org/1999/xlink",
-            "style": "stroke: black; stroke-width: 0.2; fill: none;"
         })
     root.append(
         ET.Comment(
@@ -78,17 +77,7 @@ def generate_svg(f, kb):
                              for i in outline.interiors)
         })
 
-    # TODO: consider drawing subtle nut over holes
-    # # Add holes
-    # for hole in generate_hole_shape(kb.holes, hole_diameter):
-    #     ET.SubElement(
-    #         g_holes, "polygon", {
-    #             "points":
-    #             " ".join(f"{x},{y}"
-    #                      for x, y in page_transform(hole).exterior.coords)
-    #         })
-
-    # Add keycap for proofing
+    # Add keycap
     g_keycap = ET.SubElement(
         defs,
         "g",
@@ -115,7 +104,7 @@ def generate_svg(f, kb):
             })
         # ET.SubElement(
         #     g_keycaps, "text", {
-        #         "style": "stroke: black; font-family: sans-serif; font-size: 5;",
+        #         "style": "fill: black; font-family: sans-serif; font-size: 5;",
         #         "transform": f"translate({x} {y}) rotate({180+r}) ",
         #         "alignment-baseline": "middle",
         #         "text-anchor": "middle",

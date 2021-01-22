@@ -11,6 +11,7 @@ py_library(
     name = "keyboard_lib",
     srcs = [
         "layout.py",
+        "make_plate.py",
         "matrix.py",
         "utils.py",
     ],
@@ -27,7 +28,6 @@ py_library(
     srcs = [
         "kicad_utils.py",
         "make_pcb.py",
-        "make_plate.py",
     ],
     deps = [
         ":keyboard_lib",
