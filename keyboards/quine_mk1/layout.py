@@ -1,5 +1,4 @@
 import sys
-from math import atan, atan2, cos, degrees, radians, sin, sqrt
 
 import google.protobuf.text_format
 import shapely
@@ -7,30 +6,12 @@ import shapely.geometry
 from absl import app, flags
 
 from toolbox.keyboard_pb2 import Keyboard, Position
-from toolbox.layout import holes_between_keys, make_key, mirror_keys, rotate_keys
+from toolbox.layout import holes_between_keys, make_key, mirror_keys, rotate_keys, row
 from toolbox.matrix import fill_matrix
 from toolbox.utils import pose, pose_to_xyr
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string('output', '', 'Output path')
-
-# Height to add to each columng of keys for the right hand keys
-column_offsets = [0, 2, 4, 2, -1, -2]
-
-# helpful design reference https://matt3o.com/anatomy-of-a-keyboard/
-pitch = 19.05
-
-
-def arc(n, r, x_offset=0, y_offset=0):
-    geom = pose(x_offset, y_offset)
-    about = shapely.affinity.translate(geom[0], yoff=-pitch / 2 - r)
-    geom = shapely.affinity.rotate(geom,
-                                   n * 2 * atan(pitch / 2 / r),
-                                   use_radians=True,
-                                   origin=about)
-
-    x, y, r = pose_to_xyr(geom)
-    return Keyboard.Key(pose={"x": x, "y": y, "r": r})
 
 
 def quine_1_keyboard():
@@ -45,15 +26,17 @@ def quine_1_keyboard():
         hole_diameter=2.6,
     )
 
+    pitch = 19.05
+    column_offsets = [0, 2, 4, 2, -1, -2]
     keys = [
-        *(make_key(x * pitch, 3 * pitch + column_offsets[x])
-          for x in range(6)),
-        *(make_key(x * pitch, 2 * pitch + column_offsets[x])
-          for x in range(6)),
-        *(make_key(x * pitch, 1 * pitch + column_offsets[x])
-          for x in range(6)),
-        *(arc(2 - x, 90, (5 / 3) * pitch, column_offsets[1])
-          for x in range(3)),
+        *(row(x, 3, y_offset=column_offsets[x]) for x in range(6)),
+        *(row(x, 2, y_offset=column_offsets[x]) for x in range(6)),
+        *(row(x, 1, y_offset=column_offsets[x]) for x in range(6)),
+        *(row(x,
+              0,
+              arc_radius=90,
+              x_offset=-1 / 3 * pitch,
+              y_offset=column_offsets[1]) for x in range(3)),
     ]
 
     for key in mirror_keys(rotate_keys(keys, angle=35), middle_space=0):

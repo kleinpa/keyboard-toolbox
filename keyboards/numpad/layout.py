@@ -1,5 +1,4 @@
 import sys
-from math import atan, atan2, cos, degrees, radians, sin, sqrt
 
 import google.protobuf.text_format
 import shapely
@@ -7,15 +6,12 @@ import shapely.geometry
 from absl import app, flags
 
 from toolbox.keyboard_pb2 import Keyboard, Position
-from toolbox.layout import holes_between_keys, make_key, mirror_keys, rotate_keys
+from toolbox.layout import holes_between_keys, make_key, mirror_keys, rotate_keys, row
 from toolbox.matrix import fill_matrix_random
 from toolbox.utils import pose, pose_to_xyr
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string('output', '', 'Output path')
-
-# helpful design reference https://matt3o.com/anatomy-of-a-keyboard/
-pitch = 19.05
 
 
 def planckish_keyboard():
@@ -30,24 +26,26 @@ def planckish_keyboard():
         hole_diameter=2.6,
     )
 
+    pitch = 19.05
+
     keys = [
-        make_key(0 * pitch, 4 * pitch),
-        make_key(1 * pitch, 4 * pitch),
-        make_key(2 * pitch, 4 * pitch),
-        make_key(3 * pitch, 4 * pitch),
-        make_key(0 * pitch, 3 * pitch),
-        make_key(1 * pitch, 3 * pitch),
-        make_key(2 * pitch, 3 * pitch),
-        make_key(3 * pitch, 2.5 * pitch),
-        make_key(0 * pitch, 2 * pitch),
-        make_key(1 * pitch, 2 * pitch),
-        make_key(2 * pitch, 2 * pitch),
-        make_key(0 * pitch, 1 * pitch),
-        make_key(1 * pitch, 1 * pitch),
-        make_key(2 * pitch, 1 * pitch),
-        make_key(3 * pitch, 0.5 * pitch),
-        make_key(0.5 * pitch, 0 * pitch),
-        make_key(2 * pitch, 0 * pitch),
+        row(0, 4),
+        row(1, 4),
+        row(2, 4),
+        row(3, 4),
+        row(0, 3),
+        row(1, 3),
+        row(2, 3),
+        row(3, 2.5),
+        row(0, 2),
+        row(1, 2),
+        row(2, 2),
+        row(0, 1),
+        row(1, 1),
+        row(2, 1),
+        row(3, 0.5),
+        row(0.5, 0),
+        row(2, 0),
     ]
 
     holes = [shapely.geometry.Point((1, 1))]
