@@ -1,5 +1,4 @@
 import sys
-from math import atan, atan2, cos, degrees, radians, sin, sqrt
 
 import google.protobuf.text_format
 import shapely
@@ -7,32 +6,12 @@ import shapely.geometry
 from absl import app, flags
 
 from toolbox.keyboard_pb2 import Keyboard, Position
-from toolbox.layout import holes_between_keys, make_key, mirror_keys, rotate_keys
+from toolbox.layout import holes_between_keys, make_key, mirror_keys, rotate_keys, row
 from toolbox.matrix import fill_matrix
 from toolbox.utils import pose, pose_to_xyr
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string('output', '', 'Output path')
-
-# Height to add to each columng of keys for the right hand keys
-stagger = 5
-column_offsets = list(stagger * x
-                      for x in (0 - .3, 0, 1, .45, -.96, -.96 - .3))
-
-# helpful design reference https://matt3o.com/anatomy-of-a-keyboard/
-pitch = 19.05
-
-
-def arc(n, r, x_offset=0, y_offset=0):
-    geom = pose(x_offset, y_offset)
-    about = shapely.affinity.translate(geom[0], yoff=-pitch / 2 - r)
-    geom = shapely.affinity.rotate(geom,
-                                   n * 2 * atan(pitch / 2 / r),
-                                   use_radians=True,
-                                   origin=about)
-
-    x, y, r = pose_to_xyr(geom)
-    return Keyboard.Key(pose={"x": x, "y": y, "r": r})
 
 
 def keyboard():
@@ -47,20 +26,27 @@ def keyboard():
         hole_diameter=2.6,
     )
 
+    # Height to add to each columng of keys for the right hand keys
+    column_offsets = [-1.5, 0, 5, 2.25, -4.8, -6.3]
+    pitch = 19.05
+    r = 900
     keys = [
-        *(make_key(x * pitch, 4 * pitch + column_offsets[x])
+        *(row(x, 4, y_offset=column_offsets[x], arc_radius=r)
           for x in range(6)),
-        *(make_key(x * pitch, 3 * pitch + column_offsets[x])
+        *(row(x, 3, y_offset=column_offsets[x], arc_radius=r)
           for x in range(6)),
-        *(make_key(x * pitch, 2 * pitch + column_offsets[x])
+        *(row(x, 2, y_offset=column_offsets[x], arc_radius=r)
           for x in range(6)),
-        *(make_key(x * pitch, 1 * pitch + column_offsets[x])
+        *(row(x, 1, y_offset=column_offsets[x], arc_radius=r)
           for x in range(6)),
-        *(arc(2 - x, 90, (5 / 3) * pitch, column_offsets[1])
-          for x in range(3)),
+        *(row(x,
+              0,
+              arc_radius=90,
+              x_offset=(-1 / 3) * pitch,
+              y_offset=column_offsets[1]) for x in range(3)),
     ]
 
-    keys = mirror_keys(keys, only_flip=True)
+    #keys = mirror_keys(keys, only_flip=True)
 
     for key in keys:
         kb.keys.append(key)

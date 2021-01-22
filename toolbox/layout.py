@@ -1,6 +1,8 @@
 import shapely
 import shapely.geometry
 
+from math import atan, atan2, cos, degrees, radians, sin, sqrt
+
 from toolbox.keyboard_pb2 import Keyboard
 from toolbox.utils import pose, pose_to_xyr
 
@@ -132,3 +134,28 @@ def mirror_keys(keys, middle_space=0, only_flip=False):
 def make_key(x, y, r=0):
     k = Keyboard.Key(pose={"x": x, "y": y, "r": r})
     return k
+
+
+def row(col,
+        row=0,
+        arc_radius=0,
+        x_offset=0,
+        y_offset=0,
+        pitch=19.05,
+        arc_base_row=0,
+        arc_base_col=2):
+    if arc_radius == 0:
+        return make_key(col * pitch + x_offset, row * pitch + y_offset)
+    else:
+        n = arc_base_col - col
+        geom = pose(arc_base_col * pitch + x_offset, row * pitch + y_offset)
+        about = shapely.affinity.translate(geom[0],
+                                           yoff=-pitch / 2 - arc_radius -
+                                           (row - arc_base_row) * pitch)
+        geom = shapely.affinity.rotate(geom,
+                                       n * 2 * atan(pitch / 2 / arc_radius),
+                                       use_radians=True,
+                                       origin=about)
+
+        x, y, r = pose_to_xyr(geom)
+        return make_key(x, y, r)
