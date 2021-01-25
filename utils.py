@@ -11,9 +11,9 @@ def pose(x, y, r=0):
                                                     y + sin(radians(r + 90)))])
 
 
-def pose_to_xyr(pose):
-    return (pose[0].x, pose[0].y,
-            degrees(atan2(pose[1].y - pose[0].y, pose[1].x - pose[0].x)) - 90)
+def pose_to_xyr(p):
+    return (p[0].x, p[0].y,
+            degrees(atan2(p[1].y - p[0].y, p[1].x - p[0].x)) - 90)
 
 
 # Polygon describing the required plate area under each key
@@ -26,17 +26,15 @@ key_placeholder = shapely.geometry.polygon.Polygon([
 
 
 def generate_placeholders(kb):
-    keys = [pose(k.x, k.y, k.r) for k in kb.key_poses]
-
     def placeholder(key):
-        x, y, r = pose_to_xyr(key)
+        x, y, r = key.pose.x, key.pose.y, key.pose.r
         p = key_placeholder
         p = shapely.affinity.rotate(p, r)
         p = shapely.affinity.translate(p, x, y)
         return p
 
     return shapely.geometry.multipolygon.MultiPolygon(
-        placeholder(key) for key in keys)
+        placeholder(key) for key in kb.keys)
 
 
 def generate_outline(kb):

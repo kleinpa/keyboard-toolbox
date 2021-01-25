@@ -5,37 +5,35 @@ from math import cos, radians, sin, sqrt
 import shapely
 import shapely.geometry
 
-from kicad_utils import kicad_polygon
 from layout import cutout_geom
 from utils import generate_hole_shape, generate_outline, pose, pose_to_xyr
 
 
-def generate_cutouts(keys):
+def generate_cutouts(kb):
     def cutout(key):
-        x, y, r = pose_to_xyr(key)
+        x, y, r = key.pose.x, key.pose.y, key.pose.r
         p = cutout_geom
         p = shapely.affinity.rotate(p, r)
         p = shapely.affinity.translate(p, x, y)
         return p
 
     return shapely.geometry.multipolygon.MultiPolygon(
-        cutout(key) for key in keys)
+        cutout(key) for key in kb.keys)
 
 
 def generate_plate(kb):
-    keys = [pose(k.x, k.y, k.r) for k in kb.key_poses]
+
     holes = [shapely.geometry.Point(h.x, h.y) for h in kb.hole_positions]
     outline = generate_outline(kb)
     return shapely.geometry.polygon.Polygon(
         outline.exterior,
         holes=[
-            *(x.exterior for x in generate_cutouts(keys)),
+            *(x.exterior for x in generate_cutouts(kb)),
             *(generate_hole_shape(x, kb.hole_diameter).exterior for x in holes)
         ])
 
 
 def generate_svg(f, kb):
-    keys = [pose(k.x, k.y, k.r) for k in kb.key_poses]
 
     # Transform geometry into svg coordinate system (top-left origin)
     def page_transform(geom):
@@ -107,8 +105,9 @@ def generate_svg(f, kb):
             "rx": "1.5",
         })
 
-    for i, key in enumerate(keys):
-        x, y, r = pose_to_xyr(page_transform(key))
+    for i, key in enumerate(kb.keys):
+        x, y, r = pose_to_xyr(
+            page_transform(pose(key.pose.x, key.pose.y, key.pose.r)))
         ET.SubElement(
             g_keycaps, "use", {
                 "xlink:href": "#keycap",
@@ -143,6 +142,7 @@ def generate_dxf(fn, geom):
 
 
 def generate_kicad(output_path, geom):
+    from kicad_utils import kicad_polygon
     import pcbnew
 
     # Transform geometry into kicad coordinate system (top-left origin)

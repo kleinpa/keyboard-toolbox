@@ -7,8 +7,7 @@ import shapely.geometry
 from absl import app, flags
 
 from layout import holes_between_keys, mirror_keys, rotate_keys
-from make_pcb import generate_kicad_pcb
-from make_plate import (generate_dxf, generate_kicad, generate_plate,
+from make_plate import (generate_dxf, generate_plate,
                         generate_svg)
 from utils import pose, pose_to_xyr
 
@@ -35,12 +34,13 @@ def main(argv):
             generate_dxf(fn, plate)
 
     elif FLAGS.format == 'plate_kicad_pcb':
+        from make_plate import generate_kicad
         plate = generate_plate(kb)
         generate_kicad(FLAGS.output, plate)
 
     elif FLAGS.format == 'main_kicad_pcb':
+        from make_pcb import generate_kicad_pcb
         generate_kicad_pcb(FLAGS.output, kb)
-
     else:
         raise ValueError("unknown --format value")
 

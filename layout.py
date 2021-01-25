@@ -1,7 +1,8 @@
+import keyboard_pb2
 import shapely
 import shapely.geometry
 
-from utils import pose_to_xyr
+from utils import pose, pose_to_xyr
 
 # Polygon describing the shape of an individual key cutout
 cutout_geom_square = shapely.geometry.polygon.Polygon([
@@ -64,13 +65,17 @@ cutout_geom = cutout_geom_mx_wings
 
 def rotate_keys(keys, angle):
     for key in keys:
-        yield shapely.affinity.rotate(key, angle / 2, origin=(0, 0))
+        p = pose(key.pose.x, key.pose.y, key.pose.r)
+        p = shapely.affinity.rotate(p, angle / 2, origin=(0, 0))
+        x, y, r = pose_to_xyr(p)
+        yield make_key(x, y, r)
 
 
 def holes_between_keys(keys, hole_map):
+
     for k1, k2 in hole_map:
-        x1, y1, _ = pose_to_xyr(keys[k1])
-        x2, y2, _ = pose_to_xyr(keys[k2])
+        x1, y1 = keys[k1].pose.x, keys[k1].pose.y
+        x2, y2 = keys[k2].pose.x, keys[k2].pose.y
         yield shapely.geometry.Point((x1 + x2) / 2, (y1 + y2) / 2)
 
 
@@ -79,7 +84,7 @@ def rows(keys):
     row = []
     last_x = None
     for key in keys:
-        x, y, r = pose_to_xyr(key)
+        x, y, r = key.pose.x, key.pose.y, key.pose.r
         if last_x and x < last_x:
             yield row
             row = []
@@ -97,7 +102,7 @@ def generate_key_placeholders(keys):
             (-9.525, -9.525),
             (-9.525, 9.525),
         ])
-        x, y, r = pose_to_xyr(key)
+        x, y, r = key.pose.x, key.pose.y, key.pose.r
         return shapely.affinity.translate(shapely.affinity.rotate(p, r), x, y)
 
     return shapely.geometry.multipolygon.MultiPolygon(
@@ -113,11 +118,17 @@ def mirror_keys(keys, middle_space):
     for row in rows(keys):
         full_row = []
         for key in row:
-            key = shapely.affinity.translate(key,
-                                             xoff=-x_min + middle_space / 2,
-                                             yoff=-y_min)
-            mirror_key = shapely.affinity.scale(key, -1, origin=(0, 0))
-            full_row.insert(0, mirror_key)
-            full_row.append(key)
+            p = pose(key.pose.x, key.pose.y, key.pose.r)
+            p = shapely.affinity.translate(p,
+                                           xoff=-x_min + middle_space / 2,
+                                           yoff=-y_min)
+            p2 = shapely.affinity.scale(p, -1, origin=(0, 0))
+            full_row.insert(0, make_key(*pose_to_xyr(p2)))
+            full_row.append(make_key(*pose_to_xyr(p)))
 
         yield from full_row
+
+
+def make_key(x, y, r=0):
+    k = keyboard_pb2.Keyboard.Key(pose={"x": x, "y": y, "r": r})
+    return k

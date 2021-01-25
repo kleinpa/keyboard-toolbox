@@ -12,7 +12,15 @@ message Position {
 }
 
 message Keyboard {
-  repeated Pose key_poses = 1;
+  message Key {
+    Pose pose=1;
+    double unit_width=2;
+    double unit_height=3;
+
+    int32 controller_pin_high = 4;
+    int32 controller_pin_low = 5;
+  }
+  repeated Key keys = 1;
   repeated Position hole_positions = 2;
 
   enum Footprint {

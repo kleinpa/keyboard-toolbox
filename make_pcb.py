@@ -12,7 +12,6 @@ from utils import generate_outline, pose, pose_to_xyr
 
 
 def generate_kicad_pcb(output_path, kb):
-    keys = [pose(k.x, k.y, k.r) for k in kb.key_poses]
     holes = [shapely.geometry.Point(h.x, h.y) for h in kb.hole_positions]
 
     outline = generate_outline(kb)
@@ -60,11 +59,9 @@ def generate_kicad_pcb(output_path, kb):
     for x in io_net:
         board.Add(x)
 
-    import matrix
-    mat = matrix.make_matrix(kb, mcu_io)
-
-    for i, key in enumerate(keys):
-        net1, net2 = io_net[mat[i][0]], io_net[mat[i][1]]
+    for i, key in enumerate(kb.keys):
+        net1 = io_net[key.controller_pin_low]
+        net2 = io_net[key.controller_pin_high]
 
         net = pcbnew.NETINFO_ITEM(board, f"switch-diode-{i}")
         board.Add(net)
@@ -76,7 +73,8 @@ def generate_kicad_pcb(output_path, kb):
             "SW_Cherry_MX_1.00u_PCB")
         item.MoveAnchorPosition(pcbnew.wxPointMM(2.54, -5.08))
 
-        x, y, r = pose_to_xyr(page_transform(key))
+        x, y, r = pose_to_xyr(
+            page_transform(pose(key.pose.x, key.pose.y, key.pose.r)))
         item.SetPosition(pcbnew.wxPointMM(x, y))
 
         item.SetOrientationDegrees(180 - r)
@@ -95,7 +93,8 @@ def generate_kicad_pcb(output_path, kb):
             "external/com_gitlab_kicad_libraries_kicad_footprints/Diode_SMD.pretty",
             "D_SOD-123")
 
-        x, y, r = pose_to_xyr(page_transform(key))
+        x, y, r = pose_to_xyr(
+            page_transform(pose(key.pose.x, key.pose.y, key.pose.r)))
         item.MoveAnchorPosition(pcbnew.wxPointMM(2.5, -6.5))
         item.SetPosition(pcbnew.wxPointMM(x, y))
         item.SetOrientationDegrees(180 + r)

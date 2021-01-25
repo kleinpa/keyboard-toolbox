@@ -1,17 +1,14 @@
-from absl import app, flags
-
 import sys
 from math import atan, atan2, cos, degrees, radians, sin, sqrt
 
+import google.protobuf.text_format
+import keyboard_pb2
 import shapely
 import shapely.geometry
 from absl import app, flags
-import google.protobuf.text_format
 
-from layout import mirror_keys, rotate_keys, holes_between_keys
+from layout import holes_between_keys, make_key, mirror_keys, rotate_keys
 from utils import pose, pose_to_xyr
-
-import keyboard_pb2
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string('output', '', 'Output path')
@@ -30,7 +27,9 @@ def arc(n, r, x_offset=0, y_offset=0):
                                    n * 2 * atan(pitch / 2 / r),
                                    use_radians=True,
                                    origin=about)
-    return geom
+
+    x, y, r = pose_to_xyr(geom)
+    return keyboard_pb2.Keyboard.Key(pose={"x": x, "y": y, "r": r})
 
 
 def quine_1_keyboard():
@@ -46,25 +45,35 @@ def quine_1_keyboard():
     )
 
     keys = [
-        *(pose(x * pitch, 3 * pitch + column_offsets[x]) for x in range(6)),
-        *(pose(x * pitch, 2 * pitch + column_offsets[x]) for x in range(6)),
-        *(pose(x * pitch, 1 * pitch + column_offsets[x]) for x in range(6)),
+        *(make_key(x * pitch, 3 * pitch + column_offsets[x])
+          for x in range(6)),
+        *(make_key(x * pitch, 2 * pitch + column_offsets[x])
+          for x in range(6)),
+        *(make_key(x * pitch, 1 * pitch + column_offsets[x])
+          for x in range(6)),
         *(arc(2 - x, 90, (5 / 3) * pitch, column_offsets[1])
           for x in range(3)),
     ]
+
     keys = list(mirror_keys(rotate_keys(keys, angle=35), middle_space=0))
     holes = holes_between_keys(keys, ((0, 13), (11, 22), (13, 24), (23, 34),
                                       (4, 7), (29, 38), (30, 39)))
 
     for key in keys:
-        x, y, r = pose_to_xyr(key)
-        kb.key_poses.append(keyboard_pb2.Pose(x=x, y=y, r=r))
+        kb.keys.append(key)
     for hole in holes:
         x, y = hole.x, hole.y
         kb.hole_positions.append(keyboard_pb2.Position(x=x, y=y))
 
-    x, y, r = pose_to_xyr(keys[8])
-    kb.controller_pose.CopyFrom(keyboard_pb2.Pose(x=x, y=y, r=r))
+    kb.controller_pose.CopyFrom(keys[8].pose)
+
+    # TODO: un-hardcode
+    row_nets = (0, 7, 8, 9)
+    col_nets = (17, 16, 15, 14, 13, 12, 11, 10, 6, 5, 4, 3)
+    for i, key in enumerate(kb.keys):
+        key.controller_pin_low = row_nets[i // 12]
+        key.controller_pin_high = col_nets[(i % 12) +
+                                           (3 if i // 12 == 3 else 0)]
 
     return kb
 

@@ -46,6 +46,19 @@ py_binary(
 )
 
 py_binary(
+    name = "processor_kicad",
+    srcs = [
+        "make_qmk_header.py",
+        "processor.py",
+    ],
+    main = "processor.py",
+    deps = [
+        requirement("absl-py"),
+        ":keyboard_pcb_lib",
+    ],
+)
+
+py_binary(
     name = "processor",
     srcs = [
         "make_qmk_header.py",
@@ -53,7 +66,7 @@ py_binary(
     ],
     deps = [
         requirement("absl-py"),
-        ":keyboard_pcb_lib",
+        ":keyboard_lib",
     ],
 )
 
@@ -95,8 +108,8 @@ genrule(
     name = "quine_mk1_plate_kicad",
     srcs = [":quine_mk1_pb"],
     outs = ["quine_mk1_plate.kicad_pcb"],
-    cmd = "./$(location //:processor) --input=\"$<\" --format=plate_kicad_pcb --output=\"$@\"",
-    tools = [":processor"],
+    cmd = "./$(location //:processor_kicad) --input=\"$<\" --format=plate_kicad_pcb --output=\"$@\"",
+    tools = [":processor_kicad"],
 )
 
 genrule(
@@ -111,9 +124,9 @@ genrule(
     name = "quine_mk1_board_kicad",
     srcs = [":quine_mk1_pb"],
     outs = ["quine_mk1_board.kicad_pcb"],
-    cmd = "./$(location //:processor) --input=\"$<\" --format=main_kicad_pcb --output=\"$@\"",
+    cmd = "./$(location //:processor_kicad) --input=\"$<\" --format=main_kicad_pcb --output=\"$@\"",
     tools = [
-        ":processor",
+        ":processor_kicad",
         "@com_github_keebio_keebio_parts//:all",
         "@com_gitlab_kicad_libraries_kicad_footprints//:all",
     ],

@@ -3,19 +3,19 @@ import itertools
 import keyboard_pb2
 
 
-def make_matrix(kb, io):
-    matrix = {}
+def fill_matrix(kb, io=18):
+    available = list(itertools.product(range(io // 2), range(io // 2, io)))
+    for i, (key, (low, high)) in enumerate(zip(kb.keys, available)):
+        key.controller_pin_low = low
+        key.controller_pin_high = high
 
-    # available = list(itertools.product(range(io // 2), range(io // 2, io)))
-    # for i, (key, m) in enumerate(zip(kb.key_poses, available)):
-    #     matrix[i] = m
 
-    # TODO: un-hardcode
-    row_nets = (0, 7, 8, 9)
-    col_nets = (17, 16, 15, 14, 13, 12, 11, 10, 6, 5, 4, 3)
-    matrix = {
-        i: (row_nets[i // 12], col_nets[(i % 12) + (3 if i // 12 == 3 else 0)])
-        for i in range(42)
-    }
+def fill_matrix_random(kb, io=18):
+    import random
 
-    return matrix
+    available = list(itertools.product(range(io // 2), range(io // 2, io)))
+    rnd = random.Random(0)
+    for i, key in enumerate(kb.keys):
+        low, high = available.pop(random.randrange(len(available)))
+        key.controller_pin_low = low
+        key.controller_pin_high = high
