@@ -12,6 +12,7 @@ message Position {
 }
 
 message Keyboard {
+  string name = 1;
   message Key {
     Pose pose=1;
     double unit_width=2;
@@ -20,29 +21,28 @@ message Keyboard {
     int32 controller_pin_high = 4;
     int32 controller_pin_low = 5;
   }
-  repeated Key keys = 1;
-  repeated Position hole_positions = 2;
+  repeated Key keys = 2;
+  repeated Position hole_positions = 3;
 
   enum Footprint {
     FOOTPRINT_UNKNOWN = 0;
     FOOTPRINT_CHERRY_MX = 1;
   }
-  Footprint footprint = 3;
+  Footprint footprint = 4;
 
   enum Outline {
     OUTLINE_UNKNOWN = 0;
     OUTLINE_TIGHT = 1;
   }
-  Outline outline = 4;
+  Outline outline = 5;
 
   enum Controller {
     CONTROLLER_UNKNOWN = 0;
     CONTROLLER_PROMICRO = 1;
   }
-  Controller controller = 5;
+  Controller controller = 6;
 
-  Pose controller_pose = 6;
-  // mcu type, position, matrix mapping
+  Pose controller_pose = 7;
 
   // TODO: move elsewhere
   double outline_concave = 10000;

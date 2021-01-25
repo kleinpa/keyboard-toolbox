@@ -1,56 +1,47 @@
-import itertools
-import sys
-from math import atan, atan2, cos, degrees, radians, sin, sqrt
+import tempfile
 
 import pcbnew
 import shapely
 import shapely.geometry
 from absl import app, flags
+from math import sin, cos, atan2, degrees, radians
 
-from kicad_utils import kicad_circle, kicad_polygon, kicad_text
-from utils import generate_outline, pose, pose_to_xyr
+from toolbox.keyboard_pb2 import Keyboard
+from toolbox.kicad_utils import kicad_circle, kicad_polygon, kicad_text
+from toolbox.utils import generate_outline
 
 
-def generate_kicad_pcb(output_path, kb):
-    holes = [shapely.geometry.Point(h.x, h.y) for h in kb.hole_positions]
+def generate_kicad_pcb_file(kb):
 
     outline = generate_outline(kb)
-    x_min, y_min, x_max, y_max = shapely.affinity.scale(outline,
-                                                        yfact=-1,
-                                                        origin=(0, 0)).bounds
+    x_min, y_min, x_max, y_max = outline.bounds
 
-    margin = 16
-
-    # block_margin = 48 # TODO: use bounds to set page size
-
-    # Transform geometry into kicad coordinate system (top-left origin)
-    def page_transform(geom):
-        geom = shapely.affinity.scale(geom, yfact=-1, origin=(0, 0))
-        geom = shapely.affinity.translate(geom,
-                                          xoff=-x_min + margin,
-                                          yoff=-y_min + margin)
-        return geom
+    x_offset = 16 - x_min
+    x_scale = 1
+    y_offset = 16 + y_max
+    y_scale = -1
 
     board = pcbnew.BOARD()
 
-    # TODO: Is there a good way to set default track width to 0.5mm
+    # TODO: How can I generate a project file with default track width 0.5mm? is that even the right width?
 
+    x, y, r = 79, 43, 180 - 39
+    r = degrees(
+        atan2(y_scale * sin(radians(r - 90)),
+              x_scale * cos(radians(r - 90)))) + 90
     board.Add(
-        kicad_text(page_transform(pose(79, 43, 180 - 39)),
-                   "quine mk1\npeterklein.dev"))
-
-    import inspect
-    item = kicad_text(page_transform(pose(-x_min, 60, 180)),
-                      "inspect.getsource(quine_1_keyboard)", pcbnew.FromMM(4),
-                      pcbnew.B_SilkS)
-    item.SetHorizJustify(pcbnew.GR_TEXT_HJUSTIFY_LEFT)
-    board.Add(item)
+        kicad_text(f"{kb.name}\npeterklein.dev", x_scale * x + x_offset,
+                   y_scale * y + y_offset, r))
 
     ground_net = pcbnew.NETINFO_ITEM(board, f"GND")
     board.Add(ground_net)
 
-    outline = page_transform(generate_outline(kb))
-    for x in kicad_polygon(outline):
+    outline = generate_outline(kb)
+    for x in kicad_polygon(outline,
+                           x_offset=x_offset,
+                           y_offset=y_offset,
+                           x_scale=x_scale,
+                           y_scale=y_scale):
         board.Add(x)
 
     mcu_io = 18
@@ -59,6 +50,9 @@ def generate_kicad_pcb(output_path, kb):
     for x in io_net:
         board.Add(x)
 
+    if kb.footprint != Keyboard.FOOTPRINT_CHERRY_MX:
+        raise RuntimeError(f"unknown footprint")
+
     for i, key in enumerate(kb.keys):
         net1 = io_net[key.controller_pin_low]
         net2 = io_net[key.controller_pin_high]
@@ -66,15 +60,16 @@ def generate_kicad_pcb(output_path, kb):
         net = pcbnew.NETINFO_ITEM(board, f"switch-diode-{i}")
         board.Add(net)
 
-        # m = pcbnew.FootprintLoad("external/com_github_keebio_keebio_parts",
-        #                          "MX-Alps-Choc-1U-NoLED")
+        # item = pcbnew.FootprintLoad("external/com_github_keebio_keebio_parts",
+        #                             "Kailh-PG1350-1u-NoLED")
         item = pcbnew.FootprintLoad(
             "external/com_gitlab_kicad_libraries_kicad_footprints/Button_Switch_Keyboard.pretty",
             "SW_Cherry_MX_1.00u_PCB")
         item.MoveAnchorPosition(pcbnew.wxPointMM(2.54, -5.08))
-
-        x, y, r = pose_to_xyr(
-            page_transform(pose(key.pose.x, key.pose.y, key.pose.r)))
+        x, y = x_scale * key.pose.x + x_offset, y_scale * key.pose.y + y_offset
+        r = degrees(
+            atan2(y_scale * sin(radians(key.pose.r - 90)),
+                  x_scale * cos(radians(key.pose.r - 90)))) + 90
         item.SetPosition(pcbnew.wxPointMM(x, y))
 
         item.SetOrientationDegrees(180 - r)
@@ -91,8 +86,10 @@ def generate_kicad_pcb(output_path, kb):
             "external/com_gitlab_kicad_libraries_kicad_footprints/Diode_SMD.pretty",
             "D_SOD-123")
 
-        x, y, r = pose_to_xyr(
-            page_transform(pose(key.pose.x, key.pose.y, key.pose.r)))
+        x, y = x_scale * key.pose.x + x_offset, y_scale * key.pose.y + y_offset
+        r = degrees(
+            atan2(y_scale * sin(radians(key.pose.r - 90)),
+                  x_scale * cos(radians(key.pose.r - 90)))) + 90
         item.MoveAnchorPosition(pcbnew.wxPointMM(2.5, -6.5))
         item.SetPosition(pcbnew.wxPointMM(x, y))
         item.SetOrientationDegrees(180 + r)
@@ -110,10 +107,10 @@ def generate_kicad_pcb(output_path, kb):
 
     mcu_offset = 8.5
 
-    x, y, r = pose_to_xyr(
-        page_transform(
-            pose(kb.controller_pose.x, kb.controller_pose.y,
-                 kb.controller_pose.r)))
+    x, y = x_scale * kb.controller_pose.x + x_offset, y_scale * kb.controller_pose.y + y_offset
+    r = degrees(
+        atan2(y_scale * sin(radians(key.pose.r - 90)),
+              x_scale * cos(radians(key.pose.r - 90)))) + 90
     item = pcbnew.FootprintLoad("external/com_github_keebio_keebio_parts",
                                 "ArduinoProMicro")
     item.MoveAnchorPosition(pcbnew.wxPointMM(mcu_offset, 0))
@@ -153,13 +150,15 @@ def generate_kicad_pcb(output_path, kb):
     item.FindPadByName(20).SetNet(io_net[17])
 
     # Add holes
-    for h in holes:
-        board.Add(kicad_circle(page_transform(h), kb.hole_diameter))
+    for h in kb.hole_positions:
+        x, y = x_scale * h.x + x_offset, y_scale * h.y + y_offset
+        board.Add(kicad_circle(x, y, kb.hole_diameter))
 
     # Add ground plane
     item = pcbnew.ZONE(board, False)
     poly = pcbnew.wxPoint_Vector()
     for x, y in outline.exterior.coords:
+        x, y = x_scale * x + x_offset, y_scale * y + y_offset
         poly.append(pcbnew.wxPointMM(x, y))
     item.AddPolygon(poly)
     item.SetNet(ground_net)
@@ -180,4 +179,6 @@ def generate_kicad_pcb(output_path, kb):
 
     # pcbnew.ZONE_FILLER(board).Fill(board.Zones())
 
-    board.Save(output_path)
+    tf = tempfile.NamedTemporaryFile()
+    board.Save(tf.name)
+    return tf

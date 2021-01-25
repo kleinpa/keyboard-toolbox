@@ -1,21 +1,20 @@
 import sys
 
-import google.protobuf.text_format
-import shapely
-import shapely.geometry
 from absl import app, flags
 
+from toolbox.keyboard import save_keyboard
 from toolbox.keyboard_pb2 import Keyboard, Position
-from toolbox.layout import holes_between_keys, make_key, mirror_keys, rotate_keys, row
-from toolbox.matrix import fill_matrix
-from toolbox.utils import pose, pose_to_xyr
+from toolbox.layout import holes_between_keys, mirror_keys, rotate_keys, grid
+from toolbox.utils import pose
 
 FLAGS = flags.FLAGS
-flags.DEFINE_string('output', '', 'Output path')
+flags.DEFINE_string('output', None, 'Output path.')
+flags.DEFINE_enum('format', 'bin', ['bin', 'text'], 'Protobuf output format.')
 
 
 def quine_2_keyboard():
     kb = Keyboard(
+        name="quine-mk2",
         controller=Keyboard.CONTROLLER_PROMICRO,
         footprint=Keyboard.FOOTPRINT_CHERRY_MX,
         outline=Keyboard.OUTLINE_TIGHT,
@@ -29,13 +28,13 @@ def quine_2_keyboard():
     pitch = 19.05
     column_offsets = [-1.0, 0.0, 5.0, 2.25, -4.8, -6.3]
     keys = [
-        *(row(x, 3, y_offset=column_offsets[x]) for x in range(6)),
-        *(row(x, 2, y_offset=column_offsets[x]) for x in range(6)),
-        *(row(x, 1, y_offset=column_offsets[x]) for x in range(6)),
-        *(row(x,
-              arc_radius=90,
-              x_offset=-0.65 * pitch,
-              y_offset=column_offsets[1]) for x in range(3)),
+        *(grid(x, 3, y_offset=column_offsets[x]) for x in range(6)),
+        *(grid(x, 2, y_offset=column_offsets[x]) for x in range(6)),
+        *(grid(x, 1, y_offset=column_offsets[x]) for x in range(6)),
+        *(grid(x,
+               arc_radius=90,
+               x_offset=-0.65 * pitch,
+               y_offset=column_offsets[1]) for x in range(3)),
     ]
 
     for key in mirror_keys(rotate_keys(keys, angle=45)):
@@ -61,9 +60,7 @@ def quine_2_keyboard():
 
 def main(argv):
     kb = quine_2_keyboard()
-
-    with open(FLAGS.output, 'wb') as fn:
-        fn.write(kb.SerializeToString())
+    save_keyboard(kb, FLAGS.output, FLAGS.format)
 
 
 if __name__ == "__main__":

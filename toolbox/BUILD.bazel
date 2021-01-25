@@ -1,4 +1,4 @@
-load("@rules_python//python:defs.bzl", "py_binary", "py_library")
+load("@rules_python//python:defs.bzl", "py_library")
 load("@my_deps//:requirements.bzl", "requirement")
 load("@com_google_protobuf//:protobuf.bzl", "py_proto_library")
 
@@ -10,6 +10,7 @@ py_proto_library(
 py_library(
     name = "keyboard_lib",
     srcs = [
+        "keyboard.py",
         "layout.py",
         "make_plate.py",
         "matrix.py",
@@ -18,7 +19,6 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":keyboard_py_proto",
-        requirement("ezdxf"),
         requirement("shapely"),
     ],
 )
@@ -26,76 +26,60 @@ py_library(
 py_library(
     name = "keyboard_pcb_lib",
     srcs = [
-        "kicad_utils.py",
         "make_pcb.py",
     ],
+    data = [
+        "@com_github_keebio_keebio_parts//:all",
+        "@com_gitlab_kicad_libraries_kicad_footprints//:all",
+    ],
+    visibility = ["//visibility:public"],
     deps = [
         ":keyboard_lib",
+        ":kicad_utils",
         "@com_gitlab_kicad_kicad//:pcbnew_python",
     ],
 )
 
-py_binary(
-    name = "make_gerbers",
+py_library(
+    name = "kicad_utils",
     srcs = [
-        "make_gerbers.py",
+        "kicad_utils.py",
     ],
     visibility = ["//visibility:public"],
     deps = [
-        requirement("absl-py"),
         "@com_gitlab_kicad_kicad//:pcbnew_python",
     ],
 )
 
-py_binary(
-    name = "processor_kicad",
+py_library(
+    name = "dxf_utils",
     srcs = [
-        "make_qmk_header.py",
-        "processor.py",
+        "dxf_utils.py",
     ],
-    main = "processor.py",
     visibility = ["//visibility:public"],
     deps = [
-        requirement("absl-py"),
-        ":keyboard_pcb_lib",
+        requirement("ezdxf"),
     ],
 )
 
-py_binary(
-    name = "processor",
+py_library(
+    name = "qmk_utils",
     srcs = [
-        "make_qmk_header.py",
-        "processor.py",
+        "qmk_utils.py",
     ],
     visibility = ["//visibility:public"],
     deps = [
-        requirement("absl-py"),
+        requirement("ezdxf"),
+    ],
+)
+
+py_library(
+    name = "svg_utils",
+    srcs = [
+        "svg.py",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
         ":keyboard_lib",
     ],
-)
-
-py_binary(
-    name = "test_layout",
-    srcs = [
-        "test_layout.py",
-    ],
-    deps = [
-        requirement("absl-py"),
-        "//toolbox:keyboard_lib",
-    ],
-)
-
-genrule(
-    name = "test_layout_pb",
-    outs = ["test_layout.pb"],
-    cmd = "./$(location :test_layout) --output=\"$@\"",
-    tools = [":test_layout"],
-)
-
-genrule(
-    name = "test_layout_svg",
-    srcs = [":test_layout_pb"],
-    outs = ["test_layout.svg"],
-    cmd = "./$(location //toolbox:processor) --input=\"$<\" --format=svg --output=\"$@\"",
-    tools = ["//toolbox:processor"],
 )

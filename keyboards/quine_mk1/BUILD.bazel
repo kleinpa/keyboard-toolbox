@@ -23,17 +23,17 @@ genrule(
     name = "layout_svg",
     srcs = [":layout_pb"],
     outs = ["layout.svg"],
-    cmd = "./$(location //toolbox:processor) --input=\"$<\" --format=svg --output=\"$@\"",
-    tools = ["//toolbox:processor"],
+    cmd = "./$(location //toolbox/cli) --input=\"$<\" --format=svg --output=\"$@\"",
+    tools = ["//toolbox/cli"],
 )
 
 genrule(
     name = "board_kicad",
     srcs = [":layout_pb"],
     outs = ["board.kicad_pcb"],
-    cmd = "./$(location //toolbox:processor_kicad) --input=\"$<\" --format=main_kicad_pcb --output=\"$@\"",
+    cmd = "./$(location //toolbox/cli) --input=\"$<\" --format=main_kicad_pcb --output=\"$@\"",
     tools = [
-        "//toolbox:processor_kicad",
+        "//toolbox/cli",
         "@com_github_keebio_keebio_parts//:all",
         "@com_gitlab_kicad_libraries_kicad_footprints//:all",
     ],
@@ -43,8 +43,8 @@ genrule(
     name = "qmk_header",
     srcs = [":layout_pb"],
     outs = ["qmk_header.h"],
-    cmd = "./$(location //toolbox:processor) --input=\"$<\" --format=h --output=\"$@\"",
-    tools = ["//toolbox:processor"],
+    cmd = "./$(location //toolbox/cli) --input=\"$<\" --format=h --output=\"$@\"",
+    tools = ["//toolbox/cli"],
 )
 
 # genrule(

@@ -1,1 +1,6 @@
+fp-info-cache
+/dist
 /bazel-*
+*.kicad_pro
+*.kicad_prl
+__pycache__

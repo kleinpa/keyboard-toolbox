@@ -16,19 +16,16 @@ def pose_to_xyr(p):
             degrees(atan2(p[1].y - p[0].y, p[1].x - p[0].x)) - 90)
 
 
-# Polygon describing the required plate area under each key
-key_placeholder = shapely.geometry.polygon.Polygon([
-    (9.525, 9.525),
-    (9.525, -9.525),
-    (-9.525, -9.525),
-    (-9.525, 9.525),
-])
-
-
-def generate_placeholders(kb):
+def generate_placeholders(kb, keyboard_unit=19.05):
+    """Returns a multi-polygon containing the minimum plate to support each key."""
     def placeholder(key):
         x, y, r = key.pose.x, key.pose.y, key.pose.r
-        p = key_placeholder
+        p = shapely.geometry.polygon.Polygon([
+            (keyboard_unit / 2, keyboard_unit / 2),
+            (keyboard_unit / 2, -keyboard_unit / 2),
+            (-keyboard_unit / 2, -keyboard_unit / 2),
+            (-keyboard_unit / 2, keyboard_unit / 2),
+        ])
         p = shapely.affinity.rotate(p, r)
         p = shapely.affinity.translate(p, x, y)
         return p
@@ -49,10 +46,6 @@ def generate_outline(kb):
                                        kb.outline_convex,
                                        join_style=1,
                                        resolution=resolution)
-
-
-def generate_hole_shape(hole, diameter):
-    return hole.buffer(diameter / 2)
 
 
 def controller():
