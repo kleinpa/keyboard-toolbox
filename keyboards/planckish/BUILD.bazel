@@ -17,6 +17,7 @@ genrule(
     outs = ["layout.pb"],
     cmd = "./$(location :layout) --output=\"$@\"",
     tools = [":layout"],
+    visibility = ["//visibility:public"],
 )
 
 genrule(
@@ -70,11 +71,3 @@ genrule(
     cmd = "./$(location //toolbox/cli) --input=\"$<\" --format=h --output=\"$@\"",
     tools = ["//toolbox/cli"],
 )
-
-# genrule(
-#     name = "board_gerbers",
-#     srcs = ["board_routed.kicad_pcb"],
-#     outs = ["board_gerbers.zip"],
-#     cmd = "./$(location //:make_gerbers) --input=\"$<\" --output=\"$@\"",
-#     tools = [":make_gerbers"],
-# )

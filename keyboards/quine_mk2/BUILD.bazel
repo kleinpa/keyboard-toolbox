@@ -17,6 +17,7 @@ genrule(
     outs = ["layout.pb"],
     cmd = "./$(location :layout) --output=\"$@\"",
     tools = [":layout"],
+    visibility = ["//visibility:public"],
 )
 
 genrule(

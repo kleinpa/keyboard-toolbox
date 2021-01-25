@@ -1,0 +1,33 @@
+load("@rules_python//python:defs.bzl", "py_binary")
+load("@my_deps//:requirements.bzl", "requirement")
+
+py_binary(
+    name = "service",
+    srcs = ["service.py"],
+    data = [
+        ":service_templates",
+        "//keyboards/kle:ansi104_layout_pb",
+        "//keyboards/kle:atrius_layout_pb",
+        "//keyboards/kle:ergodox_layout_pb",
+        "//keyboards/kle:numpad_layout_pb",
+        "//keyboards/planckish:layout_pb",
+        "//keyboards/quine_mk1:layout_pb",
+        "//keyboards/quine_mk2:layout_pb",
+        "//toolbox/testdata:test_layout_pb",
+    ],
+    deps = [
+        requirement("absl-py"),
+        requirement("Flask"),
+        "//toolbox:dxf_utils",
+        "//toolbox:keyboard_pcb_lib",
+        "//toolbox:qmk_utils",
+        "//toolbox:svg_utils",
+    ],
+)
+
+filegroup(
+    name = "service_templates",
+    srcs = glob([
+        "templates/*",
+    ]),
+)
