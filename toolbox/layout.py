@@ -42,11 +42,13 @@ def rows(keys):
 
 def generate_key_placeholders(keys, keyboard_unit=19.05):
     def placeholder(key):
+        width = keyboard_unit * key.unit_width
+        height = keyboard_unit * key.unit_height
         p = shapely.geometry.polygon.Polygon([
-            (keyboard_unit / 2, keyboard_unit / 2),
-            (keyboard_unit / 2, -keyboard_unit / 2),
-            (-keyboard_unit / 2, -keyboard_unit / 2),
-            (-keyboard_unit / 2, keyboard_unit / 2),
+            (width / 2, height / 2),
+            (width / 2, -height / 2),
+            (-width / 2, -height / 2),
+            (-width / 2, height / 2),
         ])
         x, y, r = key.pose.x, key.pose.y, key.pose.r
         return shapely.affinity.translate(shapely.affinity.rotate(p, r), x, y)

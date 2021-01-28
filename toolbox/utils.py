@@ -19,15 +19,16 @@ def pose_to_xyr(p):
 def generate_placeholders(kb, keyboard_unit=19.05):
     """Returns a multi-polygon containing the minimum plate to support each key."""
     def placeholder(key):
-        x, y, r = key.pose.x, key.pose.y, key.pose.r
+        width = keyboard_unit * key.unit_width
+        height = keyboard_unit * key.unit_height
         p = shapely.geometry.polygon.Polygon([
-            (keyboard_unit / 2, keyboard_unit / 2),
-            (keyboard_unit / 2, -keyboard_unit / 2),
-            (-keyboard_unit / 2, -keyboard_unit / 2),
-            (-keyboard_unit / 2, keyboard_unit / 2),
+            (width / 2, height / 2),
+            (width / 2, -height / 2),
+            (-width / 2, -height / 2),
+            (-width / 2, height / 2),
         ])
-        p = shapely.affinity.rotate(p, r)
-        p = shapely.affinity.translate(p, x, y)
+        p = shapely.affinity.rotate(p, key.pose.r)
+        p = shapely.affinity.translate(p, key.pose.x, key.pose.y)
         return p
 
     return shapely.geometry.multipolygon.MultiPolygon(

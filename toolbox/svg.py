@@ -58,14 +58,6 @@ def keyboard_to_layout_svg_file(kb, add_numbers=False):
             "id": "keycap",
         },
     )
-    ET.SubElement(
-        g_keycap, "rect", {
-            "width": "18.3",
-            "height": "18.3",
-            "x": "-9.15",
-            "y": "-9.15",
-            "rx": "1.5",
-        })
 
     for i, key in enumerate(kb.keys):
         x, y = x_scale * key.pose.x, y_scale * key.pose.y
@@ -76,8 +68,12 @@ def keyboard_to_layout_svg_file(kb, add_numbers=False):
         keyboard_unit = 19.05
         margin = keyboard_unit - 18.3
         ET.SubElement(
-            g_keycaps, "use", {
-                "xlink:href": "#keycap",
+            g_keycaps, "rect", {
+                "width": str(keyboard_unit * key.unit_width - margin),
+                "height": str(keyboard_unit * key.unit_height - margin),
+                "x": str((keyboard_unit * key.unit_width - margin) / -2),
+                "y": str((keyboard_unit * key.unit_height - margin) / -2),
+                "rx": "1.5",
                 "transform": f"translate({x} {y}) rotate({r})"
             })
         if add_numbers:
