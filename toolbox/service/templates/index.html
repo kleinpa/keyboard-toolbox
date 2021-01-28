@@ -9,4 +9,6 @@
 <a href="{{ url_for('render_qmk_header_file', name=keyboard.name)}}">qmk</a>
 <a href="{{ url_for('render_kicad_pcb_file', name=keyboard.name)}}">pcb</a>
 <a href="{{ url_for('render_plate_kicad_pcb_file', name=keyboard.name)}}">plate-pcb</a>
+<a href="{{ url_for('render_kle_file', name=keyboard.name)}}">kle</a>
+<a href="{{ url_for('render_kle_redirect', name=keyboard.name)}}" target="_blank">kle-redirect</a>
 {% endfor %}

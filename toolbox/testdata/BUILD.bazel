@@ -27,3 +27,12 @@ genrule(
     cmd = "./$(location //toolbox/cli) --input=\"$<\" --format=svg --output=\"$@\"",
     tools = ["//toolbox/cli"],
 )
+
+genrule(
+    name = "tkl_layout_pb",
+    srcs = ["tkl-kle.json"],
+    outs = ["tkl_layout.pb"],
+    cmd = "./$(location //toolbox/cli:from_kle) --input=\"$<\" --output=\"$@\"",
+    tools = ["//toolbox/cli:from_kle"],
+    visibility = ["//visibility:public"],
+)

@@ -1,15 +1,16 @@
 import glob
 import io
+import json
 import os
 import tempfile
 
 from absl import app, flags
-from flask import Flask, render_template, send_file
-
+from flask import Flask, redirect, render_template, send_file
 from toolbox.dxf_utils import shape_to_dxf_file
 from toolbox.keyboard import load_keyboard
 from toolbox.keyboard_pb2 import Keyboard
 from toolbox.kicad_utils import shape_to_kicad_file
+from toolbox.kle_utils import keyboard_to_kle, keyboard_to_kle_file
 from toolbox.make_pcb import generate_kicad_pcb_file
 from toolbox.make_plate import generate_plate
 from toolbox.qmk_utils import make_qmk_header_file
@@ -78,6 +79,22 @@ def render_dxf_file(name=None):
                      mimetype='application/dxf',
                      as_attachment=True,
                      attachment_filename=f'{name}-plate.dxf')
+
+
+@flask_app.route('/kb/<name>/kle')
+def render_kle_file(name=None):
+    return send_file(keyboard_to_kle_file(keyboards[name]),
+                     mimetype='application/json',
+                     as_attachment=True,
+                     attachment_filename=f'{name}-kle.json')
+
+
+@flask_app.route('/kb/<name>/kle_redirect')
+def render_kle_redirect(name=None):
+    kle_data = keyboard_to_kle(keyboards[name])
+    kle_json = json.dumps(kle_data, separators=(',', ':'))
+    return redirect("http://www.keyboard-layout-editor.com/##" + kle_json,
+                    code=302)
 
 
 def main(argv):

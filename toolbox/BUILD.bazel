@@ -81,5 +81,17 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":keyboard_lib",
+        requirement("shapely"),
+    ],
+)
+
+py_library(
+    name = "kle_utils",
+    srcs = [
+        "kle_utils.py",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":keyboard_lib",
     ],
 )
