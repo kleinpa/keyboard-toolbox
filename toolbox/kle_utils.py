@@ -1,4 +1,4 @@
-""" Convert between keyboard.proto and the mildly-archaic kle syntax
+"""Convert between keyboard.proto and the mildly-archaic kle syntax.
 
 keyboard.proto uses math-inspired coordinates, with +x rightwards, +y
 upwards, and +r counterclockwise, with all units in milimeters.
@@ -21,8 +21,7 @@ import json
 from math import sin, cos, radians, isclose
 
 from toolbox.keyboard_pb2 import Keyboard
-from toolbox.layout import rows, generate_key_placeholders
-from toolbox.make_plate import generate_plate
+from toolbox.layout import rows, generate_placeholders
 
 
 def kle_position(key, keyboard_unit=19.05, x0=0, y0=0):
@@ -49,7 +48,7 @@ def kle_position(key, keyboard_unit=19.05, x0=0, y0=0):
 
 
 def keyboard_to_kle(kb, keyboard_unit=19.05):
-    x_min, y_min, x_max, y_max = generate_key_placeholders(kb.keys).bounds
+    x_min, y_min, x_max, y_max = generate_placeholders(kb.keys).bounds
 
     kle_metadata = {
         "name": kb.name,
@@ -150,7 +149,7 @@ def kle_to_keyboard(kle_json, keyboard_unit=19.05):
         name="kle-import",
         controller=Keyboard.CONTROLLER_UNKNOWN,
         footprint=Keyboard.FOOTPRINT_CHERRY_MX,
-        outline=Keyboard.OUTLINE_TIGHT,
+        outline=Keyboard.OUTLINE_RECTANGLE,
 
         # Plate outline parameters
         outline_concave=90,
@@ -177,6 +176,15 @@ def kle_to_keyboard(kle_json, keyboard_unit=19.05):
         if isinstance(row_or_metadata, dict):
             if "name" in row_or_metadata:
                 kb.name = row_or_metadata["name"]
+            if "kb-toolkit-outline" in row_or_metadata:
+                if row_or_metadata["kb-toolkit-outline"] == "tight":
+                    kb.outline = Keyboard.OUTLINE_TIGHT
+                elif row_or_metadata["kb-toolkit-outline"] == "rectangle":
+                    kb.outline = Keyboard.OUTLINE_RECTANGLE
+                else:
+                    raise RuntimeError(
+                        f"unknown outline: {row_or_metadata[kb-toolkit-outline]}"
+                    )
         else:
             for key_or_props in row_or_metadata:
                 if isinstance(key_or_props, dict):

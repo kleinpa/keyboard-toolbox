@@ -1,12 +1,10 @@
-import sys
+"""A basic example keyboard layout used for testing."""
 
-import google.protobuf.text_format
 from absl import app, flags
 
 from toolbox.keyboard_pb2 import Keyboard
 from toolbox.layout import between, mirror_keys, rotate_keys, grid
 from toolbox.matrix import fill_matrix
-from toolbox.utils import pose
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string('output', '', 'Output path')

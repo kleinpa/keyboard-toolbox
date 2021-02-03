@@ -1,9 +1,9 @@
-import xml.etree.ElementTree as ET
+"""Generate switch mounting plate designs."""
 
 import shapely
 import shapely.geometry
 
-from toolbox.utils import generate_outline, pose, pose_to_xyr
+from toolbox.outline import generate_outline
 
 # Polygon describing the shape of an individual key cutout
 cutout_geom_square = shapely.geometry.polygon.Polygon([
@@ -31,7 +31,6 @@ cutout_geom_mx_alps = shapely.geometry.polygon.Polygon([
 ])
 cutout_geom_mx_wings = shapely.geometry.polygon.Polygon([
     # adapted from https://github.com/swill/kad/blob/62948e9/key.go
-    # untested
     (7, -7),
     (7, -6),
     (7.8, -6),

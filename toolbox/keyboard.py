@@ -1,4 +1,4 @@
-"""Utilities for keyboard.proto."""
+"""Helpers for working with keyboard.proto data."""
 
 import sys
 from google.protobuf import text_format
@@ -23,19 +23,8 @@ def save_keyboard(kb, output_path=None, format='text'):
         raise RuntimeError(f"unknown format: {format}")
 
 
-def load_keyboard(input_path, format='text'):
+def load_keyboard(input_path):
     with open(input_path, "rb") as fn:
         kb = Keyboard()
         kb.ParseFromString(fn.read())
         return kb
-
-
-def make_key(x, y, r=0, w=1, h=1):
-    k = Keyboard.Key(pose={
-        "x": x,
-        "y": y,
-        "r": r
-    },
-                     unit_width=w,
-                     unit_height=h)
-    return k

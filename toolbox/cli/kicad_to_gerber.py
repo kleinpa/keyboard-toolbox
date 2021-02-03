@@ -1,11 +1,6 @@
-"""Convert a .kicad_pcb file into a gerber archive ready for the fab."""
+"""Convert a .kicad_pcb file into a gerber archive ready for manufacturing."""
 
-import io
-import os
 import shutil
-import sys
-import tempfile
-import zipfile
 
 from absl import app, flags
 

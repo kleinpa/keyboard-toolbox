@@ -1,3 +1,5 @@
+"""Helpers for working with KiCad pcb files."""
+
 import io
 import os
 import shutil
@@ -8,46 +10,44 @@ import zipfile
 import pcbnew
 
 
-def kicad_polygon(geom, x_offset=0, y_offset=0, x_scale=1, y_scale=-1):
+def kicad_polygon(geom,
+                  x_offset=0,
+                  y_offset=0,
+                  x_scale=1,
+                  y_scale=-1,
+                  layer=pcbnew.Edge_Cuts):
+    """Yield a sequence of KiCad segments from the provided Shapely polygon.
+
+    A Shapely polygon may have interior polygons representing holes in
+    the larger polygon. The hole polygons are emitted as additional
+    segments so they appear as pcb cutouts.
+    """
     def make_point(p):
         x, y = p
         return pcbnew.wxPointMM(x_scale * x + x_offset, y_scale * y + y_offset)
 
+    def make_seg(p1, p2):
+        seg = pcbnew.PCB_SHAPE()
+        seg.SetShape(pcbnew.S_SEGMENT)
+        seg.SetStart(make_point(p1))
+        seg.SetEnd(make_point(p2))
+        seg.SetLayer(layer)
+        return seg
+
     points = geom.exterior.coords
     for p1, p2 in [(points[i], points[(i + 1) % len(points)])
                    for i in range(len(points))]:
-        seg = pcbnew.PCB_SHAPE()
-        seg.SetStart(make_point(p1))
-        seg.SetEnd(make_point(p2))
-        seg.SetLayer(pcbnew.Edge_Cuts)
-        yield seg
+        yield make_seg(p1, p2)
 
     for interior in geom.interiors:
         points = interior.coords
         for p1, p2 in [(points[i], points[(i + 1) % len(points)])
                        for i in range(len(points))]:
-            seg = pcbnew.PCB_SHAPE()
-            seg.SetShape(pcbnew.S_SEGMENT)
-            seg.SetStart(make_point(p1))
-            seg.SetEnd(make_point(p2))
-            seg.SetLayer(pcbnew.Edge_Cuts)
-            yield seg
-
-
-def kicad_text(text, x, y, r, size=pcbnew.FromMM(1.27), layer=pcbnew.F_SilkS):
-    item = pcbnew.PCB_TEXT(None)
-    item.SetPosition(pcbnew.wxPointMM(x, y))
-    item.SetTextAngle(r * 10)
-    item.SetLayer(layer)
-    item.SetText(text)
-    item.SetTextSize(pcbnew.wxSize(size, size))
-
-    if layer == pcbnew.B_SilkS:  # all mirrored layers?
-        item.SetMirrored(True)  #item.Flip(pcbnew.wxPointMM(x, y), False)
-    return item
+            yield make_seg(p1, p2)
 
 
 def kicad_circle(x, y, diameter, layer=pcbnew.Edge_Cuts):
+    """Create and return a KiCad circle centered at x, y."""
     item = pcbnew.PCB_SHAPE()
     item.SetShape(pcbnew.S_CIRCLE)
     item.SetStart(pcbnew.wxPointMM(x, y))
@@ -56,7 +56,8 @@ def kicad_circle(x, y, diameter, layer=pcbnew.Edge_Cuts):
     return item
 
 
-def shape_to_kicad_file(geom):
+def polygon_to_kicad_file(geom):
+    """Build a kicad file containing an empty PCB with the provided shape."""
     board = pcbnew.BOARD()
 
     for x in kicad_polygon(geom):
@@ -68,16 +69,16 @@ def shape_to_kicad_file(geom):
 
 
 def kicad_file_to_gerber_archive_file(kicad_fp):
+    """Created an archive of gerber files from the provided kicad PCB file."""
+
     # copy kicad file to a named file
     with tempfile.NamedTemporaryFile(suffix=".kicad_pcb") as kicad_file:
         shutil.copyfileobj(kicad_fp, kicad_file)
-
         board = pcbnew.LoadBoard(kicad_file.name)
 
     pctl = pcbnew.PLOT_CONTROLLER(board)
 
     popt = pctl.GetPlotOptions()
-
     popt.SetPlotFrameRef(False)
     popt.SetAutoScale(False)
     popt.SetScale(1)
@@ -107,46 +108,42 @@ def kicad_file_to_gerber_archive_file(kicad_fp):
                  ("B_SilkS", pcbnew.B_SilkS, "Silk Bottom"),
                  ("Edge_Cuts", pcbnew.Edge_Cuts, "Edges")]
 
+    for layer in range(1, board.GetCopperLayerCount() - 1):
+        plot_plan += (f"inner{layer}", layer, "inner")
+
     with tempfile.TemporaryDirectory() as temp_path:
         popt.SetOutputDirectory(temp_path)
 
-        # Functional Gerber Plots
+        # Plot layers
         for suffix, layer, description in plot_plan:
             pctl.SetLayer(layer)
             pctl.OpenPlotfile(suffix, pcbnew.PLOT_FORMAT_GERBER, description)
             pctl.PlotLayer()
             pctl.ClosePlot()
 
-        # Internal Copper Layers
-        for layer in range(1, board.GetCopperLayerCount() - 1):
-            pctl.SetLayer(layer)
-            lyrname = 'inner%s' % layer
-            pctl.OpenPlotfile(lyrname, pcbnew.PLOT_FORMAT_GERBER, "inner")
-            pctl.PlotLayer()
-            pctl.ClosePlot()
-
+        # Generate drill file
         drlwriter = pcbnew.EXCELLON_WRITER(board)
-        drlwriter.SetMapFileFormat(pcbnew.PLOT_FORMAT_GERBER)
+        drlwriter.SetMapFileFormat(aMapFmt=pcbnew.PLOT_FORMAT_GERBER)
         drlwriter.SetOptions(aMirror=False,
                              aMinimalHeader=False,
                              aOffset=pcbnew.wxPoint(0, 0),
                              aMerge_PTH_NPTH=True)
-
-        metricFmt = True
-        drlwriter.SetFormat(metricFmt)
-
+        formatMetric = True
+        drlwriter.SetFormat(formatMetric)
         drlwriter.CreateDrillandMapFilesSet(aPlotDirectory=temp_path,
                                             aGenDrill=True,
                                             aGenMap=False)
 
+        # Copy files from output directory to in-memory zip file
         fp = io.BytesIO()
         with zipfile.ZipFile(fp, 'w', zipfile.ZIP_DEFLATED) as z:
             for root, dirs, files in os.walk(temp_path):
                 for file in files:
                     print(f"wrote {file}", file=sys.stderr)
 
-                    # This change seems to be required for JLCPCB to process the archive.
-                    z.write(os.path.join(root, file),
-                            file.replace("gm1", "gko"))
+                    z.write(
+                        os.path.join(root, file),
+                        # TODO(kleinpa): Required for JLCPCB, any alternative?
+                        file.replace("gm1", "gko"))
         fp.seek(0)
         return fp

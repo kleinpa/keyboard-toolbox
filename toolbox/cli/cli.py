@@ -1,12 +1,12 @@
+"""Generate various artifacts from a keyboard definition."""
+
 import shutil
-import sys
-from math import atan, atan2, cos, degrees, radians, sin, sqrt
 
 from absl import app, flags
 
-from toolbox.dxf_utils import shape_to_dxf_file
+from toolbox.dxf_utils import polygon_to_dxf_file
 from toolbox.keyboard import load_keyboard
-from toolbox.kicad_utils import shape_to_kicad_file
+from toolbox.kicad_utils import polygon_to_kicad_file
 from toolbox.make_pcb import generate_kicad_pcb_file
 from toolbox.make_plate import generate_plate
 from toolbox.qmk_utils import make_qmk_header_file
@@ -31,12 +31,12 @@ def main(argv):
     elif FLAGS.format == 'plate_dxf':
         with open(FLAGS.output, 'wb') as output:
             plate = generate_plate(kb)
-            shutil.copyfileobj(shape_to_dxf_file(plate), output)
+            shutil.copyfileobj(polygon_to_dxf_file(plate), output)
 
     elif FLAGS.format == 'plate_kicad_pcb':
         with open(FLAGS.output, 'wb') as output:
             plate = generate_plate(kb)
-            shutil.copyfileobj(shape_to_kicad_file(plate), output)
+            shutil.copyfileobj(polygon_to_kicad_file(plate), output)
 
     elif FLAGS.format == 'h':
         with open(FLAGS.output, 'wb') as output:

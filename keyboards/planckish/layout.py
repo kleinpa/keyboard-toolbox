@@ -5,9 +5,8 @@ from absl import app, flags
 
 from toolbox.keyboard import save_keyboard
 from toolbox.keyboard_pb2 import Keyboard, Position
-from toolbox.layout import grid, holes_between_keys, make_key, mirror_keys, rotate_keys
+from toolbox.layout import grid, holes_between_keys, mirror_keys, rotate_keys
 from toolbox.matrix import fill_matrix
-from toolbox.utils import pose
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string('output', None, 'Output path.')
@@ -39,7 +38,7 @@ def planckish_keyboard():
 
     for hole in holes_between_keys(kb.keys, ((2, 15), (12, 25), (26, 39),
                                              (8, 21), (22, 35), (32, 45))):
-        kb.hole_positions.append(Position(x=hole.x, y=hole.y))
+        kb.hole_positions.append(hole)
 
     kb.controller_pose.CopyFrom(kb.keys[4].pose)
 

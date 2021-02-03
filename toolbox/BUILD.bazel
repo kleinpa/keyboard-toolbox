@@ -14,7 +14,7 @@ py_library(
         "layout.py",
         "make_plate.py",
         "matrix.py",
-        "utils.py",
+        "outline.py",
     ],
     visibility = ["//visibility:public"],
     deps = [
@@ -68,9 +68,6 @@ py_library(
         "qmk_utils.py",
     ],
     visibility = ["//visibility:public"],
-    deps = [
-        requirement("ezdxf"),
-    ],
 )
 
 py_library(

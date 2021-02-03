@@ -21,6 +21,7 @@ py_binary(
         "//toolbox:kle_utils",
         "//toolbox:qmk_utils",
         "//toolbox:svg_utils",
+        "@com_google_protobuf//:protobuf_python",
     ],
 )
 

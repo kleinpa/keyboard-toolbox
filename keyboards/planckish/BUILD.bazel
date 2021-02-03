@@ -1,5 +1,6 @@
 load("@rules_python//python:defs.bzl", "py_binary")
 load("@my_deps//:requirements.bzl", "requirement")
+load("//toolbox:defs.bzl", "keyboard_plate_dxf")
 
 py_binary(
     name = "layout",
@@ -28,12 +29,9 @@ genrule(
     tools = ["//toolbox/cli"],
 )
 
-genrule(
+keyboard_plate_dxf(
     name = "plate_dxf",
-    srcs = [":layout_pb"],
-    outs = ["plate.dxf"],
-    cmd = "./$(location //toolbox/cli) --input=\"$<\" --format=plate_dxf --output=\"$@\"",
-    tools = ["//toolbox/cli"],
+    src = ":layout_pb",
 )
 
 genrule(

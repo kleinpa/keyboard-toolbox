@@ -1,15 +1,16 @@
+"""Generate keyboard artifacts as-needed from a web server."""
+
 import glob
-import io
 import json
 import os
-import tempfile
 
 from absl import app, flags
-from flask import Flask, redirect, render_template, send_file
-from toolbox.dxf_utils import shape_to_dxf_file
+from flask import Flask, make_response, redirect, render_template, send_file
+
+from google.protobuf import text_format
+from toolbox.dxf_utils import polygon_to_dxf_file
 from toolbox.keyboard import load_keyboard
-from toolbox.keyboard_pb2 import Keyboard
-from toolbox.kicad_utils import shape_to_kicad_file
+from toolbox.kicad_utils import polygon_to_kicad_file
 from toolbox.kle_utils import keyboard_to_kle, keyboard_to_kle_file
 from toolbox.make_pcb import generate_kicad_pcb_file
 from toolbox.make_plate import generate_plate
@@ -21,10 +22,8 @@ def find_keyboards():
     keyboard_files = glob.glob("keyboards/*/*.pb") + glob.glob(
         "toolbox/testdata/*.pb")
     for f in keyboard_files:
-        with open(f, "rb") as fn:
-            kb = Keyboard()
-            kb.ParseFromString(fn.read())
-            yield (kb.name, kb)
+        kb = load_keyboard(f)
+        yield (kb.name, kb)
 
 
 keyboards = dict(find_keyboards())
@@ -47,6 +46,15 @@ def render_layout_svg_file(name=None):
                      attachment_filename=f'{name}.svg')
 
 
+@flask_app.route('/kb/<name>/textproto')
+def render_proto_text(name=None):
+    x = text_format.MessageToString(keyboards[name])
+    r = make_response(x)
+    r.mimetype = 'text/plain'
+    r.attachment_filename = f'{name}.textproto'
+    return r
+
+
 @flask_app.route('/kb/<name>/qmk_header')
 def render_qmk_header_file(name=None):
     return send_file(make_qmk_header_file(keyboards[name]),
@@ -66,7 +74,17 @@ def render_kicad_pcb_file(name=None):
 @flask_app.route('/kb/<name>/plate_kicad_pcb')
 def render_plate_kicad_pcb_file(name=None):
     plate = generate_plate(keyboards[name])
-    return send_file(shape_to_kicad_file(plate),
+    return send_file(polygon_to_kicad_file(plate),
+                     mimetype='application/x-kicad-pcb',
+                     as_attachment=True,
+                     attachment_filename=f'{name}-plate.kicad_pcb')
+
+
+@flask_app.route('/kb/<name>/plate_gerber')
+def render_plate_gerber_file(name=None):
+    plate = generate_plate(keyboards[name])
+    plate_kicad_file = polygon_to_kicad_file(plate)
+    return send_file(polygon_to_kicad_file(plate),
                      mimetype='application/x-kicad-pcb',
                      as_attachment=True,
                      attachment_filename=f'{name}-plate.kicad_pcb')
@@ -75,7 +93,7 @@ def render_plate_kicad_pcb_file(name=None):
 @flask_app.route('/kb/<name>/plate-dxf')
 def render_dxf_file(name=None):
     plate = generate_plate(keyboards[name])
-    return send_file(shape_to_dxf_file(plate),
+    return send_file(polygon_to_dxf_file(plate),
                      mimetype='application/dxf',
                      as_attachment=True,
                      attachment_filename=f'{name}-plate.dxf')

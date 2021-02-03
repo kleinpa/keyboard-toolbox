@@ -5,7 +5,6 @@ from absl import app, flags
 from toolbox.keyboard import save_keyboard
 from toolbox.keyboard_pb2 import Keyboard, Position
 from toolbox.layout import holes_between_keys, mirror_keys, rotate_keys, grid
-from toolbox.utils import pose
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string('output', None, 'Output path.')
@@ -43,7 +42,7 @@ def quine_2_keyboard():
     for hole in holes_between_keys(kb.keys,
                                    ((1, 12), (12, 25), (5, 16), (29, 38),
                                     (30, 39), (6, 19), (10, 23), (23, 34))):
-        kb.hole_positions.append(Position(x=hole.x, y=hole.y))
+        kb.hole_positions.append(hole)
 
     kb.controller_pose.CopyFrom(kb.keys[8].pose)
 

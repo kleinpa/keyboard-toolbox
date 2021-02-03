@@ -1,12 +1,34 @@
 """Helpers to create and modify key arrangments."""
+
+from math import atan, atan2, cos, degrees, radians, sin
+
 import shapely
 import shapely.geometry
 
-from math import atan, atan2, cos, degrees, radians, sin, sqrt
-
-from toolbox.keyboard import make_key
 from toolbox.keyboard_pb2 import Keyboard, Position
-from toolbox.utils import pose, pose_to_xyr, generate_placeholders
+
+
+# Use the first point for origin and second to show orientation
+def pose(x, y, r=0):
+    return shapely.geometry.multipoint.MultiPoint([(x, y),
+                                                   (x + cos(radians(r + 90)),
+                                                    y + sin(radians(r + 90)))])
+
+
+def pose_to_xyr(p):
+    return (p[0].x, p[0].y,
+            degrees(atan2(p[1].y - p[0].y, p[1].x - p[0].x)) - 90)
+
+
+def make_key(x, y, r=0, w=1, h=1):
+    k = Keyboard.Key(pose={
+        "x": x,
+        "y": y,
+        "r": r
+    },
+                     unit_width=w,
+                     unit_height=h)
+    return k
 
 
 def rotate_keys(keys, angle):
@@ -17,18 +39,17 @@ def rotate_keys(keys, angle):
         yield make_key(x, y, r)
 
 
-def holes_between_keys(keys, hole_map):
-    for k1, k2 in hole_map:
-        yield shapely.geometry.Point((keys[k1].pose.x + keys[k2].pose.x) / 2,
-                                     (keys[k1].pose.y + keys[k2].pose.y) / 2)
-
-
 def between(k1, k2):
     return Position(x=(k1.x + k2.x) / 2, y=(k1.y + k2.y) / 2)
 
 
+def holes_between_keys(keys, hole_map):
+    for k1, k2 in hole_map:
+        yield between(keys[k1].pose, keys[k2].pose)
+
+
 def rows(keys):
-    """Split the keys into monotonically increasing sublists of x-position"""
+    """Split the keys into monotonically increasing sublists of x-position."""
     row = []
     last_x = None
     for key in keys:
@@ -40,7 +61,7 @@ def rows(keys):
     if len(row) > 0: yield row
 
 
-def generate_key_placeholders(keys, keyboard_unit=19.05):
+def generate_placeholders(keys, keyboard_unit=19.05):
     def placeholder(key):
         width = keyboard_unit * key.unit_width
         height = keyboard_unit * key.unit_height
@@ -59,7 +80,7 @@ def generate_key_placeholders(keys, keyboard_unit=19.05):
 
 def mirror_keys(keys, middle_space=0, only_flip=False):
     keys = list(keys)
-    x_min, y_min, _, _ = generate_key_placeholders(keys).bounds
+    x_min, y_min, _, _ = generate_placeholders(keys).bounds
 
     row = []
     for row in rows(keys):

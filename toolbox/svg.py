@@ -1,32 +1,67 @@
+"""Create svg images from a keyboard definition."""
+
 import xml.etree.ElementTree as ET
 import io
 from math import sin, cos, atan2, degrees, radians
 
-from toolbox.utils import generate_outline, pose, pose_to_xyr
 from toolbox.make_plate import generate_plate
 
 
-def keyboard_to_layout_svg_file(kb, add_numbers=False):
+def shape_to_svg_element(shape, props={}, x_scale=1, y_scale=-1):
+    return ET.Element(
+        "path", {
+            **props, "d":
+            " M " + " ".join(f"{x_scale*x},{y_scale*y}"
+                             for x, y in shape.exterior.coords) + " Z " +
+            " ".join((" M " + " ".join(f"{x_scale*x},{y_scale*y}"
+                                       for x, y in i.coords) + " Z ")
+                     for i in shape.interiors)
+        })
 
-    # Generate the outline first to properly set the svg viewbox
-    outline = generate_plate(kb)
-    x_min, y_min, x_max, y_max = outline.bounds
 
-    x_scale = 1
-    y_scale = -1
+def shape_to_svg(shape, props={}, x_scale=1, y_scale=-1):
+    # Calculate viewbox from shape bounds
+    x_min, y_min, x_max, y_max = shape.bounds
+    left = min(x_min * x_scale, x_max * x_scale)
+    top = min(y_min * y_scale, y_max * y_scale)
+    width = abs(x_scale * x_min - x_scale * x_max)
+    height = abs(y_scale * y_min - y_scale * y_max)
 
     # Create the empty svg tree
     root = ET.Element(
         'svg', {
-            "viewBox":
-            f"{min(x_min*x_scale,x_max*x_scale)} {min(y_min*y_scale,y_max*y_scale)} {abs(x_scale*(x_max - x_min))} {abs(y_scale*(y_max - y_min))}",
+            **props,
+            "viewBox": f"{left} {top} {width} {height}",
             "xmlns": "http://www.w3.org/2000/svg",
             "xmlns:xlink": "http://www.w3.org/1999/xlink",
         })
-    root.append(
-        ET.Comment(
-            f'physical-dimensions: {x_max-x_min} mm by {y_max-y_min} mm'))
-    defs = ET.SubElement(root, "defs")
+
+    root.append(shape_to_svg_element(shape, x_scale=x_scale, y_scale=y_scale))
+
+    return ET.ElementTree(root)
+
+
+def keyboard_to_layout_svg_file(kb, add_numbers=True):
+    outline = generate_plate(kb)
+
+    x_scale = 1
+    y_scale = -1
+
+    # Calculate viewbox from outline bounds
+    x_min, y_min, x_max, y_max = outline.bounds
+    left = min(x_min * x_scale, x_max * x_scale)
+    top = min(y_min * y_scale, y_max * y_scale)
+    width = abs(x_scale * x_min - x_scale * x_max)
+    height = abs(y_scale * y_min - y_scale * y_max)
+
+    # Create the empty svg tree
+    root = ET.Element(
+        'svg', {
+            "viewBox": f"{left} {top} {width} {height}",
+            "xmlns": "http://www.w3.org/2000/svg",
+            "xmlns:xlink": "http://www.w3.org/1999/xlink",
+        })
+    root.append(ET.Comment(f'physical-dimensions: {width} mm by {height} mm'))
 
     # Add groups for document structure
     g_plate = ET.SubElement(root, "g", {
@@ -49,15 +84,6 @@ def keyboard_to_layout_svg_file(kb, add_numbers=False):
                                        for x, y in i.coords) + " Z ")
                      for i in outline.interiors)
         })
-
-    # Add keycap
-    g_keycap = ET.SubElement(
-        defs,
-        "g",
-        {
-            "id": "keycap",
-        },
-    )
 
     for i, key in enumerate(kb.keys):
         x, y = x_scale * key.pose.x, y_scale * key.pose.y

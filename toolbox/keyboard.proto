@@ -1,29 +1,61 @@
 syntax = "proto3";
 
+// A pose represents a position and rotation such as the location of a key on
+// a keyboard.
 message Pose {
     double x = 1;
     double y = 2;
     double r = 3;
 }
 
+// A pose represents a position such as the location of a mounting hole on a
+// keyboard.
 message Position {
     double x = 1;
     double y = 2;
 }
 
+// Keyboard defines the abstract of a computer keyboard, including details
+// about it's physical size, the type, number and position of keys, and the
+// rough topology of the circuitry needed to make it all work.
+//
+// More concretely the goal is to be able to generate all the manufacturing
+// artifacts required to build a keyboard, including:
+// * Switch mounting plates
+// * PCBs populated with the right outline, switches, and mounting holes
+// * Enclosures
+// * Firmware header files
+//
+// All physical coordinates use a positive-is-up-right orientation and are
+// defined in milimeters.
+//
+// Details like an intended keymap are outside the scope of this object.
 message Keyboard {
+  // The name of the keyboard. This should be url-safe.
   string name = 1;
+
   message Key {
+    // The location of this switch.
     Pose pose=1;
+
+    // The width of the key relative to the width of a standard key.
     double unit_width=2;
+
+    // The height of the key relative to the width of a standard key.
     double unit_height=3;
 
+    // The index of the controller pins this switch (and it's diode) should be
+    // connected to.
     int32 controller_pin_high = 4;
     int32 controller_pin_low = 5;
   }
   repeated Key keys = 2;
+
+  // The location of mounting holes on the PCB.
   repeated Position hole_positions = 3;
 
+  // Foorprint represents the overall switch compatibility of the keyboard.
+  // This should influence both the PCB footprint and plate cutout style.
   enum Footprint {
     FOOTPRINT_UNKNOWN = 0;
     FOOTPRINT_CHERRY_MX = 1;
@@ -33,19 +65,32 @@ message Keyboard {
   enum Outline {
     OUTLINE_UNKNOWN = 0;
     OUTLINE_TIGHT = 1;
+    OUTLINE_RECTANGLE = 2;
   }
+
+  // Outline defines the algorithm used to generate the shape of the keyboard.
   Outline outline = 5;
 
+  // The type of microcontroller used on the PCB.
   enum Controller {
     CONTROLLER_UNKNOWN = 0;
+
+    // An "Pro Micro" compatible microcontroller with 18 IO pins.
+    //
+    // When controller_pose is set to the pose of top-row key, the footprint
+    // will be positioned correctly so that the USB port is accessable
+    // from the top of the board and the legs fit around the switch.
     CONTROLLER_PROMICRO = 1;
   }
   Controller controller = 6;
 
+  // The location of the microcontroller on the PCB.
   Pose controller_pose = 7;
 
-  // TODO: move elsewhere
+  // TODO: move OUTLINE_TIGHT parameters elsewhere
   double outline_concave = 10000;
   double outline_convex = 10001;
+
+  // TODO: move this elsewhere
   double hole_diameter = 10002;
 }
