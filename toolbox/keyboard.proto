@@ -66,6 +66,7 @@ message Keyboard {
     OUTLINE_UNKNOWN = 0;
     OUTLINE_TIGHT = 1;
     OUTLINE_RECTANGLE = 2;
+    OUTLINE_CONVEX_HULL = 3;
   }
 
   // Outline defines the algorithm used to generate the shape of the keyboard.

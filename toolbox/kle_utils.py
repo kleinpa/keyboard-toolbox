@@ -179,6 +179,8 @@ def kle_to_keyboard(kle_json, keyboard_unit=19.05):
             if "kb-toolkit-outline" in row_or_metadata:
                 if row_or_metadata["kb-toolkit-outline"] == "tight":
                     kb.outline = Keyboard.OUTLINE_TIGHT
+                elif row_or_metadata["kb-toolkit-outline"] == "convex-hull":
+                    kb.outline = Keyboard.OUTLINE_CONVEX_HULL
                 elif row_or_metadata["kb-toolkit-outline"] == "rectangle":
                     kb.outline = Keyboard.OUTLINE_RECTANGLE
                 else:

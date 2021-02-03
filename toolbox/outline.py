@@ -14,6 +14,14 @@ def generate_outline_tight(kb, resolution=64):
     return x
 
 
+def generate_outline_convex_hull(kb, resolution=64, corner_radius=1.5):
+    placeholders = generate_placeholders(kb.keys)
+    x = placeholders.convex_hull
+    x = x.buffer(-corner_radius, resolution=resolution)
+    x = x.buffer(corner_radius, resolution=resolution)
+    return x
+
+
 def generate_outline_rectangle(kb, resolution=64, corner_radius=1.5):
     placeholders = generate_placeholders(kb.keys)
     x = placeholders.envelope
@@ -25,6 +33,8 @@ def generate_outline_rectangle(kb, resolution=64, corner_radius=1.5):
 def generate_outline(kb):
     if kb.outline == Keyboard.OUTLINE_TIGHT:
         return generate_outline_tight(kb)
+    elif kb.outline == Keyboard.OUTLINE_CONVEX_HULL:
+        return generate_outline_convex_hull(kb)
     elif kb.outline == Keyboard.OUTLINE_RECTANGLE:
         return generate_outline_rectangle(kb)
     else:
