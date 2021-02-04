@@ -4,30 +4,36 @@ from toolbox.keyboard_pb2 import Keyboard
 from toolbox.layout import generate_placeholders
 
 
+def shapely_round(shape, radius_convex, radius_concave, resolution=64):
+    shape = shape.buffer(radius_concave, resolution=resolution)
+    shape = shape.buffer(-radius_concave - radius_convex,
+                         resolution=resolution)
+    shape = shape.buffer(radius_convex, resolution=resolution)
+    return shape
+
+
 def generate_outline_tight(kb, resolution=64):
     placeholders = generate_placeholders(kb.keys)
-    x = placeholders
-    x = x.buffer(kb.outline_concave, resolution=resolution)
-    x = x.buffer(-kb.outline_concave - kb.outline_convex,
-                 resolution=resolution)
-    x = x.buffer(kb.outline_convex, resolution=resolution)
-    return x
+    return shapely_round(placeholders,
+                         kb.outline_convex,
+                         kb.outline_concave,
+                         resolution=resolution).exterior
 
 
 def generate_outline_convex_hull(kb, resolution=64, corner_radius=1.5):
     placeholders = generate_placeholders(kb.keys)
-    x = placeholders.convex_hull
-    x = x.buffer(-corner_radius, resolution=resolution)
-    x = x.buffer(corner_radius, resolution=resolution)
-    return x
+    return shapely_round(placeholders.convex_hull,
+                         corner_radius,
+                         corner_radius,
+                         resolution=resolution).exterior
 
 
 def generate_outline_rectangle(kb, resolution=64, corner_radius=1.5):
     placeholders = generate_placeholders(kb.keys)
-    x = placeholders.envelope
-    x = x.buffer(-corner_radius, resolution=resolution)
-    x = x.buffer(corner_radius, resolution=resolution)
-    return x
+    return shapely_round(placeholders.envelope,
+                         corner_radius,
+                         corner_radius,
+                         resolution=resolution).exterior
 
 
 def generate_outline(kb):

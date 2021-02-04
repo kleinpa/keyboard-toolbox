@@ -47,6 +47,7 @@ py_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
+        requirement("shapely"),
         "@com_gitlab_kicad_kicad//:pcbnew_python",
     ],
 )

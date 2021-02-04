@@ -1,6 +1,5 @@
 import sys
 
-import shapely.geometry
 from absl import app, flags
 
 from toolbox.keyboard import save_keyboard

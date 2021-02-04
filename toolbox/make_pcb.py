@@ -167,7 +167,7 @@ def generate_kicad_pcb_file(kb):
     # Add ground plane
     item = pcbnew.ZONE(board, False)
     poly = pcbnew.wxPoint_Vector()
-    for x, y in outline.exterior.coords:
+    for x, y in outline.coords:
         x, y = x_scale * x + x_offset, y_scale * y + y_offset
         poly.append(pcbnew.wxPointMM(x, y))
     item.AddPolygon(poly)

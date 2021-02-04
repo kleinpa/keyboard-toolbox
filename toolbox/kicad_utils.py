@@ -9,6 +9,8 @@ import zipfile
 
 import pcbnew
 
+import shapely
+
 
 def kicad_polygon(geom,
                   x_offset=0,
@@ -22,6 +24,10 @@ def kicad_polygon(geom,
     the larger polygon. The hole polygons are emitted as additional
     segments so they appear as pcb cutouts.
     """
+
+    # coerce to polygon in case input is a ring
+    geom = shapely.geometry.polygon.Polygon(geom)
+
     def make_point(p):
         x, y = p
         return pcbnew.wxPointMM(x_scale * x + x_offset, y_scale * y + y_offset)

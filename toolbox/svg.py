@@ -10,12 +10,13 @@ from toolbox.make_plate import generate_plate
 def shape_to_svg_element(shape, props={}, x_scale=1, y_scale=-1):
     return ET.Element(
         "path", {
-            **props, "d":
+            "d":
             " M " + " ".join(f"{x_scale*x},{y_scale*y}"
                              for x, y in shape.exterior.coords) + " Z " +
             " ".join((" M " + " ".join(f"{x_scale*x},{y_scale*y}"
                                        for x, y in i.coords) + " Z ")
-                     for i in shape.interiors)
+                     for i in shape.interiors),
+            **props,
         })
 
 
@@ -30,10 +31,10 @@ def shape_to_svg(shape, props={}, x_scale=1, y_scale=-1):
     # Create the empty svg tree
     root = ET.Element(
         'svg', {
-            **props,
             "viewBox": f"{left} {top} {width} {height}",
             "xmlns": "http://www.w3.org/2000/svg",
             "xmlns:xlink": "http://www.w3.org/1999/xlink",
+            **props,
         })
 
     root.append(shape_to_svg_element(shape, x_scale=x_scale, y_scale=y_scale))
@@ -42,13 +43,13 @@ def shape_to_svg(shape, props={}, x_scale=1, y_scale=-1):
 
 
 def keyboard_to_layout_svg_file(kb, add_numbers=True):
-    outline = generate_plate(kb)
+    plate = generate_plate(kb)
 
     x_scale = 1
     y_scale = -1
 
-    # Calculate viewbox from outline bounds
-    x_min, y_min, x_max, y_max = outline.bounds
+    # Calculate viewbox from plate bounds
+    x_min, y_min, x_max, y_max = plate.bounds
     left = min(x_min * x_scale, x_max * x_scale)
     top = min(y_min * y_scale, y_max * y_scale)
     width = abs(x_scale * x_min - x_scale * x_max)
@@ -68,22 +69,26 @@ def keyboard_to_layout_svg_file(kb, add_numbers=True):
         "id": "plate",
         "style": "fill: black; fill-rule: evenodd;",
     })
-    g_outline = ET.SubElement(g_plate, "g", {"id": "outline"})
+    g_plate = ET.SubElement(g_plate, "g", {"id": "plate"})
     g_keycaps = ET.SubElement(root, "g", {
         "id": "keycaps",
         "style": "fill: white;"
     })
 
-    # Add outline
+    # Add plate
     ET.SubElement(
-        g_outline, "path", {
+        g_plate, "path", {
             "d":
             " M " + " ".join(f"{x_scale*x},{y_scale*y}"
-                             for x, y in outline.exterior.coords) + " Z " +
+                             for x, y in plate.exterior.coords) + " Z " +
             " ".join((" M " + " ".join(f"{x_scale*x},{y_scale*y}"
                                        for x, y in i.coords) + " Z ")
-                     for i in outline.interiors)
+                     for i in plate.interiors)
         })
+
+    g_plate.append(
+        shape_to_svg_element(plate, {"style": "fill: black;"}, x_scale,
+                             y_scale))
 
     for i, key in enumerate(kb.keys):
         x, y = x_scale * key.pose.x, y_scale * key.pose.y
@@ -92,14 +97,14 @@ def keyboard_to_layout_svg_file(kb, add_numbers=True):
                   x_scale * cos(radians(key.pose.r - 90)))) + 90
 
         keyboard_unit = 19.05
-        margin = keyboard_unit - 18.3
+        margin = keyboard_unit - 18.42
         ET.SubElement(
             g_keycaps, "rect", {
                 "width": str(keyboard_unit * key.unit_width - margin),
                 "height": str(keyboard_unit * key.unit_height - margin),
                 "x": str((keyboard_unit * key.unit_width - margin) / -2),
                 "y": str((keyboard_unit * key.unit_height - margin) / -2),
-                "rx": "1.5",
+                "rx": "1",
                 "transform": f"translate({x} {y}) rotate({r})"
             })
         if add_numbers:
