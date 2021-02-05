@@ -1,5 +1,6 @@
 load("@rules_python//python:defs.bzl", "py_binary")
 load("@my_deps//:requirements.bzl", "requirement")
+load("//toolbox:defs.bzl", "kbpb_from_kle", "keyboard_plate_dxf")
 
 py_binary(
     name = "test_layout",
@@ -28,11 +29,13 @@ genrule(
     tools = ["//toolbox/cli"],
 )
 
-genrule(
+kbpb_from_kle(
     name = "tkl_layout_pb",
-    srcs = ["tkl-kle.json"],
-    outs = ["tkl_layout.pb"],
-    cmd = "./$(location //toolbox/cli:from_kle) --input=\"$<\" --output=\"$@\"",
-    tools = ["//toolbox/cli:from_kle"],
+    src = "tkl-kle.json",
     visibility = ["//visibility:public"],
+)
+
+keyboard_plate_dxf(
+    name = "tkl_layout_dxf",
+    src = "tkl_layout_pb",
 )
