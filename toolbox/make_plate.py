@@ -2,6 +2,7 @@
 
 import shapely
 import shapely.geometry
+import shapely.ops
 
 from toolbox.outline import generate_outline, shapely_round
 
@@ -162,7 +163,7 @@ def generate_cherry_cutout(key, corner_radius=0.3, resolution=16):
     return shapely_round(shape,
                          corner_radius,
                          corner_radius,
-                         resolution=resolution).exterior
+                         resolution=resolution)
 
 
 def generate_plate(kb, padding=0, mounting_holes=False):
@@ -174,8 +175,8 @@ def generate_plate(kb, padding=0, mounting_holes=False):
     if mounting_holes:
         for h in kb.hole_positions:
             center = shapely.geometry.Point(h.x, h.y)
-            features.append(
-                generate_hole_shape(center, kb.hole_diameter).exterior)
+            features.append(generate_hole_shape(center, kb.hole_diameter))
 
-    outline = generate_outline(kb)
-    return shapely.geometry.polygon.Polygon(outline, holes=features)
+    outline = shapely.geometry.polygon.Polygon(generate_outline(kb))
+    outline = outline.difference(shapely.ops.unary_union(features))
+    return outline
