@@ -1,0 +1,95 @@
+load("@rules_python//python:defs.bzl", "py_library")
+load("@com_github_kleinpa_kbtb_py_deps//:requirements.bzl", "requirement")
+load("@com_google_protobuf//:protobuf.bzl", "py_proto_library")
+
+py_proto_library(
+    name = "keyboard_py_proto",
+    srcs = ["keyboard.proto"],
+)
+
+py_library(
+    name = "keyboard_lib",
+    srcs = [
+        "keyboard.py",
+        "layout.py",
+        "matrix.py",
+        "outline.py",
+        "plate.py",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":keyboard_py_proto",
+        requirement("shapely"),
+    ],
+)
+
+py_library(
+    name = "keyboard_pcb_lib",
+    srcs = [
+        "pcb.py",
+    ],
+    data = [
+        "@com_github_keebio_keebio_parts//:all",
+        "@com_gitlab_kicad_libraries_kicad_footprints//:all",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":keyboard_lib",
+        ":kicad",
+        "@com_gitlab_kicad_kicad//:pcbnew_python",
+    ],
+)
+
+py_library(
+    name = "kicad",
+    srcs = [
+        "kicad.py",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        requirement("shapely"),
+        "@com_gitlab_kicad_kicad//:pcbnew_python",
+    ],
+)
+
+py_library(
+    name = "dxf",
+    srcs = [
+        "dxf.py",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        requirement("ezdxf"),
+    ],
+)
+
+py_library(
+    name = "qmk",
+    srcs = [
+        "qmk.py",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+py_library(
+    name = "svg",
+    srcs = [
+        "svg.py",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":keyboard_lib",
+        requirement("shapely"),
+    ],
+)
+
+py_library(
+    name = "kle",
+    srcs = [
+        "kle.py",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":keyboard_lib",
+    ],
+)

@@ -1,0 +1,80 @@
+load("@rules_python//python:defs.bzl", "py_binary")
+load("@com_github_kleinpa_kbtb_py_deps//:requirements.bzl", "requirement")
+load("//kbtb:defs.bzl", "kbpb_from_kle", "keyboard_plate_dxf")
+
+py_binary(
+    name = "build_test_layout",
+    srcs = ["build_test_layout.py"],
+    deps = [
+        requirement("absl-py"),
+        "//kbtb:keyboard_lib",
+    ],
+)
+
+genrule(
+    name = "test_layout",
+    outs = ["test_layout.pb"],
+    cmd = "./$(location :build_test_layout) --output=\"$@\"",
+    tools = [":build_test_layout"],
+    visibility = ["//visibility:public"],
+)
+
+genrule(
+    name = "test_layout_svg",
+    srcs = [":test_layout"],
+    outs = ["test_layout.svg"],
+    cmd = "./$(location //kbtb/cli:to_svg) --input=\"$<\" --format=svg --output=\"$@\"",
+    tools = ["//kbtb/cli:to_svg"],
+)
+
+genrule(
+    name = "plate_kicad",
+    srcs = [":test_layout"],
+    outs = ["plate.kicad_pcb"],
+    cmd = "./$(location //kbtb/cli) --input=\"$<\" --format=plate_kicad_pcb --output=\"$@\"",
+    tools = ["//kbtb/cli"],
+)
+
+genrule(
+    name = "test_plate_gerbers",
+    srcs = [":plate_kicad"],
+    outs = ["plate_gerbers.zip"],
+    cmd = "./$(location //kbtb/cli:kicad_to_gerber) --input=\"$<\" --output=\"$@\"",
+    tools = ["//kbtb/cli:kicad_to_gerber"],
+)
+
+genrule(
+    name = "test_board_kicad",
+    srcs = [":test_layout"],
+    outs = ["board.kicad_pcb"],
+    cmd = "./$(location //kbtb/cli) --input=\"$<\" --format=main_kicad_pcb --output=\"$@\"",
+    tools = [
+        "//kbtb/cli",
+        "@com_github_keebio_keebio_parts//:all",
+        "@com_gitlab_kicad_libraries_kicad_footprints//:all",
+    ],
+)
+
+genrule(
+    name = "test_qmk",
+    srcs = [":test_layout"],
+    outs = ["qmk.h"],
+    cmd = "./$(location //kbtb/cli) --input=\"$<\" --format=h --output=\"$@\"",
+    tools = ["//kbtb/cli"],
+)
+
+keyboard_plate_dxf(
+    name = "test_layout_dxf",
+    src = ":test_layout",
+)
+
+kbpb_from_kle(
+    name = "tkl_layout",
+    src = "tkl-kle.json",
+    visibility = ["//visibility:public"],
+)
+
+keyboard_plate_dxf(
+    name = "tkl_layout_dxf",
+    src = ":tkl_layout",
+)

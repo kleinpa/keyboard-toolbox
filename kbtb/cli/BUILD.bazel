@@ -1,0 +1,68 @@
+load("@rules_python//python:defs.bzl", "py_binary")
+load("@com_github_kleinpa_kbtb_py_deps//:requirements.bzl", "requirement")
+
+py_binary(
+    name = "cli",
+    srcs = [
+        "cli.py",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        requirement("absl-py"),
+        "//kbtb:dxf",
+        "//kbtb:keyboard_pcb_lib",
+        "//kbtb:qmk",
+        "//kbtb:svg",
+    ],
+)
+
+py_binary(
+    name = "from_kle",
+    srcs = [
+        "from_kle.py",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        requirement("absl-py"),
+        "//kbtb:keyboard_lib",
+        "//kbtb:kle",
+    ],
+)
+
+py_binary(
+    name = "to_dxf",
+    srcs = [
+        "to_dxf.py",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        requirement("absl-py"),
+        "//kbtb:dxf",
+        "//kbtb:keyboard_lib",
+    ],
+)
+
+py_binary(
+    name = "to_svg",
+    srcs = [
+        "to_svg.py",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        requirement("absl-py"),
+        "//kbtb:keyboard_lib",
+        "//kbtb:svg",
+    ],
+)
+
+py_binary(
+    name = "kicad_to_gerber",
+    srcs = [
+        "kicad_to_gerber.py",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        requirement("absl-py"),
+        "//kbtb:kicad",
+    ],
+)

@@ -1,0 +1,29 @@
+load("@rules_python//python:defs.bzl", "py_binary")
+load("@com_github_kleinpa_kbtb_py_deps//:requirements.bzl", "requirement")
+
+py_binary(
+    name = "service",
+    srcs = ["service.py"],
+    data = [
+        ":service_templates",
+        "//kbtb/testdata:test_layout",
+        "//kbtb/testdata:tkl_layout",
+    ],
+    deps = [
+        requirement("absl-py"),
+        requirement("Flask"),
+        "//kbtb:dxf",
+        "//kbtb:keyboard_pcb_lib",
+        "//kbtb:kle",
+        "//kbtb:qmk",
+        "//kbtb:svg",
+        "@com_google_protobuf//:protobuf_python",
+    ],
+)
+
+filegroup(
+    name = "service_templates",
+    srcs = glob([
+        "templates/*",
+    ]),
+)
