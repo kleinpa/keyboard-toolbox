@@ -5,6 +5,7 @@ from absl import app, flags
 from kbtb.keyboard_pb2 import Keyboard
 from kbtb.layout import between, mirror_keys, rotate_keys, grid
 from kbtb.matrix import fill_matrix
+from kbtb.outline import generate_outline_tight
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string('output', '', 'Output path')
@@ -15,11 +16,8 @@ def test_layout():
         name="test-layout",
         controller=Keyboard.CONTROLLER_PROMICRO,
         footprint=Keyboard.FOOTPRINT_CHERRY_MX,
-        outline=Keyboard.OUTLINE_TIGHT,
 
-        # Plate outline parameters
-        outline_concave=120,
-        outline_convex=1.5,
+        # Plate parameters
         hole_diameter=2.6,
     )
 
@@ -57,6 +55,13 @@ def test_layout():
     kb.controller_pose.CopyFrom(kb.keys[8].pose)
 
     fill_matrix(kb)
+
+    for x, y in generate_outline_tight(
+            kb,
+            outline_concave=120,
+            outline_convex=1.5,
+    ).simplify(0.001).coords:
+        kb.outline_polygon.add(x=x, y=y)
 
     return kb
 

@@ -4,7 +4,7 @@ import shapely
 import shapely.geometry
 import shapely.ops
 
-from kbtb.outline import generate_outline, shapely_round
+from kbtb.layout import shapely_round
 
 # Polygon describing the shape of an individual key cutout
 cutout_geom_mx = shapely.geometry.polygon.Polygon([
@@ -176,7 +176,7 @@ def generate_plate(kb, padding=0, mounting_holes=False):
         for h in kb.hole_positions:
             center = shapely.geometry.Point(h.x, h.y)
             features.append(generate_hole_shape(center, kb.hole_diameter))
-
-    outline = shapely.geometry.polygon.Polygon(generate_outline(kb))
+    outline = shapely.geometry.polygon.Polygon(
+        (o.x, o.y) for o in kb.outline_polygon)
     outline = outline.difference(shapely.ops.unary_union(features))
     return outline

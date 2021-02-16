@@ -3,16 +3,16 @@ syntax = "proto3";
 // A pose represents a position and rotation such as the location of a key on
 // a keyboard.
 message Pose {
-    double x = 1;
-    double y = 2;
-    double r = 3;
+  double x = 1;
+  double y = 2;
+  double r = 3;
 }
 
 // A pose represents a position such as the location of a mounting hole on a
 // keyboard.
 message Position {
-    double x = 1;
-    double y = 2;
+  double x = 1;
+  double y = 2;
 }
 
 // Keyboard defines the abstract of a computer keyboard, including details
@@ -36,13 +36,13 @@ message Keyboard {
 
   message Key {
     // The location of this switch.
-    Pose pose=1;
+    Pose pose = 1;
 
     // The width of the key relative to the width of a standard key.
-    double unit_width=2;
+    double unit_width = 2;
 
     // The height of the key relative to the width of a standard key.
-    double unit_height=3;
+    double unit_height = 3;
 
     // The index of the controller pins this switch (and it's diode) should be
     // connected to.
@@ -62,15 +62,16 @@ message Keyboard {
   }
   Footprint footprint = 4;
 
-  enum Outline {
-    OUTLINE_UNKNOWN = 0;
-    OUTLINE_TIGHT = 1;
-    OUTLINE_RECTANGLE = 2;
-    OUTLINE_CONVEX_HULL = 3;
-  }
-
-  // Outline defines the algorithm used to generate the shape of the keyboard.
-  Outline outline = 5;
+  // OutlinePath defines the fundamental shape of the keyboard.
+  //
+  // Specifically this is the outline of the 'key area' of the keyboard, used
+  // most directly to generate the PCB or the plate for a caseless keyboard.
+  // This excludes mounting holes and PCB-specific details like connector
+  // cutouts.
+  //
+  // A case should allow at least this much space for a PCB and a normal PCB
+  // should be at most this size.
+  repeated Position outline_polygon = 8;
 
   // The type of microcontroller used on the PCB.
   enum Controller {
@@ -87,10 +88,6 @@ message Keyboard {
 
   // The location of the microcontroller on the PCB.
   Pose controller_pose = 7;
-
-  // TODO: move OUTLINE_TIGHT parameters elsewhere
-  double outline_concave = 10000;
-  double outline_convex = 10001;
 
   // TODO: move this elsewhere
   double hole_diameter = 10002;

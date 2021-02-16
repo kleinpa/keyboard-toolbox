@@ -120,3 +120,11 @@ def grid(col,
 
         x, y, r = pose_to_xyr(geom)
         return make_key(x, y, r)
+
+
+def shapely_round(shape, radius_convex, radius_concave, resolution=64):
+    shape = shape.buffer(radius_concave, resolution=resolution)
+    shape = shape.buffer(-radius_concave - radius_convex,
+                         resolution=resolution)
+    shape = shape.buffer(radius_convex, resolution=resolution)
+    return shape

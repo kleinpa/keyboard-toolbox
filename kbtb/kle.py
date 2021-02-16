@@ -22,6 +22,7 @@ from math import sin, cos, radians, isclose
 
 from kbtb.keyboard_pb2 import Keyboard
 from kbtb.layout import rows, generate_placeholders
+from kbtb.outline import generate_outline_tight, generate_outline_convex_hull, generate_outline_rectangle
 
 
 def kle_position(key, keyboard_unit=19.05, x0=0, y0=0):
@@ -149,13 +150,11 @@ def kle_to_keyboard(kle_json, keyboard_unit=19.05):
         name="kle-import",
         controller=Keyboard.CONTROLLER_UNKNOWN,
         footprint=Keyboard.FOOTPRINT_CHERRY_MX,
-        outline=Keyboard.OUTLINE_RECTANGLE,
 
-        # Plate outline parameters
-        outline_concave=90,
-        outline_convex=1.5,
+        # Plate parameters
         hole_diameter=2.6,
     )
+    outline_type = None
 
     # state for KLE's relative positioning
     current_y, current_r, current_rx, current_ry = 0, 0, 0, 0
@@ -177,16 +176,7 @@ def kle_to_keyboard(kle_json, keyboard_unit=19.05):
             if "name" in row_or_metadata:
                 kb.name = row_or_metadata["name"]
             if "kb-toolkit-outline" in row_or_metadata:
-                if row_or_metadata["kb-toolkit-outline"] == "tight":
-                    kb.outline = Keyboard.OUTLINE_TIGHT
-                elif row_or_metadata["kb-toolkit-outline"] == "convex-hull":
-                    kb.outline = Keyboard.OUTLINE_CONVEX_HULL
-                elif row_or_metadata["kb-toolkit-outline"] == "rectangle":
-                    kb.outline = Keyboard.OUTLINE_RECTANGLE
-                else:
-                    raise RuntimeError(
-                        f"unknown outline: {row_or_metadata[kb-toolkit-outline]}"
-                    )
+                outline_type = row_or_metadata["kb-toolkit-outline"]
         else:
             for key_or_props in row_or_metadata:
                 if isinstance(key_or_props, dict):
@@ -225,5 +215,20 @@ def kle_to_keyboard(kle_json, keyboard_unit=19.05):
                     })
 
             current_y += 1
+
+    # generate outline polygon
+    if outline_type == 'tight':
+        outline = generate_outline_tight(kb)
+    elif outline_type == 'convex-hull':
+        outline = generate_outline_convex_hull(kb)
+    elif outline_type == 'rectangle':
+        outline = generate_outline_rectangle(kb)
+    else:
+        raise RuntimeError(f"unknown outline type: {outline_type}")
+
+    outline = outline.simplify(0.001)
+
+    for x, y in outline.coords:
+        kb.outline_polygon.add(x=x, y=y)
 
     return kb

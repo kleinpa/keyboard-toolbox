@@ -1,11 +1,10 @@
 import tempfile
+from math import atan2, cos, degrees, radians, sin
 
 import pcbnew
-from math import sin, cos, atan2, degrees, radians
-
+import shapely.geometry
 from kbtb.keyboard_pb2 import Keyboard
 from kbtb.kicad import kicad_circle, kicad_polygon
-from kbtb.outline import generate_outline
 
 
 def add_pro_micro(x, y, r, ground_net, io_nets):
@@ -56,7 +55,7 @@ def generate_kicad_pcb_file(kb):
     build out as much of the PCB as we can from the provided keyboard object.
 
     This function will generate and return a two-layer PCB with it's outline
-    built according to `generate_outline()` (with matching ground planes) and
+    built according to `kb.outline_polygon` (with matching ground planes) and
     with footprints for the switches, diodes, microcontroller, and mounting
     holes. The keyboard matrix will be used to configure connections between
     the switches, diodes, and MCU pins.
@@ -68,7 +67,8 @@ def generate_kicad_pcb_file(kb):
       configured manually.
     * The `pcbnew.ZONE_FILLER` is not available when running standalone.
     """
-    outline = generate_outline(kb)
+    outline = shapely.geometry.polygon.Polygon(
+        (o.x, o.y) for o in kb.outline_polygon)
     x_min, y_min, x_max, y_max = outline.bounds
 
     x_offset = 16 - x_min
@@ -81,7 +81,6 @@ def generate_kicad_pcb_file(kb):
     ground_net = pcbnew.NETINFO_ITEM(board, f"GND")
     board.Add(ground_net)
 
-    outline = generate_outline(kb)
     for x in kicad_polygon(outline,
                            x_offset=x_offset,
                            y_offset=y_offset,
@@ -167,7 +166,7 @@ def generate_kicad_pcb_file(kb):
     # Add ground plane
     item = pcbnew.ZONE(board, False)
     poly = pcbnew.wxPoint_Vector()
-    for x, y in outline.coords:
+    for x, y in outline.exterior.coords:
         x, y = x_scale * x + x_offset, y_scale * y + y_offset
         poly.append(pcbnew.wxPointMM(x, y))
     item.AddPolygon(poly)
