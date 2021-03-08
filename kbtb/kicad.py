@@ -145,8 +145,6 @@ def kicad_file_to_gerber_archive_file(kicad_fp):
         with zipfile.ZipFile(fp, 'w', zipfile.ZIP_DEFLATED) as z:
             for root, dirs, files in os.walk(temp_path):
                 for file in files:
-                    print(f"wrote {file}", file=sys.stderr)
-
                     z.write(
                         os.path.join(root, file),
                         # TODO(kleinpa): Required for JLCPCB, any alternative?

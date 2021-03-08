@@ -26,15 +26,6 @@ def kbtb_repos():
             strip_prefix = "kicad-footprints-15ffd67e01257d4d8134dbd6708cb58977eeccbe",
             url = "https://gitlab.com/kicad/libraries/kicad-footprints/-/archive/15ffd67e01257d4d8134dbd6708cb58977eeccbe/kicad-footprints-15ffd67e01257d4d8134dbd6708cb58977eeccbe.tar.gz",
         )
-    if "com_github_keebio_keebio_components" not in native.existing_rules():
-        http_archive(
-            name = "com_github_keebio_keebio_components",
-            build_file_content = BUILD_ALL_CONTENT,
-            sha256 = "af33022480e698b01c3fb80ed71c0ee2eaf96808e31bc7ac5e3d12d338c70b09",
-            strip_prefix = "kicad-footprints-15ffd67e01257d4d8134dbd6708cb58977eeccbe",
-            url = "https://gitlab.com/kicad/libraries/kicad-footprints/-/archive/15ffd67e01257d4d8134dbd6708cb58977eeccbe/kicad-footprints-15ffd67e01257d4d8134dbd6708cb58977eeccbe.tar.gz",
-        )
-
     if "com_github_keebio_keebio_parts" not in native.existing_rules():
         http_archive(
             name = "com_github_keebio_keebio_parts",

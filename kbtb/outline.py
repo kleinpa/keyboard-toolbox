@@ -25,7 +25,10 @@ def generate_outline_convex_hull(kb, resolution=64, corner_radius=1.5):
 
 def generate_outline_rectangle(kb, resolution=64, corner_radius=1.5):
     placeholders = generate_placeholders(kb.keys)
-    return shapely_round(placeholders.envelope,
-                         corner_radius,
-                         corner_radius,
-                         resolution=resolution).exterior
+    if corner_radius == 0:
+        return placeholders.envelope.exterior
+    else:
+        return shapely_round(placeholders.envelope,
+                             corner_radius,
+                             corner_radius,
+                             resolution=resolution).exterior
