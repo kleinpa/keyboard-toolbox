@@ -37,6 +37,7 @@ def _keyboard_plate_dxf(ctx):
         arguments = [
             "--input={}".format(ctx.file.src.path),
             "--output={}".format(output_file.path),
+            "--plate_type={}".format(ctx.attr.plate_type),
             "--format=plate_dxf",
         ],
         executable = ctx.executable._toolbox,
@@ -49,6 +50,9 @@ keyboard_plate_dxf = rule(
         "src": attr.label(
             allow_single_file = [".pb"],
             mandatory = True,
+        ),
+        "plate_type": attr.string(
+            default = "top",
         ),
         "_toolbox": attr.label(
             default = Label("//kbtb/cli:to_dxf"),

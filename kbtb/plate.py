@@ -166,11 +166,12 @@ def generate_cherry_cutout(key, corner_radius=0.3, resolution=16):
                          resolution=resolution)
 
 
-def generate_plate(kb, padding=0, mounting_holes=False):
+def generate_plate(kb, padding=0, mounting_holes=False, cutouts=True):
     features = []
 
-    for key in kb.keys:
-        features.append(generate_cherry_cutout(key))
+    if cutouts:
+        for key in kb.keys:
+            features.append(generate_cherry_cutout(key))
 
     if mounting_holes:
         for h in kb.hole_positions:
