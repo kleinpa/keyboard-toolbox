@@ -4,7 +4,7 @@ import io
 
 from kbtb.keyboard_pb2 import Keyboard
 
-generator = "github.com/kleinpa/kb"
+generator = "github.com/kleinpa/kbtb"
 
 
 def make_qmk_header_file(kb):

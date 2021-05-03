@@ -51,6 +51,9 @@ def kbtb_repos():
             sha256 = "8e10e556e45aebb73a75f67801bca27241a747ed7bd4e06ab4eff330ae16b6c8",
             strip_prefix = "kicad-320ca5a0d0df232455718dffe9d62e05d5122ac7",
             url = "https://gitlab.com/kicad/code/kicad/-/archive/320ca5a0d0df232455718dffe9d62e05d5122ac7/kicad-320ca5a0d0df232455718dffe9d62e05d5122ac7.tar.gz",
+            # sha256 = "3beb629e888018db692b29a4e6bd0cc9b50914654e90034d040d06d58d8638b5",
+            # strip_prefix = "kicad-2fd5f25c3c43c33e5377349e3862f5101cd9826c",
+            # url = "https://gitlab.com/kicad/code/kicad/-/archive/2fd5f25c3c43c33e5377349e3862f5101cd9826c/kicad-2fd5f25c3c43c33e5377349e3862f5101cd9826c.tar.gz",
         )
     if "rules_foreign_cc" not in native.existing_rules():
         http_archive(
