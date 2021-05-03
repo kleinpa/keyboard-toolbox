@@ -5,11 +5,24 @@ import os
 import shutil
 import sys
 import tempfile
+import csv
 import zipfile
+import re
 
 import pcbnew
 
 import shapely
+
+lcsc_parts = {
+    ("D_SOD-123", "D_SOD-123"): "C81598",
+    ("HRO-TYPE-C-31-M-12", "HRO-TYPE-C-31-M-12"): "C165948",
+    ("LQFP-48_7x7mm_P0.5mm", "STM32F072C8T6"): "C80488",
+    ("R_0603_1608Metric", "0.1 uF"): "C14663",
+    ("R_0603_1608Metric", "10 kΩ"): "C25803",
+    ("R_0603_1608Metric", "5.1 kΩ"): "C23186",
+    ("SOT-143", "SR05"): "C521962",
+    ("SOT-23", "MCP1700T-3302E/TT"): "C5446",
+}
 
 
 def kicad_polygon(geom,
@@ -72,6 +85,53 @@ def polygon_to_kicad_file(geom):
     tf = tempfile.NamedTemporaryFile()
     board.Save(tf.name)
     return tf
+
+
+def kicad_bom(board, layer=pcbnew.B_Cu):
+    # https://support.jlcpcb.com/article/79-pick-place-file-for-smt-assembly
+    fieldnames = ['Designator', 'Description', 'Value', 'LCSC Part Number']
+    fp = io.StringIO()
+    writer = csv.DictWriter(fp, fieldnames=fieldnames)
+    writer.writeheader()
+
+    for footprint in board.GetFootprints():
+        if footprint.GetLayer() != layer:
+            continue
+
+        writer.writerow({
+            'Designator':
+            footprint.GetReference(),
+            'Description':
+            footprint.GetFPID().GetLibItemName(),
+            'Value':
+            footprint.GetValue(),
+            'LCSC Part Number':
+            lcsc_parts.get((str(footprint.GetFPID().GetLibItemName()),
+                            str(footprint.GetValue())), 'unknown'),
+        })
+    fp.seek(0)
+    return fp.read()
+
+
+def kicad_centroid(board, layer=pcbnew.B_Cu):
+    # https://support.jlcpcb.com/article/79-pick-place-file-for-smt-assembly
+    fieldnames = ['Designator', 'Mid X', 'Mid Y', 'Rotation', 'Layer']
+    fp = io.StringIO()
+    writer = csv.DictWriter(fp, fieldnames=fieldnames)
+    writer.writeheader()
+
+    for footprint in board.GetFootprints():
+        if footprint.GetLayer() != layer:
+            continue
+        writer.writerow({
+            'Designator': footprint.GetReference(),
+            'Mid X': footprint.GetPosition().x * pcbnew.MM_PER_IU,
+            'Mid Y': footprint.GetPosition().y * pcbnew.MM_PER_IU,
+            'Rotation': footprint.GetOrientationDegrees(),
+            'Layer': 'bottom',
+        })
+    fp.seek(0)
+    return fp.read()
 
 
 def kicad_file_to_gerber_archive_file(kicad_fp):
@@ -149,5 +209,7 @@ def kicad_file_to_gerber_archive_file(kicad_fp):
                         os.path.join(root, file),
                         # TODO(kleinpa): Required for JLCPCB, any alternative?
                         file.replace("gm1", "gko"))
+            z.writestr('bom.csv', kicad_bom(board))
+            z.writestr('cpl.csv', kicad_centroid(board))
         fp.seek(0)
         return fp
