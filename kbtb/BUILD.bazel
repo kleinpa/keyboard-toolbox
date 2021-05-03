@@ -29,6 +29,8 @@ py_library(
         "pcb.py",
     ],
     data = [
+        "//kbtb/kicad_modules",
+        "@com_github_ai03_2725_typec//:all",
         "@com_github_keebio_keebio_parts//:all",
         "@com_gitlab_kicad_libraries_kicad_footprints//:all",
     ],

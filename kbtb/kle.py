@@ -21,7 +21,7 @@ import json
 from math import sin, cos, radians, isclose
 
 from kbtb.keyboard_pb2 import Keyboard
-from kbtb.layout import rows, generate_placeholders
+from kbtb.layout import group_by_row, generate_placeholders
 from kbtb.outline import generate_outline_tight, generate_outline_convex_hull, generate_outline_rectangle
 
 
@@ -62,7 +62,7 @@ def keyboard_to_kle(kb, keyboard_unit=19.05):
     # state for KLE's relative positioning
     current_x, current_y, current_r = 0, 0, 0
 
-    for row in rows(kb.keys):
+    for row in group_by_row(kb.keys):
         kle_row = []
 
         for key in row:
@@ -154,7 +154,7 @@ def kle_to_keyboard(kle_json, keyboard_unit=19.05):
         # Plate parameters
         hole_diameter=2.6,
     )
-    outline_type = None
+    outline_type = 'convex-hull'
 
     # state for KLE's relative positioning
     current_y, current_r, current_rx, current_ry = 0, 0, 0, 0
@@ -225,8 +225,6 @@ def kle_to_keyboard(kle_json, keyboard_unit=19.05):
         outline = generate_outline_rectangle(kb)
     else:
         raise RuntimeError(f"unknown outline type: {outline_type}")
-
-    outline = outline.simplify(0.001)
 
     for x, y in outline.coords:
         kb.outline_polygon.add(x=x, y=y)

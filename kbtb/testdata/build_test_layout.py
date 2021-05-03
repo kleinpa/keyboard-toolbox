@@ -3,7 +3,7 @@
 from absl import app, flags
 
 from kbtb.keyboard_pb2 import Keyboard
-from kbtb.layout import between, mirror_keys, rotate_keys, grid
+from kbtb.layout import between, between_pose, pose_closest_point, mirror_keys, rotate_keys, grid
 from kbtb.matrix import fill_matrix
 from kbtb.outline import generate_outline_tight
 
@@ -18,7 +18,7 @@ def test_layout():
         footprint=Keyboard.FOOTPRINT_CHERRY_MX,
 
         # Plate parameters
-        hole_diameter=2.6,
+        hole_diameter=2.4,
     )
 
     rows = 4
@@ -51,16 +51,16 @@ def test_layout():
         between(kb.keys[42 + (rows - 5) * 12].pose,
                 kb.keys[51 + (rows - 5) * 12].pose)
     ])
-
     kb.controller_pose.CopyFrom(kb.keys[8].pose)
-
     fill_matrix(kb)
 
-    for x, y in generate_outline_tight(
-            kb,
-            outline_concave=120,
-            outline_convex=1.5,
-    ).simplify(0.001).coords:
+    outline = generate_outline_tight(
+        kb,
+        outline_concave=120,
+        outline_convex=1.5,
+    ).simplify(0.001)
+
+    for x, y in outline.coords:
         kb.outline_polygon.add(x=x, y=y)
 
     return kb

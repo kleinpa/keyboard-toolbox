@@ -5,7 +5,7 @@ from math import atan, atan2, cos, degrees, radians, sin
 import shapely
 import shapely.geometry
 
-from kbtb.keyboard_pb2 import Keyboard, Position
+from kbtb.keyboard_pb2 import Keyboard, Position, Pose
 
 
 # Use the first point for origin and second to show orientation
@@ -43,12 +43,27 @@ def between(k1, k2):
     return Position(x=(k1.x + k2.x) / 2, y=(k1.y + k2.y) / 2)
 
 
+def between_pose(k1, k2):
+    return Pose(x=(k1.x + k2.x) / 2, y=(k1.y + k2.y) / 2, r=(k1.r + k2.r) / 2)
+
+
 def holes_between_keys(keys, hole_map):
     for k1, k2 in hole_map:
         yield between(keys[k1].pose, keys[k2].pose)
 
 
-def rows(keys):
+def pose_closest_point(outline, point):
+    ps = [
+        outline.interpolate(
+            x + outline.project(shapely.geometry.Point(point.x, point.y)))
+        for x in [-1, 0, 1]
+    ]
+    return Pose(x=ps[1].x,
+                y=ps[1].y,
+                r=degrees(atan2(ps[2].y - ps[0].y, ps[2].x - ps[0].x)) - 90)
+
+
+def group_by_row(keys):  # duplicated to matrix.py
     """Split the keys into monotonically increasing sublists of x-position."""
     row = []
     last_x = None
@@ -83,7 +98,7 @@ def mirror_keys(keys, middle_space=0, only_flip=False):
     x_min, y_min, _, _ = generate_placeholders(keys).bounds
 
     row = []
-    for row in rows(keys):
+    for row in group_by_row(keys):
         full_row = []
         for key in row:
             p = pose(key.pose.x, key.pose.y, key.pose.r)

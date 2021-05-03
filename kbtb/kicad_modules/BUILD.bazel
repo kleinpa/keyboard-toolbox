@@ -1,0 +1,5 @@
+filegroup(
+    name = "kicad_modules",
+    srcs = glob(["*.kicad_mod"]),
+    visibility = ["//visibility:public"],
+)

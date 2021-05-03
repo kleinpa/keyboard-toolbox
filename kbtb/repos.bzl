@@ -16,7 +16,7 @@ def kbtb_repos():
             url = "https://github.com/protocolbuffers/protobuf/archive/v3.14.0.zip",
         )
 
-    BUILD_ALL_CONTENT = """filegroup(name = "all", srcs = glob(["**"], exclude=["3dmodels/*","USB-Mini-B_ LCSC-C46398.kicad_mod"]), visibility = ["//visibility:public"])"""
+    BUILD_ALL_CONTENT = """filegroup(name = "all", srcs = glob(["**"], exclude=["3dmodels/*","USB-Mini-B_ LCSC-C46398.kicad_mod","*.step"]), visibility = ["//visibility:public"])"""
 
     if "com_gitlab_kicad_libraries_kicad_footprints" not in native.existing_rules():
         http_archive(
@@ -33,6 +33,14 @@ def kbtb_repos():
             sha256 = "01ab881944905fcaa86517eff75135623b435722b3b20ef832fd2babb39b61e7",
             strip_prefix = "Keebio-Parts.pretty-c7ae3b44674679f4d767767c002fed1eacd414a1",
             url = "https://github.com/keebio/Keebio-Parts.pretty/archive/c7ae3b44674679f4d767767c002fed1eacd414a1.zip",
+        )
+    if "com_github_ai03_2725_typec" not in native.existing_rules():
+        http_archive(
+            name = "com_github_ai03_2725_typec",
+            build_file_content = BUILD_ALL_CONTENT,
+            sha256 = "348486e854174d3abb56eb35022e0e8471b9573d625d1f245aefbb7dbb6cbe6c",
+            strip_prefix = "Type-C.pretty-fecd1a97dee885e7daf32da80dfa47e726d59529",
+            url = "https://github.com/ai03-2725/Type-C.pretty/archive/fecd1a97dee885e7daf32da80dfa47e726d59529.zip",
         )
     if "com_gitlab_kicad_kicad" not in native.existing_rules():
         http_archive(

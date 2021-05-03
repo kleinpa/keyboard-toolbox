@@ -83,6 +83,7 @@ message Keyboard {
     // will be positioned correctly so that the USB port is accessable
     // from the top of the board and the legs fit around the switch.
     CONTROLLER_PROMICRO = 1;
+    CONTROLLER_STM32F072 = 2;
   }
   Controller controller = 6;
 
