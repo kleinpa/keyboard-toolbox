@@ -19,6 +19,7 @@ genrule(
     visibility = ["//visibility:public"],
 )
 
+# TODO(peterklein): keyboard_plate_svg()
 genrule(
     name = "test_layout_svg",
     srcs = [":test_layout"],
@@ -27,22 +28,25 @@ genrule(
     tools = ["//kbtb/cli:to_svg"],
 )
 
+# TODO(peterklein): keyboard_plate_kicad()
 genrule(
-    name = "plate_kicad",
+    name = "test_plate_kicad",
     srcs = [":test_layout"],
     outs = ["plate.kicad_pcb"],
     cmd = "./$(location //kbtb/cli) --input=\"$<\" --format=plate_kicad_pcb --output=\"$@\"",
     tools = ["//kbtb/cli"],
 )
 
+# TODO(peterklein): keyboard_plate_gerbers()
 genrule(
     name = "test_plate_gerbers",
-    srcs = [":plate_kicad"],
+    srcs = [":test_plate_kicad"],
     outs = ["plate_gerbers.zip"],
     cmd = "./$(location //kbtb/cli:kicad_to_gerber) --input=\"$<\" --output=\"$@\"",
     tools = ["//kbtb/cli:kicad_to_gerber"],
 )
 
+# TODO(peterklein): keyboard_board_kicad()
 genrule(
     name = "test_board_kicad",
     srcs = [":test_layout"],
@@ -60,14 +64,21 @@ genrule(
 genrule(
     name = "test_qmk",
     srcs = [":test_layout"],
-    outs = ["qmk.h"],
+    outs = ["test_qmk.h"],
     cmd = "./$(location //kbtb/cli) --input=\"$<\" --format=h --output=\"$@\"",
     tools = ["//kbtb/cli"],
 )
 
 keyboard_plate_dxf(
-    name = "test_layout_dxf",
+    name = "test_top_plate",
     src = ":test_layout",
+    plate_type = "top",
+)
+
+keyboard_plate_dxf(
+    name = "test_bottom_plate",
+    src = ":test_layout",
+    plate_type = "bottom",
 )
 
 kbpb_from_kle(
@@ -76,7 +87,90 @@ kbpb_from_kle(
     visibility = ["//visibility:public"],
 )
 
+# TODO(peterklein): keyboard_plate_svg()
+genrule(
+    name = "tkl_layout_svg",
+    srcs = [":tkl_layout"],
+    outs = ["tkl_layout.svg"],
+    cmd = "./$(location //kbtb/cli:to_svg) --input=\"$<\" --format=svg --output=\"$@\"",
+    tools = ["//kbtb/cli:to_svg"],
+)
+
+py_binary(
+    name = "build_numpad_layout",
+    srcs = ["build_numpad_layout.py"],
+    deps = [
+        requirement("absl-py"),
+        "//kbtb:keyboard_lib",
+        "//kbtb:kle",
+    ],
+)
+
+genrule(
+    name = "numpad_layout",
+    outs = ["numpad_layout.pb"],
+    cmd = "./$(location :build_numpad_layout) --output=\"$@\"",
+    tools = [":build_numpad_layout"],
+    visibility = ["//visibility:public"],
+)
+
 keyboard_plate_dxf(
-    name = "tkl_layout_dxf",
-    src = ":tkl_layout",
+    name = "numpad_top_plate",
+    src = ":numpad_layout",
+    plate_type = "bottom",
+)
+
+keyboard_plate_dxf(
+    name = "numpad_bottom_plate",
+    src = ":numpad_layout",
+    plate_type = "bottom",
+)
+
+genrule(
+    name = "numpad_kicad",
+    srcs = [":numpad_layout"],
+    outs = ["numpad_board.kicad_pcb"],
+    cmd = "./$(location //kbtb/cli) --input=\"$<\" --format=main_kicad_pcb --output=\"$@\"",
+    tools = [
+        "//kbtb/cli",
+        "//kbtb/kicad_modules",
+        "@com_github_ai03_2725_typec//:all",
+        "@com_github_keebio_keebio_parts//:all",
+        "@com_gitlab_kicad_libraries_kicad_footprints//:all",
+    ],
+)
+
+genrule(
+    name = "numpad_gerbers",
+    srcs = ["numpad_board_routed.kicad_pcb"],
+    outs = ["numpad_board_routed.zip"],
+    cmd = "./$(location //kbtb/cli:kicad_to_gerber) --input=\"$<\" --output=\"$@\"",
+    tools = [
+        "//kbtb/cli:kicad_to_gerber",
+    ],
+)
+
+genrule(
+    name = "numpad_plate",
+    srcs = [":numpad_layout"],
+    outs = ["numpad_plate.kicad_pcb"],
+    cmd = "./$(location //kbtb/cli) --input=\"$<\" --format=plate_kicad_pcb --output=\"$@\"",
+    tools = ["//kbtb/cli"],
+)
+
+genrule(
+    name = "numpad_plate_gerbers",
+    srcs = [":numpad_plate"],
+    outs = ["numpad_plate_gerbers.zip"],
+    cmd = "./$(location //kbtb/cli:kicad_to_gerber) --input=\"$<\" --output=\"$@\"",
+    tools = ["//kbtb/cli:kicad_to_gerber"],
+)
+
+# TODO(peterklein): keyboard_plate_svg()
+genrule(
+    name = "numpad_layout_svg",
+    srcs = [":numpad_layout"],
+    outs = ["numpad_layout.svg"],
+    cmd = "./$(location //kbtb/cli:to_svg) --input=\"$<\" --format=svg --output=\"$@\"",
+    tools = ["//kbtb/cli:to_svg"],
 )
