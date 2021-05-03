@@ -140,7 +140,7 @@ def cherry_stabilizer(length):
 # k.Layers[SWITCHLAYER].CutPolys = append(k.Layers[SWITCHLAYER].CutPolys, stab_path)
 
 
-def generate_cherry_cutout(key, corner_radius=0.3, resolution=16):
+def generate_cherry_cutout(key, corner_radius=0.3, resolution=16, shift=0):
     x, y, r = key.pose.x, key.pose.y, key.pose.r
     shape = cutout_geom_mx
 
@@ -163,15 +163,19 @@ def generate_cherry_cutout(key, corner_radius=0.3, resolution=16):
     return shapely_round(shape,
                          corner_radius,
                          corner_radius,
-                         resolution=resolution)
+                         resolution=resolution).buffer(shift,
+                                                       resolution=resolution)
 
 
 def generate_plate(kb, padding=0, mounting_holes=False, cutouts=True):
     features = []
 
+    # Cutouts in my first water just cut Aluminum plate made by SendCutSend were a bit tight, fudging here.
+    cutout_padding = 0.05
+
     if cutouts:
         for key in kb.keys:
-            features.append(generate_cherry_cutout(key))
+            features.append(generate_cherry_cutout(key, shift=cutout_padding))
 
     if mounting_holes:
         for h in kb.hole_positions:
