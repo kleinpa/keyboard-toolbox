@@ -141,16 +141,6 @@ genrule(
 )
 
 genrule(
-    name = "numpad_gerbers",
-    srcs = ["numpad_board_routed.kicad_pcb"],
-    outs = ["numpad_board_routed.zip"],
-    cmd = "./$(location //kbtb/cli:kicad_to_gerber) --input=\"$<\" --output=\"$@\"",
-    tools = [
-        "//kbtb/cli:kicad_to_gerber",
-    ],
-)
-
-genrule(
     name = "numpad_plate",
     srcs = [":numpad_layout"],
     outs = ["numpad_plate.kicad_pcb"],

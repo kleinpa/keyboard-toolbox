@@ -1,0 +1,9 @@
+genrule(
+    name = "numpad_board_routed_gerbers",
+    srcs = ["numpad_board_routed.kicad_pcb"],
+    outs = ["numpad_board_routed.zip"],
+    cmd = "./$(location @com_github_kleinpa_kbtb//kbtb/cli:kicad_to_gerber) --input=\"$<\" --output=\"$@\"",
+    tools = [
+        "@com_github_kleinpa_kbtb//kbtb/cli:kicad_to_gerber",
+    ],
+)

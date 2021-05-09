@@ -43,6 +43,9 @@ files+=("kbtb/testdata/numpad_layout.svg")
 targets+=("//kbtb/testdata:min_stm32_kicad")
 files+=("kbtb/testdata/min_stm32.kicad_pcb")
 
+targets+=("//kbtb/testdata/routed:numpad_board_routed_gerbers")
+files+=("kbtb/testdata/routed/numpad_board_routed.zip")
+
 bazelisk build ${targets[@]} $@
 rm -rf $(bazel info workspace)/dist/*
 for path in "${files[@]}"
