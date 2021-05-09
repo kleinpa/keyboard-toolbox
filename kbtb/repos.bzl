@@ -1,14 +1,21 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 def kbtb_repos():
-    if "rules_python" not in native.existing_rules():
+    if not native.existing_rule("com_github_kleinpa_kicadbazel"):
+        http_archive(
+            name = "com_github_kleinpa_kicadbazel",
+            sha256 = "e92637c01fb77a1f082e852c5e97c202cd5928a73a141503739fc0e27655cf93",
+            url = "https://github.com/kleinpa/kicad-bazel/archive/f1fcedcc10c5a4be92c439d5b8a6098aa1ad8f95.tar.gz",
+            strip_prefix = "kicad-bazel-f1fcedcc10c5a4be92c439d5b8a6098aa1ad8f95",
+        )
+    if not native.existing_rule("rules_python"):
         http_archive(
             name = "rules_python",
             sha256 = "b6d46438523a3ec0f3cead544190ee13223a52f6a6765a29eae7b7cc24cc83a0",
             url = "https://github.com/bazelbuild/rules_python/releases/download/0.1.0/rules_python-0.1.0.tar.gz",
         )
 
-    if "com_google_protobuf" not in native.existing_rules():
+    if not native.existing_rule("com_google_protobuf"):
         http_archive(
             name = "com_google_protobuf",
             sha256 = "bf0e5070b4b99240183b29df78155eee335885e53a8af8683964579c214ad301",
@@ -18,7 +25,7 @@ def kbtb_repos():
 
     BUILD_ALL_CONTENT = """filegroup(name = "all", srcs = glob(["**"], exclude=["3dmodels/*","USB-Mini-B_ LCSC-C46398.kicad_mod","*.step"]), visibility = ["//visibility:public"])"""
 
-    if "com_gitlab_kicad_libraries_kicad_footprints" not in native.existing_rules():
+    if not native.existing_rule("com_gitlab_kicad_libraries_kicad_footprints"):
         http_archive(
             name = "com_gitlab_kicad_libraries_kicad_footprints",
             build_file_content = BUILD_ALL_CONTENT,
@@ -26,7 +33,7 @@ def kbtb_repos():
             strip_prefix = "kicad-footprints-15ffd67e01257d4d8134dbd6708cb58977eeccbe",
             url = "https://gitlab.com/kicad/libraries/kicad-footprints/-/archive/15ffd67e01257d4d8134dbd6708cb58977eeccbe/kicad-footprints-15ffd67e01257d4d8134dbd6708cb58977eeccbe.tar.gz",
         )
-    if "com_github_keebio_keebio_parts" not in native.existing_rules():
+    if not native.existing_rule("com_github_keebio_keebio_parts"):
         http_archive(
             name = "com_github_keebio_keebio_parts",
             build_file_content = BUILD_ALL_CONTENT,
@@ -34,31 +41,11 @@ def kbtb_repos():
             strip_prefix = "Keebio-Parts.pretty-c7ae3b44674679f4d767767c002fed1eacd414a1",
             url = "https://github.com/keebio/Keebio-Parts.pretty/archive/c7ae3b44674679f4d767767c002fed1eacd414a1.zip",
         )
-    if "com_github_ai03_2725_typec" not in native.existing_rules():
+    if not native.existing_rule("com_github_ai03_2725_typec"):
         http_archive(
             name = "com_github_ai03_2725_typec",
             build_file_content = BUILD_ALL_CONTENT,
             sha256 = "348486e854174d3abb56eb35022e0e8471b9573d625d1f245aefbb7dbb6cbe6c",
             strip_prefix = "Type-C.pretty-fecd1a97dee885e7daf32da80dfa47e726d59529",
             url = "https://github.com/ai03-2725/Type-C.pretty/archive/fecd1a97dee885e7daf32da80dfa47e726d59529.zip",
-        )
-    if "com_gitlab_kicad_kicad" not in native.existing_rules():
-        http_archive(
-            name = "com_gitlab_kicad_kicad",
-            build_file = "@com_github_kleinpa_kbtb//external:kicad-BUILD.bazel",
-            patch_args = ["-p1"],
-            patches = ["@com_github_kleinpa_kbtb//external:kicad.patch"],
-            sha256 = "8e10e556e45aebb73a75f67801bca27241a747ed7bd4e06ab4eff330ae16b6c8",
-            strip_prefix = "kicad-320ca5a0d0df232455718dffe9d62e05d5122ac7",
-            url = "https://gitlab.com/kicad/code/kicad/-/archive/320ca5a0d0df232455718dffe9d62e05d5122ac7/kicad-320ca5a0d0df232455718dffe9d62e05d5122ac7.tar.gz",
-            # sha256 = "3beb629e888018db692b29a4e6bd0cc9b50914654e90034d040d06d58d8638b5",
-            # strip_prefix = "kicad-2fd5f25c3c43c33e5377349e3862f5101cd9826c",
-            # url = "https://gitlab.com/kicad/code/kicad/-/archive/2fd5f25c3c43c33e5377349e3862f5101cd9826c/kicad-2fd5f25c3c43c33e5377349e3862f5101cd9826c.tar.gz",
-        )
-    if "rules_foreign_cc" not in native.existing_rules():
-        http_archive(
-            name = "rules_foreign_cc",
-            sha256 = "0339cb90f49427446f80489bc20a474d536755120b23dc7a4e4283df5f26ad88",
-            strip_prefix = "rules_foreign_cc-57500442a623bed3664bf9cc8460ba290a8a577b",
-            url = "https://github.com/bazelbuild/rules_foreign_cc/archive/57500442a623bed3664bf9cc8460ba290a8a577b.zip",
         )

@@ -1,6 +1,7 @@
 load("@rules_python//python:defs.bzl", "py_binary")
 load("@com_github_kleinpa_kbtb_py_deps//:requirements.bzl", "requirement")
 load("//kbtb:defs.bzl", "kbpb_from_kle", "keyboard_plate_dxf")
+load("@com_github_kleinpa_kicadbazel//tools:defs.bzl", "gerbers_from_kicad")
 
 py_binary(
     name = "build_test_layout",
@@ -14,8 +15,8 @@ py_binary(
 genrule(
     name = "test_layout",
     outs = ["test_layout.pb"],
-    cmd = "./$(location :build_test_layout) --output=\"$@\"",
-    tools = [":build_test_layout"],
+    cmd = "./$(execpath :build_test_layout) --output=\"$@\"",
+    exec_tools = [":build_test_layout"],
     visibility = ["//visibility:public"],
 )
 
@@ -24,8 +25,8 @@ genrule(
     name = "test_layout_svg",
     srcs = [":test_layout"],
     outs = ["test_layout.svg"],
-    cmd = "./$(location //kbtb/cli:to_svg) --input=\"$<\" --format=svg --output=\"$@\"",
-    tools = ["//kbtb/cli:to_svg"],
+    cmd = "./$(execpath //kbtb/cli:to_svg) --input=\"$<\" --format=svg --output=\"$@\"",
+    exec_tools = ["//kbtb/cli:to_svg"],
 )
 
 # TODO(peterklein): keyboard_plate_kicad()
@@ -33,17 +34,13 @@ genrule(
     name = "test_plate_kicad",
     srcs = [":test_layout"],
     outs = ["plate.kicad_pcb"],
-    cmd = "./$(location //kbtb/cli) --input=\"$<\" --format=plate_kicad_pcb --output=\"$@\"",
-    tools = ["//kbtb/cli"],
+    cmd = "LD_LIBRARY_PATH='$(execpath //kbtb/cli).runfiles/com_gitlab_kicad_kicad' ./$(execpath //kbtb/cli) --input=\"$<\" --format=plate_kicad_pcb --output=\"$@\"",
+    exec_tools = ["//kbtb/cli"],
 )
 
-# TODO(peterklein): keyboard_plate_gerbers()
-genrule(
-    name = "test_plate_gerbers",
-    srcs = [":test_plate_kicad"],
-    outs = ["plate_gerbers.zip"],
-    cmd = "./$(location //kbtb/cli:kicad_to_gerber) --input=\"$<\" --output=\"$@\"",
-    tools = ["//kbtb/cli:kicad_to_gerber"],
+gerbers_from_kicad(
+    name = "test_plate_pcb",
+    src = ":test_plate_kicad",
 )
 
 # TODO(peterklein): keyboard_board_kicad()
@@ -51,8 +48,8 @@ genrule(
     name = "test_board_kicad",
     srcs = [":test_layout"],
     outs = ["board.kicad_pcb"],
-    cmd = "./$(location //kbtb/cli) --input=\"$<\" --format=main_kicad_pcb --output=\"$@\"",
-    tools = [
+    cmd = "LD_LIBRARY_PATH='$(execpath //kbtb/cli).runfiles/com_gitlab_kicad_kicad' ./$(execpath //kbtb/cli) --input=\"$<\" --format=main_kicad_pcb --output=\"$@\"",
+    exec_tools = [
         "//kbtb/cli",
         "//kbtb/kicad_modules",
         "@com_github_ai03_2725_typec//:all",
@@ -65,8 +62,8 @@ genrule(
     name = "test_qmk",
     srcs = [":test_layout"],
     outs = ["test_qmk.h"],
-    cmd = "./$(location //kbtb/cli) --input=\"$<\" --format=h --output=\"$@\"",
-    tools = ["//kbtb/cli"],
+    cmd = "LD_LIBRARY_PATH='$(execpath //kbtb/cli).runfiles/com_gitlab_kicad_kicad' ./$(execpath //kbtb/cli) --input=\"$<\" --format=h --output=\"$@\"",
+    exec_tools = ["//kbtb/cli"],
 )
 
 keyboard_plate_dxf(
@@ -92,8 +89,8 @@ genrule(
     name = "tkl_layout_svg",
     srcs = [":tkl_layout"],
     outs = ["tkl_layout.svg"],
-    cmd = "./$(location //kbtb/cli:to_svg) --input=\"$<\" --format=svg --output=\"$@\"",
-    tools = ["//kbtb/cli:to_svg"],
+    cmd = "./$(execpath //kbtb/cli:to_svg) --input=\"$<\" --format=svg --output=\"$@\"",
+    exec_tools = ["//kbtb/cli:to_svg"],
 )
 
 py_binary(
@@ -109,8 +106,8 @@ py_binary(
 genrule(
     name = "numpad_layout",
     outs = ["numpad_layout.pb"],
-    cmd = "./$(location :build_numpad_layout) --output=\"$@\"",
-    tools = [":build_numpad_layout"],
+    cmd = "./$(execpath :build_numpad_layout) --output=\"$@\"",
+    exec_tools = [":build_numpad_layout"],
     visibility = ["//visibility:public"],
 )
 
@@ -130,8 +127,8 @@ genrule(
     name = "numpad_kicad",
     srcs = [":numpad_layout"],
     outs = ["numpad_board.kicad_pcb"],
-    cmd = "./$(location //kbtb/cli) --input=\"$<\" --format=main_kicad_pcb --output=\"$@\"",
-    tools = [
+    cmd = "LD_LIBRARY_PATH='$(execpath //kbtb/cli).runfiles/com_gitlab_kicad_kicad' ./$(execpath //kbtb/cli) --input=\"$<\" --format=main_kicad_pcb --output=\"$@\"",
+    exec_tools = [
         "//kbtb/cli",
         "//kbtb/kicad_modules",
         "@com_github_ai03_2725_typec//:all",
@@ -141,29 +138,16 @@ genrule(
 )
 
 genrule(
-    name = "numpad_gerbers",
-    srcs = ["numpad_board_routed.kicad_pcb"],
-    outs = ["numpad_board_routed.zip"],
-    cmd = "./$(location //kbtb/cli:kicad_to_gerber) --input=\"$<\" --output=\"$@\"",
-    tools = [
-        "//kbtb/cli:kicad_to_gerber",
-    ],
-)
-
-genrule(
-    name = "numpad_plate",
+    name = "numpad_plate_kicad",
     srcs = [":numpad_layout"],
     outs = ["numpad_plate.kicad_pcb"],
-    cmd = "./$(location //kbtb/cli) --input=\"$<\" --format=plate_kicad_pcb --output=\"$@\"",
-    tools = ["//kbtb/cli"],
+    cmd = "LD_LIBRARY_PATH='$(execpath //kbtb/cli).runfiles/com_gitlab_kicad_kicad' ./$(execpath //kbtb/cli) --input=\"$<\" --format=plate_kicad_pcb --output=\"$@\"",
+    exec_tools = ["//kbtb/cli"],
 )
 
-genrule(
-    name = "numpad_plate_gerbers",
-    srcs = [":numpad_plate"],
-    outs = ["numpad_plate_gerbers.zip"],
-    cmd = "./$(location //kbtb/cli:kicad_to_gerber) --input=\"$<\" --output=\"$@\"",
-    tools = ["//kbtb/cli:kicad_to_gerber"],
+gerbers_from_kicad(
+    name = "numpad_plate_pcb",
+    src = ":numpad_plate_kicad",
 )
 
 # TODO(peterklein): keyboard_plate_svg()
@@ -171,8 +155,8 @@ genrule(
     name = "numpad_layout_svg",
     srcs = [":numpad_layout"],
     outs = ["numpad_layout.svg"],
-    cmd = "./$(location //kbtb/cli:to_svg) --input=\"$<\" --format=svg --output=\"$@\"",
-    tools = ["//kbtb/cli:to_svg"],
+    cmd = "./$(execpath //kbtb/cli:to_svg) --input=\"$<\" --format=svg --output=\"$@\"",
+    exec_tools = ["//kbtb/cli:to_svg"],
 )
 
 py_binary(
@@ -188,8 +172,8 @@ py_binary(
 genrule(
     name = "min_stm32_layout",
     outs = ["min_stm32_layout.pb"],
-    cmd = "./$(location :build_min_stm32_layout) --output=\"$@\"",
-    tools = [":build_min_stm32_layout"],
+    cmd = "./$(execpath :build_min_stm32_layout) --output=\"$@\"",
+    exec_tools = [":build_min_stm32_layout"],
     visibility = ["//visibility:public"],
 )
 
@@ -198,8 +182,8 @@ genrule(
     name = "min_stm32_kicad",
     srcs = [":min_stm32_layout"],
     outs = ["min_stm32.kicad_pcb"],
-    cmd = "./$(location //kbtb/cli) --input=\"$<\" --format=main_kicad_pcb --output=\"$@\"",
-    tools = [
+    cmd = "LD_LIBRARY_PATH='$(execpath //kbtb/cli).runfiles/com_gitlab_kicad_kicad' ./$(execpath //kbtb/cli) --input=\"$<\" --format=main_kicad_pcb --output=\"$@\"",
+    exec_tools = [
         "//kbtb/cli",
         "//kbtb/kicad_modules",
         "@com_github_ai03_2725_typec//:all",

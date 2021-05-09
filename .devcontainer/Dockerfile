@@ -34,19 +34,21 @@ RUN mkdir /tmp/buildifier \
 # Install Kicad build deps
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
    && apt-get install --no-install-recommends -y \
+   build-essential \
    cmake \
+   libboost-dev \
+   libboost-filesystem-dev \
+   libboost-test-dev \
+   libcairo2-dev \
+   libcurl4-openssl-dev \
    libgl-dev \
    libglew-dev \
    libglm-dev \
-   libcurl4-openssl-dev \
-   libcairo2-dev \
-   libboost-dev swig \
-   libwxgtk3.0-gtk3-dev \
    libgtk-3-dev \
-   libssl-dev \
-   libboost-test-dev \
-   libboost-filesystem-dev \
-   build-essential \
    libpython3-dev \
+   libwxgtk3.0-gtk3-dev \
+   swig \
+   ninja-build \
+   libssl-dev \
    && apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/* /tmp/library-scripts
 

@@ -38,7 +38,7 @@ py_library(
     deps = [
         ":keyboard_lib",
         ":kicad",
-        "@com_gitlab_kicad_kicad//:pcbnew_python",
+        "@com_gitlab_kicad_kicad//:pcbnew",
     ],
 )
 
@@ -50,7 +50,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         requirement("shapely"),
-        "@com_gitlab_kicad_kicad//:pcbnew_python",
+        "@com_gitlab_kicad_kicad//:pcbnew",
     ],
 )
 
