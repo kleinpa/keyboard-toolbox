@@ -56,11 +56,11 @@ def pose_closest_point(outline, point):
     ps = [
         outline.interpolate(
             x + outline.project(shapely.geometry.Point(point.x, point.y)))
-        for x in [-1, 0, 1]
+        for x in [-.1, 0, .1]
     ]
     return Pose(x=ps[1].x,
                 y=ps[1].y,
-                r=degrees(atan2(ps[2].y - ps[0].y, ps[2].x - ps[0].x)) - 90)
+                r=degrees(atan2(ps[2].y - ps[0].y, ps[2].x - ps[0].x)))
 
 
 def group_by_row(keys):  # duplicated to matrix.py

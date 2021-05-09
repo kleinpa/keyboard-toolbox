@@ -14,7 +14,7 @@ import pcbnew
 import shapely
 
 lcsc_parts = {
-    ("D_SOD-123", "D_SOD-123"): "C81598",
+    ("D_SOD-123", "4148"): "C81598",
     ("HRO-TYPE-C-31-M-12", "HRO-TYPE-C-31-M-12"): "C165948",
     ("LQFP-48_7x7mm_P0.5mm", "STM32F072C8T6"): "C80488",
     ("R_0603_1608Metric", "0.1 uF"): "C14663",

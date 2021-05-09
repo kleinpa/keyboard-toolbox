@@ -87,8 +87,11 @@ message Keyboard {
   }
   Controller controller = 6;
 
-  // The location of the microcontroller on the PCB.
+  // The location of the microcontroller on the PCB. Depending on the controller, this may need to be over or between keys.
   Pose controller_pose = 7;
+
+  // The location of the connector on the PCB.
+  Pose connector_pose = 9;
 
   // TODO: move this elsewhere
   double hole_diameter = 10002;

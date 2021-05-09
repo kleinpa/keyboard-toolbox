@@ -174,3 +174,36 @@ genrule(
     cmd = "./$(location //kbtb/cli:to_svg) --input=\"$<\" --format=svg --output=\"$@\"",
     tools = ["//kbtb/cli:to_svg"],
 )
+
+py_binary(
+    name = "build_min_stm32_layout",
+    srcs = ["build_min_stm32_layout.py"],
+    deps = [
+        requirement("absl-py"),
+        "//kbtb:keyboard_lib",
+        "//kbtb:kle",
+    ],
+)
+
+genrule(
+    name = "min_stm32_layout",
+    outs = ["min_stm32_layout.pb"],
+    cmd = "./$(location :build_min_stm32_layout) --output=\"$@\"",
+    tools = [":build_min_stm32_layout"],
+    visibility = ["//visibility:public"],
+)
+
+# TODO(peterklein): keyboard_board_kicad()
+genrule(
+    name = "min_stm32_kicad",
+    srcs = [":min_stm32_layout"],
+    outs = ["min_stm32.kicad_pcb"],
+    cmd = "./$(location //kbtb/cli) --input=\"$<\" --format=main_kicad_pcb --output=\"$@\"",
+    tools = [
+        "//kbtb/cli",
+        "//kbtb/kicad_modules",
+        "@com_github_ai03_2725_typec//:all",
+        "@com_github_keebio_keebio_parts//:all",
+        "@com_gitlab_kicad_libraries_kicad_footprints//:all",
+    ],
+)
