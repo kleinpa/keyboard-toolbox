@@ -1,6 +1,4 @@
 absl-py
-alphashape
 ezdxf
 shapely
-sexpdata
 Flask
