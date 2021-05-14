@@ -4,15 +4,20 @@
     {
       "label": "Bazel Build All",
       "type": "process",
-      "command": "bazel",
+      "command": "bazelisk",
       "args": [
         "build",
         "//...",
-        "--keep_going"
+        "--keep_going",
       ],
       "group": {
         "kind": "build",
         "isDefault": true
+      },
+      "options": {
+        "env": {
+          "PATH": "/usr/local/bin:/usr/bin:/bin"
+        }
       }
     }
   ]

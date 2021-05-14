@@ -47,9 +47,9 @@ targets+=("//kbtb/testdata/routed:numpad_board_routed")
 files+=("kbtb/testdata/routed/numpad_board_routed.zip")
 
 bazelisk build ${targets[@]} $@
-rm -rf $(bazel info workspace)/dist/*
+rm -rf $(bazelisk info workspace)/dist/*
 for path in "${files[@]}"
 do
-    mkdir -p $(dirname $(bazel info workspace)/dist/$path)
-    cp $(bazel info bazel-bin)/$path $(bazel info workspace)/dist/$path
+    mkdir -p $(dirname $(bazelisk info workspace)/dist/$path)
+    cp $(bazelisk info bazel-bin)/$path $(bazelisk info workspace)/dist/$path
 done
