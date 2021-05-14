@@ -1,5 +1,5 @@
 load("@rules_python//python:defs.bzl", "py_binary")
-load("@com_github_kleinpa_kbtb_py_deps//:requirements.bzl", "requirement")
+load("@com_github_kleinpa_keyboardtoolbox_py_deps//:requirements.bzl", "requirement")
 load("//kbtb:defs.bzl", "kbpb_from_kle", "keyboard_plate_dxf")
 load("@com_github_kleinpa_kicadbazel//tools:defs.bzl", "gerbers_from_kicad")
 

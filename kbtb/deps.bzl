@@ -7,6 +7,6 @@ def kbtb_deps():
     kicadbazel_deps()
 
     pip_install(
-        name = "com_github_kleinpa_kbtb_py_deps",
-        requirements = "@com_github_kleinpa_kbtb//:requirements.txt",
+        name = "com_github_kleinpa_keyboardtoolbox_py_deps",
+        requirements = "@com_github_kleinpa_keyboardtoolbox//:requirements.txt",
     )
