@@ -4,7 +4,7 @@ import shutil
 
 from absl import app, flags
 
-from kbtb.kicad import kicad_file_to_gerber_archive_file
+from kbtb.kicad import bomcpl_from_kicad
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string('input', '', 'Path to .kicad_pcb file')
@@ -13,9 +13,10 @@ flags.DEFINE_string('output', '', 'Path to write .zip file containing gerbers')
 
 def main(argv):
     with open(FLAGS.input, "rb") as fp:
-        output = kicad_file_to_gerber_archive_file(fp)
+        kicad_file = fp.read()
+        gerber_archive = bomcpl_from_kicad(kicad_file)
     with open(FLAGS.output, "wb") as fp:
-        shutil.copyfileobj(output, fp)
+        fp.write(gerber_archive)
 
 
 if __name__ == "__main__":

@@ -57,9 +57,9 @@ py_binary(
 )
 
 py_binary(
-    name = "kicad_to_gerber",
+    name = "bomcpl_from_kicad",
     srcs = [
-        "kicad_to_gerber.py",
+        "bomcpl_from_kicad.py",
     ],
     visibility = ["//visibility:public"],
     deps = [

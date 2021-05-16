@@ -61,3 +61,32 @@ keyboard_plate_dxf = rule(
         ),
     },
 )
+
+def _bomcpl_from_kicad(ctx):
+    output_file = ctx.actions.declare_file("{}.zip".format(ctx.label.name))
+    ctx.actions.run(
+        inputs = [ctx.file.src],
+        outputs = [output_file],
+        arguments = [
+            "--input={}".format(ctx.file.src.path),
+            "--output={}".format(output_file.path),
+        ],
+        env = {"LD_LIBRARY_PATH": ctx.executable._bomcpl_from_kicad.path + ".runfiles/com_gitlab_kicad_kicad"},
+        executable = ctx.executable._bomcpl_from_kicad,
+    )
+    return DefaultInfo(files = depset([output_file]))
+
+bomcpl_from_kicad = rule(
+    implementation = _bomcpl_from_kicad,
+    attrs = {
+        "src": attr.label(
+            allow_single_file = [".kicad_pcb"],
+            mandatory = True,
+        ),
+        "_bomcpl_from_kicad": attr.label(
+            default = Label("//kbtb/cli:bomcpl_from_kicad"),
+            executable = True,
+            cfg = "exec",
+        ),
+    },
+)
