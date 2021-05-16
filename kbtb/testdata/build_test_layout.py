@@ -4,7 +4,7 @@ from absl import app, flags
 
 from kbtb.keyboard_pb2 import Keyboard
 from kbtb.layout import between, between_pose, pose_closest_point, mirror_keys, rotate_keys, grid
-from kbtb.matrix import fill_matrix
+from kbtb.matrix import fill_matrix_rows
 from kbtb.outline import generate_outline_tight
 
 FLAGS = flags.FLAGS
@@ -28,11 +28,12 @@ def test_layout():
     keys = [
         *(grid(x, row, y_offset=column_offsets[x])
           for row in range(rows - 1, 0, -1) for x in range(6)),
-        *(grid(x,
-               0,
-               arc_radius=120,
-               x_offset=-1 / 3 * pitch,
-               y_offset=column_offsets[1]) for x in range(3)),
+        *(grid(
+            x,
+            0,
+            arc_radius=120,
+            x_offset=-1 / 3 * pitch,
+            y_offset=column_offsets[1]) for x in range(3)),
     ]
 
     for key in mirror_keys(rotate_keys(keys, angle=19), middle_space=0):
@@ -52,7 +53,7 @@ def test_layout():
                 kb.keys[51 + (rows - 5) * 12].pose)
     ])
     kb.controller_pose.CopyFrom(kb.keys[8].pose)
-    fill_matrix(kb)
+    fill_matrix_rows(kb)
 
     outline = generate_outline_tight(
         kb,
