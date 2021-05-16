@@ -16,7 +16,6 @@ def polygon_to_dxf_file(geom):
     for interior in geom.interiors:
         msp.add_lwpolyline(interior.coords)
 
-    fn = io.TextIOWrapper(io.BytesIO())
+    fn = io.StringIO()
     doc.write(fn, fmt="asc")
-    fn.seek(0)
-    return fn.detach()
+    return fn.getvalue().encode('utf-8')

@@ -1,7 +1,5 @@
 """Generate various artifacts from a keyboard definition."""
 
-import shutil
-
 from absl import app, flags
 
 from kbtb.keyboard import load_keyboard, save_keyboard
@@ -26,19 +24,19 @@ def main(argv):
     if FLAGS.format == 'plate_kicad_pcb':
         with open(FLAGS.output, 'wb') as output:
             plate = generate_plate(kb)
-            shutil.copyfileobj(polygon_to_kicad_file(plate), output)
+            output.write(polygon_to_kicad_file(plate))
 
     elif FLAGS.format == 'h':
         with open(FLAGS.output, 'wb') as output:
-            shutil.copyfileobj(make_qmk_header_file(kb), output)
+            output.write(make_qmk_header_file(kb))
 
     elif FLAGS.format == 'main_kicad_pcb':
         with open(FLAGS.output, 'wb') as output:
-            shutil.copyfileobj(generate_kicad_pcb_file(kb), output)
+            output.write(generate_kicad_pcb_file(kb))
 
     elif FLAGS.format == 'kle':
         with open(FLAGS.output, 'wb') as output:
-            shutil.copyfileobj(keyboard_to_kle_file(kb), output)
+            output.write(keyboard_to_kle_file(kb))
 
     elif FLAGS.format == 'proto_text':
         save_keyboard(kb, output_path=FLAGS.output, format='text')

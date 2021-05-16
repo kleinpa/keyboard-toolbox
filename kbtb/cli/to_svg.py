@@ -1,7 +1,5 @@
 """Generate preview svg images from a keyboard definition."""
 
-import shutil
-
 from absl import app, flags
 
 from kbtb.keyboard import load_keyboard
@@ -18,8 +16,7 @@ def main(argv):
 
     if FLAGS.format == 'svg':
         with open(FLAGS.output, 'wb') as output:
-            shutil.copyfileobj(svg_to_file(keyboard_to_layout_svg(kb)), output)
-
+            output.write(svg_to_file(keyboard_to_layout_svg(kb)))
     else:
         raise ValueError("unknown --format value")
 

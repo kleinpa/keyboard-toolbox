@@ -68,10 +68,8 @@ def keyboard_to_kle(kb, keyboard_unit=19.05):
         for key in row:
             props = {}
 
-            x, y, r, w, h = kle_position(key,
-                                         x0=x_min,
-                                         y0=y_max,
-                                         keyboard_unit=keyboard_unit)
+            x, y, r, w, h = kle_position(
+                key, x0=x_min, y0=y_max, keyboard_unit=keyboard_unit)
 
             # break row if rotation has changed
             if not isclose(current_r, r, abs_tol=0.00001):
@@ -110,12 +108,7 @@ def keyboard_to_kle(kb, keyboard_unit=19.05):
 
 def keyboard_to_kle_file(kb, keyboard_unit=19.05):
     kle_data = keyboard_to_kle(kb, keyboard_unit)
-
-    fp = io.TextIOWrapper(io.BytesIO())
-    json.dump(kle_data, fp)
-    fp.seek(0)
-
-    return fp.detach()
+    return json.dumps(kle_data)
 
 
 def kle_param_to_key(x, y, r, rx, ry, w, h, keyboard_unit=19.05):
@@ -136,13 +129,12 @@ def kle_param_to_key(x, y, r, rx, ry, w, h, keyboard_unit=19.05):
     x2 = x2 - sin(radians(-r - 90)) * width / 2
     y2 = y2 - cos(radians(-r - 90)) * width / 2
 
-    return Keyboard.Key(pose={
-        "x": x2,
-        "y": y2,
-        "r": r
-    },
-                        unit_width=w,
-                        unit_height=h)
+    return Keyboard.Key(
+        pose={
+            "x": x2,
+            "y": y2,
+            "r": r
+        }, unit_width=w, unit_height=h)
 
 
 def kle_to_keyboard(kle_json, keyboard_unit=19.05):
@@ -197,14 +189,15 @@ def kle_to_keyboard(kle_json, keyboard_unit=19.05):
                     height = props["h"]
 
                     kb.keys.append(
-                        kle_param_to_key(x=current_x,
-                                         y=current_y,
-                                         r=current_r,
-                                         rx=current_rx,
-                                         ry=current_ry,
-                                         w=width,
-                                         h=height,
-                                         keyboard_unit=keyboard_unit))
+                        kle_param_to_key(
+                            x=current_x,
+                            y=current_y,
+                            r=current_r,
+                            rx=current_rx,
+                            ry=current_ry,
+                            w=width,
+                            h=height,
+                            keyboard_unit=keyboard_unit))
 
                     current_x += width
                     props.update({

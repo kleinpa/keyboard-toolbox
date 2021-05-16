@@ -1,7 +1,5 @@
 """Generate various artifacts from a keyboard definition."""
 
-import shutil
-
 from absl import app, flags
 
 from kbtb.dxf import polygon_to_dxf_file
@@ -29,7 +27,7 @@ def main(argv):
     if FLAGS.format == 'plate_dxf':
         with open(FLAGS.output, 'wb') as output:
             plate = generate_plate_by_type(kb)
-            shutil.copyfileobj(polygon_to_dxf_file(plate), output)
+            output.write(polygon_to_dxf_file(plate))
 
     else:
         raise ValueError("unknown --format value")

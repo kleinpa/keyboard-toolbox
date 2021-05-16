@@ -483,7 +483,6 @@ def generate_kicad_pcb_file(kb):
 
     board.Add(item)
 
-    tf = tempfile.NamedTemporaryFile()
-    board.Save(tf.name)
-
-    return tf
+    with tempfile.NamedTemporaryFile() as tf:
+        board.Save(tf.name)
+        return tf.read()

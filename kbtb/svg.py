@@ -122,5 +122,4 @@ def keyboard_to_layout_svg(kb, add_numbers=True):
 def svg_to_file(svg):
     f = io.BytesIO()
     svg.write(f)
-    f.seek(0)
-    return f
+    return f.getvalue()
