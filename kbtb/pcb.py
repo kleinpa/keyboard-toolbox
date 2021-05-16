@@ -1,5 +1,6 @@
 import os
 import tempfile
+from typing import NamedTuple
 from math import atan2, cos, degrees, radians, sin
 
 import pcbnew
@@ -9,247 +10,283 @@ from kbtb.keyboard_pb2 import Keyboard
 from kbtb.kicad import kicad_circle, kicad_polygon
 
 
-def load_footprint(library, footprint):
-    module = pcbnew.FootprintLoad(library, footprint)
-    if not module:
+class PCBPosition(NamedTuple):
+    x: int
+    y: int
+    r: int = 0
+    flip: bool = False
+
+
+def offset(pose: PCBPosition, x, y, r=0, flip=False):
+    return PCBPosition(
+        pose.x + cos(radians(pose.r)) * x - sin(radians(pose.r)) * y,
+        pose.y + cos(radians(pose.r)) * y + sin(radians(pose.r)) * x,
+        pose.r + r, pose.flip ^ flip)
+
+
+# pcbnew.FootprintLoad fails silently so use this function instead.
+def load_footprint(library, name):
+    footprint = pcbnew.FootprintLoad(library, name)
+    if not footprint:
         raise ValueError(
-            f"can not load footprint {footprint} from library {library}")
-    return module
+            f"can not load footprint {name} from library {library}")
+    return footprint
 
 
-def place_module(module, x, y, r, flip=False):
-    module = pcbnew.FOOTPRINT(module)
-    module.SetPosition(pcbnew.wxPointMM(x, y))
-    if flip:
-        module.Flip(pcbnew.wxPointMM(x, y), aFlipLeftRight=True)
-    module.SetOrientationDegrees(180 - r)
-    for g in module.GraphicalItems():
-        if isinstance(g, pcbnew.EDA_TEXT):
-            g.SetKeepUpright(False)
-    return module
+def set_pcb_position(footprint, pose: PCBPosition):
+    footprint.SetPosition(pcbnew.wxPointMM(pose.x, pose.y))
+    if pose.flip:
+        footprint.Flip(pcbnew.wxPointMM(pose.x, pose.y), aFlipLeftRight=True)
+    footprint.SetOrientationDegrees(-pose.r)
+    return footprint
 
 
-def add_pro_micro(x, y, r, parent, ground_net, io_nets):
-    mcu_offset = 17.75
+def set_next_prefix(board, footprint, prefix):
+    other = [x.GetReference() for x in board.GetFootprints()]
+    x = 1
+    while f"{prefix}{x}" in other:
+        x = x + 1
+    footprint.SetReference(f"{prefix}{x}")
 
+
+def resistor(val, net_a, net_b):
+    item = load_footprint(
+        "external/com_gitlab_kicad_libraries_kicad_footprints/Resistor_SMD.pretty",
+        "R_0603_1608Metric")
+    item.SetValue(val)
+    item.FindPadByName(1).SetNet(net_a)
+    item.FindPadByName(2).SetNet(net_b)
+    return item
+
+
+def add_pro_micro(pose: PCBPosition, board, ground_net, io_nets):
+    mcu_offset = 17.78 - 9.525
     controller = load_footprint("external/com_github_keebio_keebio_parts",
                                 "ArduinoProMicro")
-    controller.MoveAnchorPosition(pcbnew.wxPointMM(mcu_offset, 0))
-    controller.SetPosition(pcbnew.wxPointMM(x, y))
-    controller.SetOrientationDegrees(90 + r)
-    controller.SetReference(f"U1")
-    controller.Flip(pcbnew.wxPointMM(x, y), True)
+
+    set_pcb_position(controller, offset(pose, 0, mcu_offset, 90))
+    set_next_prefix(board, controller, "U")
+
+    # TODO: make this change to actual footprint instead of hacking it here
     for g in controller.GraphicalItems():
-        if isinstance(g, pcbnew.EDA_TEXT):
-            pass  #g.SetVisible(False)
-        else:
-            pass  #g.DeleteStructure()
+        layer = g.GetLayer()
+        # delete everything from top
+        if layer == 37:
+            if isinstance(g, pcbnew.EDA_TEXT):
+                g.SetVisible(False)
+            else:
+                g.DeleteStructure()
 
     for i in [3, 4, 23]:
         controller.FindPadByName(i).SetNet(ground_net)
 
-    controller.FindPadByName(1).SetNet(io_nets[0])
-    controller.FindPadByName(2).SetNet(io_nets[1])
-    controller.FindPadByName(5).SetNet(io_nets[2])
-    controller.FindPadByName(6).SetNet(io_nets[3])
-    controller.FindPadByName(7).SetNet(io_nets[4])
-    controller.FindPadByName(8).SetNet(io_nets[5])
-    controller.FindPadByName(9).SetNet(io_nets[6])
-    controller.FindPadByName(10).SetNet(io_nets[7])
-    controller.FindPadByName(11).SetNet(io_nets[8])
-    controller.FindPadByName(12).SetNet(io_nets[9])
-    controller.FindPadByName(13).SetNet(io_nets[10])
-    controller.FindPadByName(14).SetNet(io_nets[11])
-    controller.FindPadByName(15).SetNet(io_nets[12])
-    controller.FindPadByName(16).SetNet(io_nets[13])
-    controller.FindPadByName(17).SetNet(io_nets[14])
-    controller.FindPadByName(18).SetNet(io_nets[15])
-    controller.FindPadByName(19).SetNet(io_nets[16])
-    controller.FindPadByName(20).SetNet(io_nets[17])
+    for i, net in enumerate(io_nets):
+        [
+            controller.FindPadByName(1),
+            controller.FindPadByName(2),
+            controller.FindPadByName(5),
+            controller.FindPadByName(6),
+            controller.FindPadByName(7),
+            controller.FindPadByName(8),
+            controller.FindPadByName(9),
+            controller.FindPadByName(10),
+            controller.FindPadByName(11),
+            controller.FindPadByName(12),
+            controller.FindPadByName(13),
+            controller.FindPadByName(14),
+            controller.FindPadByName(15),
+            controller.FindPadByName(16),
+            controller.FindPadByName(17),
+            controller.FindPadByName(18),
+            controller.FindPadByName(19),
+            controller.FindPadByName(20),
+        ][i].SetNet(net)
 
-    return controller
+    board.Add(controller)
 
-# Adds a USB Type-C connector configured as a Legacy Device Adapter.
-def add_usbc_legacy(x, y, r, parent, ground_net, net_usb_plus, net_usb_minus, net_usb_vbus, flip=False):
-    net_usb_cc1 = pcbnew.NETINFO_ITEM(parent, f"usb-cc1")
-    parent.Add(net_usb_cc1)
-    net_usb_cc2 = pcbnew.NETINFO_ITEM(parent, f"usb-cc2")
-    parent.Add(net_usb_cc2)
 
-    def offset(x1,y1,r1,x2,y2,r2):
-        return (x1+cos(radians(r1))*x2-sin(radians(r1))*y2,
-               y1+cos(radians(r1))*y2+sin(radians(r1))*x2,
-               r1+r2)
+# Add a USB Type-C connector configured as a Legacy Device Adapter.
+def add_usbc_legacy(pose: PCBPosition, board, ground_net, usb_nets):
+    net_usb_dp, net_usb_dn, net_usb_vbus = usb_nets
+
+    net_usb_cc1 = pcbnew.NETINFO_ITEM(board, f"usb-cc1")
+    board.Add(net_usb_cc1)
+    net_usb_cc2 = pcbnew.NETINFO_ITEM(board, f"usb-cc2")
+    board.Add(net_usb_cc2)
 
     # usb type-c connector
-    item = place_module(
-        load_footprint(
-            "external/com_github_ai03_2725_typec",
-            "HRO-TYPE-C-31-M-12",
-        ), *offset(x,y,r,0,0,180 if flip else 0), flip)
-
-    item.SetReference(f"J1")
+    item = load_footprint(
+        "external/com_github_ai03_2725_typec",
+        "HRO-TYPE-C-31-M-12",
+    )
+    set_pcb_position(item, offset(pose, 0, 0, 0))
+    set_next_prefix(board, item, "J")
+    item.Reference().SetVisible(False)
+    item.Value().SetVisible(False)
     item.FindPadByName(1).SetNet(ground_net)
     item.FindPadByName(2).SetNet(net_usb_vbus)
     #item.FindPadByName(3).SetNet() # sbu2
     item.FindPadByName(4).SetNet(net_usb_cc1)
-    item.FindPadByName(5).SetNet(net_usb_minus)
-    item.FindPadByName(6).SetNet(net_usb_plus)
-    item.FindPadByName(7).SetNet(net_usb_minus)
-    item.FindPadByName(8).SetNet(net_usb_plus)
+    item.FindPadByName(5).SetNet(net_usb_dn)
+    item.FindPadByName(6).SetNet(net_usb_dp)
+    item.FindPadByName(7).SetNet(net_usb_dn)
+    item.FindPadByName(8).SetNet(net_usb_dp)
     #item.FindPadByName(9).SetNet() # sbu1
     item.FindPadByName(10).SetNet(net_usb_cc2)
     item.FindPadByName(11).SetNet(net_usb_vbus)
     item.FindPadByName(12).SetNet(ground_net)
     #item.FindPadByName(13).SetNet()  # shield
-    yield item
+    board.Add(item)
 
     ## usb cc resistors
-    def resistor(x,y,r,ref,val,net_a,net_b):
-        item = place_module(
-            load_footprint(
-                "external/com_gitlab_kicad_libraries_kicad_footprints/Resistor_SMD.pretty",
-                "R_0603_1608Metric"), x, y, r, flip)
-        item.SetReference(ref)
-        item.SetValue(val)
-        item.FindPadByName(1).SetNet(net_a)
-        item.FindPadByName(2).SetNet(net_b)
-        return item
-
-
-    yield resistor(*offset(x,y,r,-2.8,10,90),"R6","5.1 kΩ",net_usb_cc1, ground_net)
-    yield resistor(*offset(x,y,r,2.8,10,90),"R7","5.1 kΩ",net_usb_cc2, ground_net)
-
+    item = resistor("5.1 kΩ", ground_net, net_usb_cc1)
+    set_pcb_position(item, offset(pose, -2.8, 10, -90))
+    set_next_prefix(board, item, "R")
+    board.Add(item)
+    item = resistor("5.1 kΩ", ground_net, net_usb_cc2)
+    set_pcb_position(item, offset(pose, 2.8, 10, -90))
+    set_next_prefix(board, item, "R")
+    board.Add(item)
 
     # esd protection
     # https://www.littelfuse.com/~/media/electronics/datasheets/tvs_diode_arrays/littelfuse_tvs_diode_array_sr05_datasheet.pdf.pdf
-    item = place_module(
-        load_footprint(
-            "external/com_gitlab_kicad_libraries_kicad_footprints/Package_TO_SOT_SMD.pretty",
-            "SOT-143"), *offset(x,y,r,0,12,0), flip)
-    item.SetReference(f"U3")
+    item = load_footprint(
+        "external/com_gitlab_kicad_libraries_kicad_footprints/Package_TO_SOT_SMD.pretty",
+        "SOT-143")
+    set_pcb_position(item, offset(pose, 0, 12, 0))
+    set_next_prefix(board, item, "U")
     item.SetValue("SR05")
     item.FindPadByName(1).SetNet(ground_net)
-    item.FindPadByName(2).SetNet(net_usb_minus)
-    item.FindPadByName(3).SetNet(net_usb_plus)
+    item.FindPadByName(2).SetNet(net_usb_dn)
+    item.FindPadByName(3).SetNet(net_usb_dp)
     item.FindPadByName(4).SetNet(net_usb_vbus)
-    yield item
+    board.Add(item)
 
 
+def add_stm32(pose: PCBPosition, board, ground_net, usb_nets, io_nets):
+    # signals for swd debug
+    net_mcu_reset = pcbnew.NETINFO_ITEM(board, f"reset")
+    board.Add(net_mcu_reset)
+    net_swd_swdio = pcbnew.NETINFO_ITEM(board, f"swdio")
+    board.Add(net_swd_swdio)
+    net_swd_swdclk = pcbnew.NETINFO_ITEM(board, f"swdclk")
+    board.Add(net_swd_swdclk)
 
-def add_stm32(x, y, r, parent, ground_net, net_usb_plus, net_usb_minus, net_usb_vbus, io_nets, flip=False):
-    net_mcu_vcc = pcbnew.NETINFO_ITEM(parent, f"vcc")
-    parent.Add(net_mcu_vcc)
-    net_mcu_boot = pcbnew.NETINFO_ITEM(parent, f"boot")
-    parent.Add(net_mcu_boot)
-    net_mcu_reset = pcbnew.NETINFO_ITEM(parent, f"reset")
-    parent.Add(net_mcu_reset)
-
-    net_swd_swdio = pcbnew.NETINFO_ITEM(parent, f"swdio")
-    parent.Add(net_swd_swdio)
-    net_swd_swdclk = pcbnew.NETINFO_ITEM(parent, f"swdclk")
-    parent.Add(net_swd_swdclk)
-
-
-    def offset(x1,y1,r1,x2,y2,r2):
-        return (x1 + x2 * cos(radians(r1)) - y2 * sin(radians(r1)),
-                y1 + y2 * cos(radians(r1)) + x2 * sin(radians(r1)),
-                r1 + r2)
+    # this section is powered by usb and includes a voltage regulator
+    net_usb_dp, net_usb_dn, net_usb_vbus = usb_nets
+    net_mcu_vcc = pcbnew.NETINFO_ITEM(board, f"vcc")
+    board.Add(net_mcu_vcc)
 
     # stm32f072
-    item = place_module(
-        load_footprint(
-            "external/com_gitlab_kicad_libraries_kicad_footprints/Package_QFP.pretty",
-            "LQFP-48_7x7mm_P0.5mm"), *offset(x,y,r,0,0,45), flip)
-    item.SetReference(f"U1")
+    # https://www.st.com/resource/en/datasheet/stm32f072c8.pdf
+    item = load_footprint(
+        "external/com_gitlab_kicad_libraries_kicad_footprints/Package_QFP.pretty",
+        "LQFP-48_7x7mm_P0.5mm")
+    set_pcb_position(item, offset(pose, 0, 0, 180 + 45))
+    set_next_prefix(board, item, "U")
     item.SetValue("STM32F072C8T6")
-    #raise RuntimeError(f"r={r} offset={offset(x,y,r,0,0,0)}")
-    yield item
+    board.Add(item)
 
-    for p in [8, 23, 35, 47]:
+    for p in [8, 23, 35, 44, 47]:  # VSS/VSSA/BOOT0
         item.FindPadByName(p).SetNet(ground_net)
-    for p in [1, 9, 24, 36, 48]:
+    for p in [1, 9, 24, 36, 48]:  # VDD/VDDA
         item.FindPadByName(p).SetNet(net_mcu_vcc)
 
-    item.FindPadByName(7).SetNet(net_mcu_reset)
-    item.FindPadByName(44).SetNet(net_mcu_boot)
+    item.FindPadByName(7).SetNet(net_mcu_reset)  # NRST
 
-    item.FindPadByName(34).SetNet(net_swd_swdio)
-    item.FindPadByName(37).SetNet(net_swd_swdclk)
-    item.FindPadByName(32).SetNet(net_usb_minus)
-    item.FindPadByName(33).SetNet(net_usb_plus)
+    item.FindPadByName(34).SetNet(net_swd_swdio)  # PA13
+    item.FindPadByName(37).SetNet(net_swd_swdclk)  # PA14
+    item.FindPadByName(32).SetNet(net_usb_dn)  # PA11
+    item.FindPadByName(33).SetNet(net_usb_dp)  # PA12
 
-    item.FindPadByName(1).SetNet(io_nets[0])
-    item.FindPadByName(2).SetNet(io_nets[1])
-    item.FindPadByName(5).SetNet(io_nets[2])
-    item.FindPadByName(6).SetNet(io_nets[3])
-    item.FindPadByName(7).SetNet(io_nets[4])
-    item.FindPadByName(8).SetNet(io_nets[5])
-    item.FindPadByName(9).SetNet(io_nets[6])
-    item.FindPadByName(10).SetNet(io_nets[7])
-    item.FindPadByName(11).SetNet(io_nets[8])
-    item.FindPadByName(12).SetNet(io_nets[9])
-    item.FindPadByName(13).SetNet(io_nets[10])
-    item.FindPadByName(14).SetNet(io_nets[11])
-    item.FindPadByName(15).SetNet(io_nets[12])
-    item.FindPadByName(16).SetNet(io_nets[13])
-    item.FindPadByName(17).SetNet(io_nets[14])
-    item.FindPadByName(18).SetNet(io_nets[15])
-    item.FindPadByName(19).SetNet(io_nets[16])
-    item.FindPadByName(20).SetNet(io_nets[17])
+    for i, net in enumerate(io_nets):
+        [
+            item.FindPadByName(2),  # C13 pin 2
+            item.FindPadByName(3),  # C14
+            item.FindPadByName(4),  # C15
+            item.FindPadByName(5),  # F0
+            item.FindPadByName(6),  # F1
+            item.FindPadByName(10),  # A0 pin 10
+            item.FindPadByName(11),  # A1
+            item.FindPadByName(12),  # A2
+            item.FindPadByName(13),  # A3 pin 13
+            item.FindPadByName(14),  # A4
+            item.FindPadByName(15),  # A5
+            item.FindPadByName(16),  # A6
+            item.FindPadByName(17),  # A7
+            item.FindPadByName(18),  # B0
+            item.FindPadByName(19),  # B1
+            item.FindPadByName(20),  # B2
+            item.FindPadByName(21),  # B10
+            item.FindPadByName(22),  # B11
+            item.FindPadByName(25),  # B12 pin 25
+            item.FindPadByName(26),  # B13
+            item.FindPadByName(27),  # B14
+            item.FindPadByName(28),  # B15
+            item.FindPadByName(29),  # A8
+            item.FindPadByName(30),  # A9
+            item.FindPadByName(31),  # A10
+            item.FindPadByName(32),  # A11
+            item.FindPadByName(33),  # A12
+            item.FindPadByName(34),  # A13
+            item.FindPadByName(39),  # B3 pin 39
+            item.FindPadByName(40),  # B4
+            item.FindPadByName(41),  # B5
+            item.FindPadByName(42),  # B6
+            item.FindPadByName(43),  # B7
+            item.FindPadByName(45),  # B8 pin 45
+            item.FindPadByName(46),  # B9
+        ][i].SetNet(net)
 
-    # swd headers
-    item = place_module(
-        load_footprint(
-            "external/com_gitlab_kicad_libraries_kicad_footprints/Connector.pretty",
-            "Tag-Connect_TC2030-IDC-FP_2x03_P1.27mm_Vertical"), *offset(x,y,r,0,19,0), flip)
-    item.SetReference(f"J2")
+    # debug connector
+    item = load_footprint(
+        "external/com_gitlab_kicad_libraries_kicad_footprints/Connector.pretty",
+        "Tag-Connect_TC2030-IDC-FP_2x03_P1.27mm_Vertical")
+    set_pcb_position(item, offset(pose, 0, 19, -90))
+    set_next_prefix(board, item, "J")
+    item.Value().SetVisible(False)
+    item.Reference().SetVisible(False)
     item.FindPadByName(1).SetNet(net_mcu_vcc)
     item.FindPadByName(2).SetNet(net_swd_swdio)
     item.FindPadByName(3).SetNet(net_mcu_reset)
-    item.FindPadByName(4).SetNet(net_swd_swdclk)  # bad
+    item.FindPadByName(4).SetNet(net_swd_swdclk)
     item.FindPadByName(5).SetNet(ground_net)
-    yield item
-
-
-    def resistor(x,y,r,ref,val,net_a,net_b):
-        item = place_module(
-            load_footprint(
-                "external/com_gitlab_kicad_libraries_kicad_footprints/Resistor_SMD.pretty",
-                "R_0603_1608Metric"), x, y, r, flip)
-        item.SetReference(ref)
-        item.SetValue(val)
-        item.FindPadByName(1).SetNet(net_a)
-        item.FindPadByName(2).SetNet(net_b)
-        return item
-
-    # boot resistor
-    yield resistor(*offset(x,y,r,4.5,-4.5,225),"R1","10 kΩ",ground_net, net_mcu_boot)
+    board.Add(item)
 
     # mcu decoupling
-    asdf=7
-    yield resistor(*offset(x,y,r,asdf,0,90),"C1","0.1 uF",ground_net, net_mcu_vcc)
-    yield resistor(*offset(x,y,r,-asdf,0,90),"C2","0.1 uF",net_mcu_vcc, ground_net)
-    #yield resistor(*offset(x,y,r,0,asdf,0),"C3","0.1 uF",net_mcu_vcc, ground_net)
-    yield resistor(*offset(x,y,r,0,-asdf,0),"C3","0.1 uF",ground_net,net_mcu_vcc)
+    item = resistor("0.1 uF", ground_net, net_mcu_vcc)
+    set_pcb_position(item, offset(pose, 7, 0, 90))
+    set_next_prefix(board, item, "C")
+    board.Add(item)
+    item = resistor("0.1 uF", net_mcu_vcc, ground_net)
+    set_pcb_position(item, offset(pose, -7, 0, 90))
+    set_next_prefix(board, item, "C")
+    board.Add(item)
+    item = resistor("0.1 uF", net_mcu_vcc, ground_net)
+    set_pcb_position(item, offset(pose, 0, -7, 0))
+    set_next_prefix(board, item, "C")
+    board.Add(item)
+    item = resistor("0.1 uF", ground_net, net_mcu_vcc)
+    set_pcb_position(item, offset(pose, 0, 7, 0))
+    set_next_prefix(board, item, "C")
+    board.Add(item)
 
     # voltage regulator
-    item = place_module(
-        load_footprint(
-            "external/com_gitlab_kicad_libraries_kicad_footprints/Package_TO_SOT_SMD.pretty",
-            "SOT-23"), x, y + 10, r, flip)
-    item.SetReference(f"U2")
+    item = load_footprint(
+        "external/com_gitlab_kicad_libraries_kicad_footprints/Package_TO_SOT_SMD.pretty",
+        "SOT-23")
+    set_pcb_position(item, offset(pose, 0, -10, 0))
+    set_next_prefix(board, item, "U")
     item.SetValue("MCP1700T-3302E/TT")
     item.FindPadByName(1).SetNet(ground_net)
     item.FindPadByName(2).SetNet(net_mcu_vcc)
     item.FindPadByName(3).SetNet(net_usb_vbus)
-    yield item
+    board.Add(item)
 
-    ## TODO: voltage regulator caps
+    ## TODO: add voltage regulator caps
 
 
-
-def add_mx_switch(x, y, r, parent, key, i, net1, net2):
+def add_mx_switch(pose: PCBPosition, board, key, i, net1, net2):
     stab_size = 1
     rotate_switch = 0
     rotate_stab = 0
@@ -266,84 +303,80 @@ def add_mx_switch(x, y, r, parent, key, i, net1, net2):
         stab_size = key.unit_height
 
     # net to connect diode to switch
-    net = pcbnew.NETINFO_ITEM(parent, f"switch-diode-{i}")
-    yield net
+    net = pcbnew.NETINFO_ITEM(board, f"switch-diode-{i}")
+    board.Add(net)
 
-    item = pcbnew.FootprintLoad(
+    item = load_footprint(
         os.path.join(os.path.dirname(__file__), "kicad_modules"),
         "SW_Cherry_MX_PCB")
-
-    item.SetPosition(pcbnew.wxPointMM(x, y))
-    item.SetOrientationDegrees(180 - r + rotate_switch)
-
+    set_pcb_position(item, offset(pose, 0, 0, rotate_switch))
     item.SetReference(f"SW{i}")
+    item.Value().SetVisible(False)
+    item.Reference().SetKeepUpright(False)
     item.FindPadByName(2).SetNet(net)
     item.FindPadByName(1).SetNet(net1)
+
+    board.Add(item)
+
+    item = load_footprint(
+        "external/com_gitlab_kicad_libraries_kicad_footprints/Diode_SMD.pretty",
+        "D_SOD-123")
+    set_pcb_position(item, offset(pose, -3.5, -5.5, 180, flip=True))
+    set_next_prefix(board, item, "D")
+    item.SetValue("4148")
     item.Reference().SetKeepUpright(False)
+    item.FindPadByName(1).SetNet(net)
+    item.FindPadByName(2).SetNet(net2)
+    board.Add(item)
 
-    for g in item.GraphicalItems():
-        if isinstance(g, pcbnew.EDA_TEXT):
-            g.SetKeepUpright(False)
-
-    yield item
-
+    # Stabilizers are still a WIP. Orientation is hard to get right
+    # automatically so it should probably be pushed up into keyboard.proto
     if stab_size == 1:
         pass
     elif stab_size == 2:
-        item = pcbnew.FootprintLoad("kbtb/kicad_modules",
-                                    "Stab_Cherry_MX_2.00u_PCB")
-        item.SetPosition(pcbnew.wxPointMM(x, y))
-        item.SetOrientationDegrees(180 - r + rotate_stab)
+        item = load_footprint(
+            os.path.join(os.path.dirname(__file__), "kicad_modules"),
+            "Stab_Cherry_MX_2.00u_PCB")
+        set_pcb_position(item, offset(pose, 0, 0, rotate_stab))
         item.SetReference(f"ST{i}")
-        yield item
+        item.Value().SetVisible(False)
+        item.Reference().SetVisible(False)
+        board.Add(item)
     elif stab_size == 6.25:
-        item = pcbnew.FootprintLoad("kbtb/kicad_modules",
-                                    "Stab_Cherry_MX_6.25u_PCB")
-        item.SetPosition(pcbnew.wxPointMM(x, y))
-        item.SetOrientationDegrees(180 - r + rotate_stab)
+        item = load_footprint(
+            os.path.join(os.path.dirname(__file__), "kicad_modules"),
+            "Stab_Cherry_MX_6.25u_PCB")
+        set_pcb_position(item, offset(pose, 0, 0, rotate_stab))
         item.SetReference(f"ST{i}")
-        yield item
+        item.Value().SetVisible(False)
+        item.Reference().SetVisible(False)
+        board.Add(item)
     else:
         raise RuntimeError(f"unknown stabilizer size: {stab_size}")
-
-    item = pcbnew.FootprintLoad(
-        "external/com_gitlab_kicad_libraries_kicad_footprints/Diode_SMD.pretty",
-        "D_SOD-123")
-    item.MoveAnchorPosition(pcbnew.wxPointMM(2.5, -6.5))
-    item.SetPosition(pcbnew.wxPointMM(x, y))
-    item.SetOrientationDegrees(180 + r)
-    item.SetReference(f"D{i}")
-    item.SetValue("4148")
-    item.Flip(pcbnew.wxPointMM(x, y), True)
-    item.FindPadByName(1).SetNet(net)
-    item.FindPadByName(2).SetNet(net2)
-    item.Reference().SetKeepUpright(False)
-    for g in item.GraphicalItems():
-        if isinstance(g, pcbnew.EDA_TEXT):
-            g.SetKeepUpright(False)
-        else:
-            g.DeleteStructure()
-    yield item
 
 
 def generate_kicad_pcb_file(kb):
     """Create a KiCad pcb file that implements the provided keyboard.
 
-    This function is limited by the capabilities of PCB, but the idea is to
-    build out as much of the PCB as we can from the provided keyboard object.
+    This function is limited by the capabilities of KiCad's scripting
+    interface, but the idea is to build out as much of the PCB as we
+    can from the provided keyboard object.
 
-    This function will generate and return a two-layer PCB with it's outline
-    built according to `kb.outline_polygon` (with matching ground planes) and
-    with footprints for the switches, diodes, microcontroller, and mounting
-    holes. The keyboard matrix will be used to configure connections between
-    the switches, diodes, and MCU pins.
+    This function generates and returns a two-layer PCB with an
+    outline and ground plane built from `kb.outline_polygon` and with
+    footprints for the switches, diodes, microcontroller, and mounting
+    holes. The keyboard matrix will be used to configure connections
+    between the switches, diodes, and controller pins.
 
     A few KiCad-based limitations:
 
-    * The default trace width is loaded from a KiCad project file which is not
-      generated here, therefore the default trace width will need to be
-      configured manually.
-    * The `pcbnew.ZONE_FILLER` is not available when running standalone.
+    * The default trace width is loaded from a KiCad project file
+      which is not generated here, therefore the default trace width
+      will need to be configured manually.
+
+    * The `pcbnew.ZONE_FILLER` is not available when running
+      standalone.
+
     """
     outline = shapely.geometry.polygon.Polygon(
         (o.x, o.y) for o in kb.outline_polygon)
@@ -354,70 +387,71 @@ def generate_kicad_pcb_file(kb):
     y_offset = 16 + y_max
     y_scale = -1
 
+    # convert from keyboard.proto coordinates to PCBPosition
+    def scale(pose,
+              x_scale=x_scale,
+              y_scale=y_scale,
+              x_offset=x_offset,
+              y_offset=y_offset,
+              flip=False):
+        x, y = x_scale * pose.x + x_offset, y_scale * pose.y + y_offset
+        r = degrees(
+            atan2(y_scale * sin(radians(pose.r)),
+                  x_scale * cos(radians(pose.r))))
+        return PCBPosition(x, y, r, flip)
+
     board = pcbnew.BOARD()
 
     ground_net = pcbnew.NETINFO_ITEM(board, f"GND")
     board.Add(ground_net)
 
-    for x in kicad_polygon(outline,
-                           x_offset=x_offset,
-                           y_offset=y_offset,
-                           x_scale=x_scale,
-                           y_scale=y_scale):
+    for x in kicad_polygon(
+            outline,
+            x_offset=x_offset,
+            y_offset=y_offset,
+            x_scale=x_scale,
+            y_scale=y_scale):
         board.Add(x)
 
-    mcu_io = 18
+    matrix_pins = set([
+        *[key.controller_pin_low for key in kb.keys],
+        *[key.controller_pin_high for key in kb.keys]
+    ])
 
-    io_nets = [pcbnew.NETINFO_ITEM(board, f"io-{i}") for i in range(mcu_io)]
-    for x in io_nets:
+    matrix_nets = dict(
+        (p, pcbnew.NETINFO_ITEM(board, f"matrix-{p}")) for p in matrix_pins)
+    for x in matrix_nets.values():
         board.Add(x)
 
     if kb.footprint == Keyboard.FOOTPRINT_CHERRY_MX:
         for i, key in enumerate(kb.keys):
-            net1 = io_nets[key.controller_pin_low]
-            net2 = io_nets[key.controller_pin_high]
-            x, y = x_scale * key.pose.x + x_offset, y_scale * key.pose.y + y_offset
-
-            r = degrees(
-                atan2(y_scale * sin(radians(key.pose.r - 90)),
-                      x_scale * cos(radians(key.pose.r - 90)))) + 90
-
-            for x in add_mx_switch(x, y, r, board, key, i, net1, net2):
-                board.Add(x)
+            add_mx_switch(
+                scale(key.pose), board, key, i,
+                matrix_nets[key.controller_pin_low],
+                matrix_nets[key.controller_pin_high])
     else:
         raise RuntimeError(f"unknown footprint")
 
     if kb.controller == Keyboard.CONTROLLER_PROMICRO:
-        x, y = x_scale * kb.controller_pose.x + x_offset, y_scale * kb.controller_pose.y + y_offset
-        r = degrees(
-            atan2(y_scale * sin(radians(kb.controller_pose.r - 90)),
-                  x_scale * cos(radians(kb.controller_pose.r - 90))))
-        board.Add(add_pro_micro(x, y, r, board, ground_net, io_nets))
+        # For the pro
+        add_pro_micro(
+            scale(kb.controller_pose, flip=True), board, ground_net,
+            matrix_nets.values())
     elif kb.controller == Keyboard.CONTROLLER_STM32F072:
-
-        def scale(x,y,r,x_scale=x_scale, y_scale=y_scale, x_offset=x_offset, y_offset=y_offset):
-            x, y = x_scale * x + x_offset, y_scale * y + y_offset
-            r = degrees(
-                atan2(y_scale * sin(radians(r)),
-                    x_scale * cos(radians(r))))
-            return x,y,r
-
-        net_usb_plus = pcbnew.NETINFO_ITEM(board, f"usb-dp")
-        board.Add(net_usb_plus)
-        net_usb_minus = pcbnew.NETINFO_ITEM(board, f"usb-dm")
-        board.Add(net_usb_minus)
+        net_usb_dp = pcbnew.NETINFO_ITEM(board, f"usb-dp")
+        board.Add(net_usb_dp)
+        net_usb_dn = pcbnew.NETINFO_ITEM(board, f"usb-dn")
+        board.Add(net_usb_dn)
         net_usb_vbus = pcbnew.NETINFO_ITEM(board, f"usb-vcc")
         board.Add(net_usb_vbus)
+        usb_nets = net_usb_dp, net_usb_dn, net_usb_vbus
 
-        x,y,r=scale(kb.connector_pose.x,kb.connector_pose.y,kb.connector_pose.r)
-        for x in add_usbc_legacy(x, y, r, board, ground_net, net_usb_plus, net_usb_minus, net_usb_vbus, flip=True):
-            board.Add(x)
-        # project controller pose to outline (consider doing this in board generation)
+        add_usbc_legacy(
+            scale(kb.connector_pose, flip=True), board, ground_net, usb_nets)
 
-
-        x,y,r=scale(kb.controller_pose.x,kb.controller_pose.y,kb.controller_pose.r)
-        for x in add_stm32(x, y, r, board, ground_net, net_usb_plus, net_usb_minus, net_usb_vbus, io_nets, flip=True):
-            board.Add(x)
+        add_stm32(
+            scale(kb.controller_pose, flip=True), board, ground_net, usb_nets,
+            matrix_nets.values())
     else:
         raise RuntimeError("unknown controller")
 
@@ -439,7 +473,7 @@ def generate_kicad_pcb_file(kb):
     lset.AddLayer(pcbnew.B_Cu)
     item.SetLayerSet(lset)
 
-    # Use hatched fill because it looks cooler
+    # Use hatched fill because it looks cool
     # item.SetFillMode(pcbnew.ZONE_FILL_MODE_HATCH_PATTERN)
     # item.SetHatchThickness(pcbnew.FromMM(1))
     # item.SetHatchGap(pcbnew.FromMM(5))
@@ -451,4 +485,5 @@ def generate_kicad_pcb_file(kb):
 
     tf = tempfile.NamedTemporaryFile()
     board.Save(tf.name)
+
     return tf
