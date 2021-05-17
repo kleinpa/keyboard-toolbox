@@ -191,3 +191,36 @@ genrule(
         "@com_gitlab_kicad_libraries_kicad_footprints//:all",
     ],
 )
+
+py_binary(
+    name = "build_atmega32u4_demo",
+    srcs = ["build_atmega32u4_demo.py"],
+    deps = [
+        requirement("absl-py"),
+        "//kbtb:keyboard_lib",
+        "//kbtb:kle",
+    ],
+)
+
+genrule(
+    name = "atmega32u4_demo_layout",
+    outs = ["atmega32u4_demo.pb"],
+    cmd = "./$(execpath :build_atmega32u4_demo) --output=\"$@\"",
+    exec_tools = [":build_atmega32u4_demo"],
+    visibility = ["//visibility:public"],
+)
+
+# TODO(peterklein): keyboard_board_kicad()
+genrule(
+    name = "atmega32u4_demo_kicad",
+    srcs = [":atmega32u4_demo_layout"],
+    outs = ["atmega32u4_demo.kicad_pcb"],
+    cmd = "LD_LIBRARY_PATH='$(execpath //kbtb/cli).runfiles/com_gitlab_kicad_kicad' ./$(execpath //kbtb/cli) --input=\"$<\" --format=main_kicad_pcb --output=\"$@\"",
+    exec_tools = [
+        "//kbtb/cli",
+        "//kbtb/kicad_modules",
+        "@com_github_ai03_2725_typec//:all",
+        "@com_github_keebio_keebio_parts//:all",
+        "@com_gitlab_kicad_libraries_kicad_footprints//:all",
+    ],
+)

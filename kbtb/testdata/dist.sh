@@ -46,6 +46,13 @@ files+=("kbtb/testdata/min_stm32.kicad_pcb")
 targets+=("//kbtb/testdata/routed:numpad_board_routed")
 files+=("kbtb/testdata/routed/numpad_board_routed.zip")
 
+targets+=("//kbtb/testdata:atmega32u4_demo_kicad")
+files+=("kbtb/testdata/atmega32u4_demo.kicad_pcb")
+targets+=("//kbtb/testdata/routed:atmega32u4_demo")
+files+=("kbtb/testdata/routed/atmega32u4_demo.zip")
+targets+=("//kbtb/testdata/routed:atmega32u4_demo_bom")
+files+=("kbtb/testdata/routed/atmega32u4_demo_bom.zip")
+
 bazelisk build ${targets[@]} $@
 rm -rf $(bazelisk info workspace)/dist/*
 for path in "${files[@]}"

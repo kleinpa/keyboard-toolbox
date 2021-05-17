@@ -7,20 +7,43 @@ import tempfile
 import csv
 import zipfile
 import re
+import logging
 
 import pcbnew
 
 import shapely
 
 lcsc_parts = {
-    ("D_SOD-123", "4148"): "C81598",
-    ("HRO-TYPE-C-31-M-12", "HRO-TYPE-C-31-M-12"): "C165948",
-    ("LQFP-48_7x7mm_P0.5mm", "STM32F072C8T6"): "C80488",
-    ("R_0603_1608Metric", "0.1 uF"): "C14663",
-    ("R_0603_1608Metric", "10 kΩ"): "C25803",
-    ("R_0603_1608Metric", "5.1 kΩ"): "C23186",
-    ("SOT-143", "SR05"): "C521962",
-    ("SOT-23", "MCP1700T-3302E/TT"): "C5446",
+    ("D_SOD-123", "4148"):
+    "C81598",
+    ("HRO-TYPE-C-31-M-12", "HRO-TYPE-C-31-M-12"):
+    "C165948",
+    ("LQFP-48_7x7mm_P0.5mm", "STM32F072C8T6"):
+    "C80488",
+    ("R_0603_1608Metric", "0.1 µF"):
+    "C14663",
+    ("R_0603_1608Metric", "10 kΩ"):
+    "C25803",
+    ("R_0603_1608Metric", "5.1 kΩ"):
+    "C23186",
+    ("SOT-143", "SR05"):
+    "C521962",
+    ("SOT-23", "MCP1700T-3302E/TT"):
+    "C5446",
+    ("", "ATMEGA32U4-AU"):
+    "C44854",
+    ("Crystal_SMD_3225-4Pin_3.2x2.5mm", "16 MHz"):
+    "C13738",
+    ('Tag-Connect_TC2030-IDC-FP_2x03_P1.27mm_Vertical', 'Tag-Connect_TC2030-IDC-FP_2x03_P1.27mm_Vertical'):
+    None,
+    ('R_0603_1608Metric', '10 µF'):
+    "C19702",
+    ('R_0603_1608Metric', '22 pF'):
+    "C1653",
+    ('R_0603_1608Metric', '1 µF'):
+    "C15849",
+    ('TQFP-44_10x10mm_P0.8mm', 'ATMEGA32U4-AU'):
+    "",
 }
 
 
@@ -97,17 +120,25 @@ def kicad_bom(board, layer=pcbnew.B_Cu):
         if footprint.GetLayer() != layer:
             continue
 
-        writer.writerow({
-            'Designator':
-            footprint.GetReference(),
-            'Description':
-            footprint.GetFPID().GetLibItemName(),
-            'Value':
-            footprint.GetValue(),
-            'LCSC Part Number':
-            lcsc_parts.get((str(footprint.GetFPID().GetLibItemName()),
-                            str(footprint.GetValue())), 'unknown'),
-        })
+        lcsc_part = "unknown"
+
+        key = (str(footprint.GetFPID().GetLibItemName()),
+               str(footprint.GetValue()))
+        if key in lcsc_parts:
+            if lcsc_parts[key]:
+                writer.writerow({
+                    'Designator':
+                    footprint.GetReference(),
+                    'Description':
+                    footprint.GetFPID().GetLibItemName(),
+                    'Value':
+                    footprint.GetValue(),
+                    'LCSC Part Number':
+                    lcsc_parts[key],
+                })
+        else:
+            logging.warn(f"unknown lcsc part number for {key}")
+
     fp.seek(0)
     return fp.read()
 
@@ -146,4 +177,5 @@ def bomcpl_from_kicad(kicad_file):
         with zipfile.ZipFile(fp, 'w', zipfile.ZIP_DEFLATED) as z:
             z.writestr('bom.csv', kicad_bom(board))
             z.writestr('cpl.csv', kicad_centroid(board))
+
         return fp.getvalue()

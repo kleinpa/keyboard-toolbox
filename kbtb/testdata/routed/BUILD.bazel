@@ -10,3 +10,13 @@ bomcpl_from_kicad(
     name = "numpad_bom",
     src = "numpad_board_routed.kicad_pcb",
 )
+
+gerbers_from_kicad(
+    name = "atmega32u4_demo",
+    src = "atmega32u4_demo.kicad_pcb",
+)
+
+bomcpl_from_kicad(
+    name = "atmega32u4_demo_bom",
+    src = "atmega32u4_demo.kicad_pcb",
+)
