@@ -17,31 +17,23 @@ flags.DEFINE_string('output', '', 'Output path')
 
 
 def main(argv):
-    kb = kle_to_keyboard(json.loads('[["",{"y":0.3},""],["",""]]'))
+    kb = kle_to_keyboard(
+        json.loads('[["","",""],["","",""],["","",""]]'),
+        controller=Keyboard.CONTROLLER_STM32F072,
+        switch=Keyboard.SWITCH_CHERRY_MX,
+        outline_type="rectangle",
+    )
 
-    kb.controller = Keyboard.CONTROLLER_STM32F072
-    kb.footprint = Keyboard.FOOTPRINT_CHERRY_MX
-    kb.hole_diameter = 2.4
-
-    fill_matrix_rows(kb)
-
-    outline = generate_outline_convex_hull(kb)
+    # Read the outline that kle_to_keyboard generated
+    outline = shapely.geometry.polygon.LinearRing(
+        (o.x, o.y) for o in kb.outline_polygon)
 
     kb.connector_pose.CopyFrom(
         pose_closest_point(outline,
                            between_pose(kb.keys[0].pose, kb.keys[1].pose)))
     kb.connector_pose.x -= .7
 
-
-    kb.controller_pose.CopyFrom(
-                           between_pose(kb.keys[1].pose, kb.keys[2].pose))
-
-
-    # kle_to_keyboard adds a default outline so remove it
-    kb.ClearField("outline_polygon")
-
-    for x, y in outline.coords:
-        kb.outline_polygon.add(x=x, y=y)
+    kb.controller_pose.CopyFrom(between_pose(kb.keys[1].pose, kb.keys[5].pose))
 
     with open(FLAGS.output, 'wb') as fn:
         fn.write(kb.SerializeToString())

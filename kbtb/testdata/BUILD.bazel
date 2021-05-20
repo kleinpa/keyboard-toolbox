@@ -93,6 +93,26 @@ genrule(
     exec_tools = ["//kbtb/cli:to_svg"],
 )
 
+keyboard_plate_dxf(
+    name = "tkl_layout_plate",
+    src = ":tkl_layout",
+    plate_type = "top",
+)
+
+genrule(
+    name = "tkl_kicad",
+    srcs = [":tkl_layout"],
+    outs = ["tkl.kicad_pcb"],
+    cmd = "LD_LIBRARY_PATH='$(execpath //kbtb/cli).runfiles/com_gitlab_kicad_kicad' ./$(execpath //kbtb/cli) --input=\"$<\" --format=main_kicad_pcb --output=\"$@\"",
+    exec_tools = [
+        "//kbtb/cli",
+        "//kbtb/kicad_modules",
+        "@com_github_ai03_2725_typec//:all",
+        "@com_github_keebio_keebio_parts//:all",
+        "@com_gitlab_kicad_libraries_kicad_footprints//:all",
+    ],
+)
+
 py_binary(
     name = "build_numpad_layout",
     srcs = ["build_numpad_layout.py"],
@@ -160,8 +180,8 @@ genrule(
 )
 
 py_binary(
-    name = "build_min_stm32_layout",
-    srcs = ["build_min_stm32_layout.py"],
+    name = "build_stm32f072_demo",
+    srcs = ["build_stm32f072_demo.py"],
     deps = [
         requirement("absl-py"),
         "//kbtb:keyboard_lib",
@@ -170,51 +190,18 @@ py_binary(
 )
 
 genrule(
-    name = "min_stm32_layout",
-    outs = ["min_stm32_layout.pb"],
-    cmd = "./$(execpath :build_min_stm32_layout) --output=\"$@\"",
-    exec_tools = [":build_min_stm32_layout"],
+    name = "stm32f072_demo",
+    outs = ["stm32f072_demo.pb"],
+    cmd = "./$(execpath :build_stm32f072_demo) --output=\"$@\"",
+    exec_tools = [":build_stm32f072_demo"],
     visibility = ["//visibility:public"],
 )
 
 # TODO(peterklein): keyboard_board_kicad()
 genrule(
     name = "min_stm32_kicad",
-    srcs = [":min_stm32_layout"],
+    srcs = [":stm32f072_demo"],
     outs = ["min_stm32.kicad_pcb"],
-    cmd = "LD_LIBRARY_PATH='$(execpath //kbtb/cli).runfiles/com_gitlab_kicad_kicad' ./$(execpath //kbtb/cli) --input=\"$<\" --format=main_kicad_pcb --output=\"$@\"",
-    exec_tools = [
-        "//kbtb/cli",
-        "//kbtb/kicad_modules",
-        "@com_github_ai03_2725_typec//:all",
-        "@com_github_keebio_keebio_parts//:all",
-        "@com_gitlab_kicad_libraries_kicad_footprints//:all",
-    ],
-)
-
-py_binary(
-    name = "build_atmega32u4_demo",
-    srcs = ["build_atmega32u4_demo.py"],
-    deps = [
-        requirement("absl-py"),
-        "//kbtb:keyboard_lib",
-        "//kbtb:kle",
-    ],
-)
-
-genrule(
-    name = "atmega32u4_demo_layout",
-    outs = ["atmega32u4_demo.pb"],
-    cmd = "./$(execpath :build_atmega32u4_demo) --output=\"$@\"",
-    exec_tools = [":build_atmega32u4_demo"],
-    visibility = ["//visibility:public"],
-)
-
-# TODO(peterklein): keyboard_board_kicad()
-genrule(
-    name = "atmega32u4_demo_kicad",
-    srcs = [":atmega32u4_demo_layout"],
-    outs = ["atmega32u4_demo.kicad_pcb"],
     cmd = "LD_LIBRARY_PATH='$(execpath //kbtb/cli).runfiles/com_gitlab_kicad_kicad' ./$(execpath //kbtb/cli) --input=\"$<\" --format=main_kicad_pcb --output=\"$@\"",
     exec_tools = [
         "//kbtb/cli",

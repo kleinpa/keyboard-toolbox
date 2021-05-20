@@ -144,27 +144,18 @@ def generate_cherry_cutout(key, corner_radius=0.3, resolution=16, shift=0):
     x, y, r = key.pose.x, key.pose.y, key.pose.r
     shape = cutout_geom_mx
 
-    # add stabilizers along the long axis of key
-    if key.unit_height == 1 and key.unit_width > 1:
-        stab_geom = cherry_stabilizer(key.unit_width)
+    if key.HasField("stabilizer"):
+        stab_geom = cherry_stabilizer(key.stabilizer.size)
         if stab_geom:
             shape = shape.union(stab_geom)
-    elif key.unit_width == 1 and key.unit_height > 1:
-        stab_geom = cherry_stabilizer(key.unit_height)
-        if stab_geom:
-            shape = shape.union(stab_geom)
-        shape = shapely.affinity.rotate(shape, -90)
-    else:
-        pass  # TODO: warn about unusual size
+        shape = shapely.affinity.rotate(shape, key.stabilizer.r)
 
     shape = shapely.affinity.rotate(shape, r)
     shape = shapely.affinity.translate(shape, x, y)
 
-    return shapely_round(shape,
-                         corner_radius,
-                         corner_radius,
-                         resolution=resolution).buffer(shift,
-                                                       resolution=resolution)
+    return shapely_round(
+        shape, corner_radius, corner_radius, resolution=resolution).buffer(
+            shift, resolution=resolution)
 
 
 def generate_plate(kb, padding=0, mounting_holes=False, cutouts=True):

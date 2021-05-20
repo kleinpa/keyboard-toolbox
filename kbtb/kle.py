@@ -23,6 +23,7 @@ from math import sin, cos, radians, isclose
 from kbtb.keyboard_pb2 import Keyboard
 from kbtb.layout import group_by_row, generate_placeholders
 from kbtb.outline import generate_outline_tight, generate_outline_convex_hull, generate_outline_rectangle
+from kbtb.matrix import fill_matrix_rows
 
 
 def kle_position(key, keyboard_unit=19.05, x0=0, y0=0):
@@ -137,16 +138,46 @@ def kle_param_to_key(x, y, r, rx, ry, w, h, keyboard_unit=19.05):
         }, unit_width=w, unit_height=h)
 
 
-def kle_to_keyboard(kle_json, keyboard_unit=19.05):
+def add_standard_stabilizers(kb):
+    allowed_sizes = [2, 6.25]
+
+    def add(key, size, r, flip):
+        if size < min(allowed_sizes):
+            return
+
+        key.stabilizer.size = max(x for x in allowed_sizes if x <= size)
+        key.stabilizer.r = r
+        key.switch_r = r
+
+        if flip:
+            key.stabilizer.r += 180
+
+    rows = list(group_by_row(kb.keys))
+    for i, row in enumerate(rows):
+        last_row = i == len(rows) - 1
+
+        for j, key in enumerate(row):
+            last_col = j == len(row) - 1
+            if key.unit_width > 1 and key.unit_height == 1:
+                add(key, key.unit_width, 0, last_row)
+            if key.unit_width == 1 and key.unit_height > 1:
+                add(key, key.unit_height, 90, last_col)
+
+
+def kle_to_keyboard(kle_json,
+                    keyboard_unit=19.05,
+                    switch=Keyboard.SWITCH_CHERRY_MX,
+                    controller=Keyboard.CONTROLLER_STM32F072,
+                    outline_type='convex-hull',
+                    hole_diameter=2.4,
+                    add_stabilizers=True,
+                    add_matrix=True):
     kb = Keyboard(
         name="kle-import",
-        controller=Keyboard.CONTROLLER_UNKNOWN,
-        footprint=Keyboard.FOOTPRINT_CHERRY_MX,
-
-        # Plate parameters
-        hole_diameter=2.6,
+        controller=controller,
+        switch=switch,
+        hole_diameter=hole_diameter,
     )
-    outline_type = 'convex-hull'
 
     # state for KLE's relative positioning
     current_y, current_r, current_rx, current_ry = 0, 0, 0, 0
@@ -221,5 +252,11 @@ def kle_to_keyboard(kle_json, keyboard_unit=19.05):
 
     for x, y in outline.coords:
         kb.outline_polygon.add(x=x, y=y)
+
+    if add_stabilizers:
+        add_standard_stabilizers(kb)
+
+    if add_matrix:
+        fill_matrix_rows(kb)
 
     return kb

@@ -451,20 +451,6 @@ def add_atmega32u4(pose: PCBPosition, board, ground_net, usb_nets, io_nets):
 
 
 def add_mx_switch(pose: PCBPosition, board, key, i, net1, net2):
-    stab_size = 1
-    rotate_switch = 0
-    rotate_stab = 0
-
-    # if key is wide then add stab
-    if key.unit_width > 1 and key.unit_height == 1:
-        rotate_stab = -180
-        stab_size = key.unit_width
-
-    # if key is tall then rotate switch and add stab
-    if key.unit_width == 1 and key.unit_height > 1:
-        rotate_switch = 90
-        rotate_stab = -90
-        stab_size = key.unit_height
 
     # net to connect diode to switch
     net = pcbnew.NETINFO_ITEM(board, f"switch-diode-{i}")
@@ -473,7 +459,7 @@ def add_mx_switch(pose: PCBPosition, board, key, i, net1, net2):
     item = load_footprint(
         os.path.join(os.path.dirname(__file__), "kicad_modules"),
         "SW_Cherry_MX_PCB")
-    set_pcb_position(item, offset(pose, 0, 0, rotate_switch))
+    set_pcb_position(item, offset(pose, 0, 0, key.switch_r))
     item.SetReference(f"SW{i}")
     item.Value().SetVisible(False)
     item.Reference().SetKeepUpright(False)
@@ -495,28 +481,30 @@ def add_mx_switch(pose: PCBPosition, board, key, i, net1, net2):
 
     # Stabilizers are still a WIP. Orientation is hard to get right
     # automatically so it should probably be pushed up into keyboard.proto
-    if stab_size == 1:
-        pass
-    elif stab_size == 2:
-        item = load_footprint(
-            os.path.join(os.path.dirname(__file__), "kicad_modules"),
-            "Stab_Cherry_MX_2.00u_PCB")
-        set_pcb_position(item, offset(pose, 0, 0, rotate_stab))
-        item.SetReference(f"ST{i}")
-        item.Value().SetVisible(False)
-        item.Reference().SetVisible(False)
-        board.Add(item)
-    elif stab_size == 6.25:
-        item = load_footprint(
-            os.path.join(os.path.dirname(__file__), "kicad_modules"),
-            "Stab_Cherry_MX_6.25u_PCB")
-        set_pcb_position(item, offset(pose, 0, 0, rotate_stab))
-        item.SetReference(f"ST{i}")
-        item.Value().SetVisible(False)
-        item.Reference().SetVisible(False)
-        board.Add(item)
-    else:
-        raise RuntimeError(f"unknown stabilizer size: {stab_size}")
+
+    if key.HasField("stabilizer"):
+        if key.stabilizer.size == 2:
+            item = load_footprint(
+                os.path.join(os.path.dirname(__file__), "kicad_modules"),
+                "Stab_Cherry_MX_2.00u_PCB")
+            set_pcb_position(item, offset(pose, 0, 0, -key.stabilizer.r))
+            item.SetReference(f"ST{i}")
+            item.Value().SetVisible(False)
+            item.Reference().SetVisible(False)
+            board.Add(item)
+
+        elif key.stabilizer.size == 6.25:
+            item = load_footprint(
+                os.path.join(os.path.dirname(__file__), "kicad_modules"),
+                "Stab_Cherry_MX_6.25u_PCB")
+            set_pcb_position(item, offset(pose, 0, 0, -key.stabilizer.r))
+            item.SetReference(f"ST{i}")
+            item.Value().SetVisible(False)
+            item.Reference().SetVisible(False)
+            board.Add(item)
+        else:
+            raise RuntimeError(
+                f"unknown stabilizer size: {key.stabilizer.size}")
 
 
 def generate_kicad_pcb_file(kb):
@@ -587,7 +575,7 @@ def generate_kicad_pcb_file(kb):
     for x in matrix_nets.values():
         board.Add(x)
 
-    if kb.footprint == Keyboard.FOOTPRINT_CHERRY_MX:
+    if kb.switch == Keyboard.SWITCH_CHERRY_MX:
         for i, key in enumerate(kb.keys):
             add_mx_switch(
                 scale(key.pose), board, key, i,

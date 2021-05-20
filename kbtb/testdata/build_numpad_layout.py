@@ -24,27 +24,24 @@ def main(argv):
         ["", "", ""],
         ["", "", "", {"h": 2.0}, ""],
         [{"w": 2.0}, "", ""]
-    ]"""))
+    ]"""),
+        controller=Keyboard.CONTROLLER_ATMEGA32U4,
+        switch=Keyboard.SWITCH_CHERRY_MX,
+        outline_type="rectangle")
 
-    kb.controller = Keyboard.CONTROLLER_STM32F072
-    kb.footprint = Keyboard.FOOTPRINT_CHERRY_MX
-    kb.hole_diameter = 2.4
+    def bottom_left_of(pose, pitch=19):
+        return Position(x=pose.x + pitch / 2, y=pose.y - pitch / 2)
 
-    pitch = 19
     kb.hole_positions.extend([
-        Position(x=kb.keys[0].pose.x + pitch / 2,
-                 y=kb.keys[0].pose.y - pitch / 2),
-        Position(x=kb.keys[2].pose.x + pitch / 2,
-                 y=kb.keys[2].pose.y - pitch / 2),
-        Position(x=kb.keys[11].pose.x + pitch / 2,
-                 y=kb.keys[11].pose.y - pitch / 2),
-        Position(x=kb.keys[13].pose.x + pitch / 2,
-                 y=kb.keys[13].pose.y - pitch / 2),
+        bottom_left_of(kb.keys[0].pose),
+        bottom_left_of(kb.keys[2].pose),
+        bottom_left_of(kb.keys[11].pose),
+        bottom_left_of(kb.keys[13].pose),
     ])
 
-    fill_matrix_rows(kb)
-
-    outline = generate_outline_rectangle(kb)
+    # Read the outline that kle_to_keyboard generated
+    outline = shapely.geometry.polygon.LinearRing(
+        (o.x, o.y) for o in kb.outline_polygon)
 
     kb.connector_pose.CopyFrom(
         pose_closest_point(outline,
@@ -54,12 +51,6 @@ def main(argv):
     kb.controller_pose.CopyFrom(
         between_pose(kb.keys[5].pose, kb.keys[10].pose))
     kb.controller_pose.y += 2
-
-    # kle_to_keyboard adds a default outline so remove it
-    kb.ClearField("outline_polygon")
-
-    for x, y in outline.coords:
-        kb.outline_polygon.add(x=x, y=y)
 
     with open(FLAGS.output, 'wb') as fn:
         fn.write(kb.SerializeToString())

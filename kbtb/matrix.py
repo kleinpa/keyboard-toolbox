@@ -17,7 +17,7 @@ def group_by_row(keys):  # duplicated from layout.py
     if len(row) > 0: yield row
 
 
-def fill_matrix_rows(kb, io=18):
+def fill_matrix_rows(kb):
     """Generates a basic keyboard matrix for the provided keyboard.
 
     Populate the controller_pin_* fields with a matrix that splits
@@ -28,11 +28,6 @@ def fill_matrix_rows(kb, io=18):
     rows = list(group_by_row(kb.keys))
     row_count = len(rows)
     col_count = max(len(col) for col in rows)
-
-    if row_count + col_count > io:
-        raise RuntimeError(
-            f"unable to build matrix: {row_count+col_count} pins needed but only {io} available"
-        )
 
     for row, keys in enumerate(rows):
         for col, key in enumerate(keys):

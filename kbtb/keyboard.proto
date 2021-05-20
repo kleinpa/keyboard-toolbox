@@ -1,35 +1,38 @@
 syntax = "proto3";
 
-// A pose represents a position and rotation such as the location of a key on
-// a keyboard.
+// A pose represents a position and rotation such as the location of a
+// key on a keyboard.
 message Pose {
   double x = 1;
   double y = 2;
   double r = 3;
 }
 
-// A pose represents a position such as the location of a mounting hole on a
-// keyboard.
+// A pose represents a position such as the location of a mounting
+// hole on a keyboard.
 message Position {
   double x = 1;
   double y = 2;
 }
 
-// Keyboard defines the abstract of a computer keyboard, including details
-// about it's physical size, the type, number and position of keys, and the
-// rough topology of the circuitry needed to make it all work.
+// Keyboard defines the abstract of a computer keyboard, including
+// details about it's physical size, the type, number and position of
+// keys, and the rough topology of the circuitry needed to make it all
+// work.
 //
-// More concretely the goal is to be able to generate all the manufacturing
-// artifacts required to build a keyboard, including:
+// More concretely the goal is to be able to generate all the
+// manufacturing artifacts required to build a keyboard, including:
+//
 // * Switch mounting plates
-// * PCBs populated with the right outline, switches, and mounting holes
-// * Enclosures
+// * PCBs populated with the right outline, switches, and mounting
+// * holes Enclosures
 // * Firmware header files
 //
-// All physical coordinates use a positive-is-up-right orientation and are
-// defined in milimeters.
+// All physical coordinates use a positive-is-up-right orientation and
+// are defined in milimeters.
 //
-// Details like an intended keymap are outside the scope of this object.
+// Details like an intended keymap are outside the scope of this
+// definition.
 message Keyboard {
   // The name of the keyboard. This should be url-safe.
   string name = 1;
@@ -44,33 +47,55 @@ message Keyboard {
     // The height of the key relative to the width of a standard key.
     double unit_height = 3;
 
-    // The index of the controller pins this switch (and it's diode) should be
-    // connected to.
+    // The index of the controller pins this switch (and it's diode)
+    // should be connected to.
     int32 controller_pin_high = 4;
     int32 controller_pin_low = 5;
+
+    message Stabilizer {
+      // The width of the stabilizer in keyboard units. Common values
+      // include 6.25u and 2u.
+      double size = 1;
+
+      // Orientation of the stabilizer relative to the switch.
+      double r = 2;
+    }
+
+    // When present, a compatible stabilizer footprint will be added
+    // to plates and PCBs.
+    Stabilizer stabilizer = 6;
+
+    // Orientation of the physical switch relative to the key. This
+    // may be required with long vertical keys.
+    double switch_r = 7;
+
   }
   repeated Key keys = 2;
 
   // The location of mounting holes on the PCB.
   repeated Position hole_positions = 3;
 
-  // Foorprint represents the overall switch compatibility of the keyboard.
-  // This should influence both the PCB footprint and plate cutout style.
-  enum Footprint {
-    FOOTPRINT_UNKNOWN = 0;
-    FOOTPRINT_CHERRY_MX = 1;
+  // SwitchCompatibility represents the overall switch compatibility
+  // of the keyboard. This should influence both the PCB footprint and
+  // plate cutout style.
+  enum SwitchCompatibility {
+    SWITCH_UNKNOWN = 0;
+
+    // Compatible with standard Cherry MX switches. Supports both
+    // plate mounted and PCB-mounted stabilizers.
+    SWITCH_CHERRY_MX = 1;
   }
-  Footprint footprint = 4;
+  SwitchCompatibility switch = 4;
 
   // OutlinePath defines the fundamental shape of the keyboard.
   //
-  // Specifically this is the outline of the 'key area' of the keyboard, used
-  // most directly to generate the PCB or the plate for a caseless keyboard.
-  // This excludes mounting holes and PCB-specific details like connector
-  // cutouts.
+  // Specifically this is the outline of the 'key area' of the
+  // keyboard, used most directly to generate the PCB or the plate for
+  // a caseless keyboard. This excludes mounting holes and
+  // PCB-specific details like connector cutouts.
   //
-  // A case should allow at least this much space for a PCB and a normal PCB
-  // should be at most this size.
+  // A case should allow at least this much space for a PCB and a
+  // normal PCB should be at most this size.
   repeated Position outline_polygon = 8;
 
   // The type of microcontroller used on the PCB.
@@ -79,16 +104,24 @@ message Keyboard {
 
     // An "Pro Micro" compatible microcontroller with 18 IO pins.
     //
-    // When controller_pose is set to the pose of top-row key, the footprint
-    // will be positioned correctly so that the USB port is accessable
-    // from the top of the board and the legs fit around the switch.
+    // When controller_pose is set to the pose of top-row key, the
+    // footprint will be positioned correctly so that the USB port is
+    // accessable from the top of the board and the legs fit around
+    // the switch.
     CONTROLLER_PROMICRO = 1;
+
+    // STM32F072 with 35 usable IO pins. This controller uses a USB
+    // Type-C connector positioned by the connector_pose field.
     CONTROLLER_STM32F072 = 2;
+
+    // ATMEGA32U4-AU with 22 usable IO pins. This controller uses a
+    // USB Type-C connector positioned by the connector_pose field.
     CONTROLLER_ATMEGA32U4 = 3;
   }
   Controller controller = 6;
 
-  // The location of the microcontroller on the PCB. Depending on the controller, this may need to be over or between keys.
+  // The location of the microcontroller on the PCB. Depending on the
+  // controller, this may need to be over or between keys.
   Pose controller_pose = 7;
 
   // The location of the connector on the PCB.

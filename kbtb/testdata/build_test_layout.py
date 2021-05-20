@@ -15,26 +15,30 @@ def test_layout():
     kb = Keyboard(
         name="test-layout",
         controller=Keyboard.CONTROLLER_PROMICRO,
-        footprint=Keyboard.FOOTPRINT_CHERRY_MX,
+        switch=Keyboard.SWITCH_CHERRY_MX,
 
         # Plate parameters
         hole_diameter=2.4,
     )
 
-    rows = 4
-
     pitch = 19.05
     column_offsets = [-1, 0, 1, 0, -1, -2]
-    keys = [
-        *(grid(x, row, y_offset=column_offsets[x])
-          for row in range(rows - 1, 0, -1) for x in range(6)),
-        *(grid(
-            x,
-            0,
-            arc_radius=120,
-            x_offset=-1 / 3 * pitch,
-            y_offset=column_offsets[1]) for x in range(3)),
-    ]
+    keys = []
+
+    rows = 4
+
+    for row in range(rows - 1, 0, -1):
+        for x in range(6):
+            keys.append(grid(x, row, y_offset=column_offsets[x]))
+
+    for x in range(3):
+        keys.append(
+            grid(
+                x,
+                0,
+                arc_radius=120,
+                x_offset=-1 / 3 * pitch,
+                y_offset=column_offsets[1]))
 
     for key in mirror_keys(rotate_keys(keys, angle=19), middle_space=0):
         kb.keys.append(key)
@@ -52,7 +56,7 @@ def test_layout():
         between(kb.keys[42 + (rows - 5) * 12].pose,
                 kb.keys[51 + (rows - 5) * 12].pose)
     ])
-    kb.controller_pose.CopyFrom(kb.keys[8].pose)
+    kb.controller_pose.CopyFrom(kb.keys[3].pose)
     fill_matrix_rows(kb)
 
     outline = generate_outline_tight(
