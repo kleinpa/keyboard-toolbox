@@ -199,9 +199,9 @@ genrule(
 
 # TODO(peterklein): keyboard_board_kicad()
 genrule(
-    name = "min_stm32_kicad",
+    name = "stm32f072_demo_kicad",
     srcs = [":stm32f072_demo"],
-    outs = ["min_stm32.kicad_pcb"],
+    outs = ["stm32f072_demo.kicad_pcb"],
     cmd = "LD_LIBRARY_PATH='$(execpath //kbtb/cli).runfiles/com_gitlab_kicad_kicad' ./$(execpath //kbtb/cli) --input=\"$<\" --format=main_kicad_pcb --output=\"$@\"",
     exec_tools = [
         "//kbtb/cli",

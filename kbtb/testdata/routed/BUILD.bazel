@@ -2,13 +2,13 @@ load("@com_github_kleinpa_kicadbazel//tools:defs.bzl", "gerbers_from_kicad")
 load("//kbtb:defs.bzl", "bomcpl_from_kicad")
 
 gerbers_from_kicad(
-    name = "numpad_board_routed",
-    src = "numpad_board_routed.kicad_pcb",
+    name = "numpad",
+    src = "numpad_board.kicad_pcb",
 )
 
 bomcpl_from_kicad(
     name = "numpad_bom",
-    src = "numpad_board_routed.kicad_pcb",
+    src = "numpad_board.kicad_pcb",
 )
 
 gerbers_from_kicad(
