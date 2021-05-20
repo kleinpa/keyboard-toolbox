@@ -491,7 +491,7 @@ def add_mx_switch(pose: PCBPosition, board, key, i, net1, net2):
                 f"unknown stabilizer size: {key.stabilizer.size}")
 
 
-def generate_kicad_pcb_file(kb):
+def generate_kicad_pcb_file(kb, stamp_hash=None):
     """Create a KiCad pcb file that implements the provided keyboard.
 
     This function is limited by the capabilities of KiCad's scripting
@@ -607,7 +607,8 @@ def generate_kicad_pcb_file(kb):
         raise RuntimeError("unknown controller")
 
     if kb.info_text:
-        text = kb.info_text.replace("{git}", "fake-hash")
+
+        text = kb.info_text.replace("{git}", stamp_hash or "unknown")
 
         kicad_add_text(board, scale(kb.info_pose, flip=True), text, size=1.3)
 
