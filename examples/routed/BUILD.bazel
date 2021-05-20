@@ -4,6 +4,7 @@ load("//kbtb:defs.bzl", "bomcpl_from_kicad")
 gerbers_from_kicad(
     name = "numpad",
     src = "numpad_board.kicad_pcb",
+    visibility = ["//visibility:public"],
 )
 
 bomcpl_from_kicad(

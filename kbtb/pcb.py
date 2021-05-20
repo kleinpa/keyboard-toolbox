@@ -1,20 +1,12 @@
 import os
 import tempfile
-from typing import NamedTuple
 from math import atan2, cos, degrees, radians, sin
 
 import pcbnew
 import shapely.geometry
 
 from kbtb.keyboard_pb2 import Keyboard
-from kbtb.kicad import kicad_circle, kicad_polygon
-
-
-class PCBPosition(NamedTuple):
-    x: int
-    y: int
-    r: int = 0
-    flip: bool = False
+from kbtb.kicad import kicad_circle, kicad_polygon, kicad_add_text, set_pcb_position, PCBPosition
 
 
 def offset(pose: PCBPosition, x, y, r=0, flip=False):
@@ -30,14 +22,6 @@ def load_footprint(library, name):
     if not footprint:
         raise ValueError(
             f"can not load footprint {name} from library {library}")
-    return footprint
-
-
-def set_pcb_position(footprint, pose: PCBPosition):
-    footprint.SetPosition(pcbnew.wxPointMM(pose.x, pose.y))
-    if pose.flip:
-        footprint.Flip(pcbnew.wxPointMM(pose.x, pose.y), aFlipLeftRight=True)
-    footprint.SetOrientationDegrees(-pose.r)
     return footprint
 
 
@@ -621,6 +605,11 @@ def generate_kicad_pcb_file(kb):
             matrix_nets.values())
     else:
         raise RuntimeError("unknown controller")
+
+    if kb.info_text:
+        text = kb.info_text.replace("{git}", "fake-hash")
+
+        kicad_add_text(board, scale(kb.info_pose, flip=True), text, size=1.3)
 
     # Add holes
     for h in kb.hole_positions:

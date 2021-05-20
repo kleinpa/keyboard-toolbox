@@ -7,10 +7,8 @@ import json
 import shapely.geometry
 
 from kbtb.keyboard_pb2 import Keyboard, Position
-from kbtb.layout import between, between_pose, pose_closest_point, mirror_keys, rotate_keys, grid
-from kbtb.matrix import fill_matrix_rows
+from kbtb.layout import between_pose, pose_closest_point, project_to_outline
 from kbtb.kle import kle_to_keyboard
-from kbtb.outline import generate_outline_convex_hull
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string('output', '', 'Output path')
@@ -22,7 +20,7 @@ def main(argv):
         controller=Keyboard.CONTROLLER_STM32F072,
         switch=Keyboard.SWITCH_CHERRY_MX,
         outline_type="rectangle",
-    )
+        info_text="kbtb/stm32f072@{git}")
 
     # Read the outline that kle_to_keyboard generated
     outline = shapely.geometry.polygon.LinearRing(
@@ -34,6 +32,9 @@ def main(argv):
     kb.connector_pose.x -= .7
 
     kb.controller_pose.CopyFrom(between_pose(kb.keys[1].pose, kb.keys[5].pose))
+
+    kb.info_pose.CopyFrom(
+        project_to_outline(outline, kb.keys[-2].pose, offset=-2))
 
     with open(FLAGS.output, 'wb') as fn:
         fn.write(kb.SerializeToString())

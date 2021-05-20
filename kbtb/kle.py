@@ -171,13 +171,14 @@ def kle_to_keyboard(kle_json,
                     outline_type='convex-hull',
                     hole_diameter=2.4,
                     add_stabilizers=True,
-                    add_matrix=True):
+                    add_matrix=True,
+                    **kb_args):
     kb = Keyboard(
         name="kle-import",
         controller=controller,
         switch=switch,
         hole_diameter=hole_diameter,
-    )
+        **kb_args)
 
     # state for KLE's relative positioning
     current_y, current_r, current_rx, current_ry = 0, 0, 0, 0

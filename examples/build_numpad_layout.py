@@ -1,16 +1,13 @@
 """A basic example keyboard layout used for testing."""
 
-from math import atan2, cos, degrees, radians, sin
 from absl import app, flags
 import json
 
 import shapely.geometry
 
 from kbtb.keyboard_pb2 import Keyboard, Position
-from kbtb.layout import between, between_pose, pose_closest_point, mirror_keys, rotate_keys, grid
-from kbtb.matrix import fill_matrix_rows
+from kbtb.layout import between_pose, pose_closest_point, project_to_outline
 from kbtb.kle import kle_to_keyboard
-from kbtb.outline import generate_outline_rectangle
 
 FLAGS = flags.FLAGS
 flags.DEFINE_string('output', '', 'Output path')
@@ -27,7 +24,8 @@ def main(argv):
     ]"""),
         controller=Keyboard.CONTROLLER_ATMEGA32U4,
         switch=Keyboard.SWITCH_CHERRY_MX,
-        outline_type="rectangle")
+        outline_type="rectangle",
+        info_text="kbtb/numpad@{git}")
 
     def bottom_left_of(pose, pitch=19):
         return Position(x=pose.x + pitch / 2, y=pose.y - pitch / 2)
@@ -51,6 +49,12 @@ def main(argv):
     kb.controller_pose.CopyFrom(
         between_pose(kb.keys[5].pose, kb.keys[10].pose))
     kb.controller_pose.y += 2
+
+    kb.info_pose.CopyFrom(
+        project_to_outline(
+            outline,
+            between_pose(kb.keys[16].pose, kb.keys[14].pose),
+            offset=-2))
 
     with open(FLAGS.output, 'wb') as fn:
         fn.write(kb.SerializeToString())

@@ -3,7 +3,7 @@
 from absl import app, flags
 
 from kbtb.keyboard_pb2 import Keyboard
-from kbtb.layout import between, between_pose, pose_closest_point, mirror_keys, rotate_keys, grid
+from kbtb.layout import between, between_pose, project_to_outline, mirror_keys, rotate_keys, grid
 from kbtb.matrix import fill_matrix_rows
 from kbtb.outline import generate_outline_tight
 
@@ -19,7 +19,7 @@ def test_layout():
 
         # Plate parameters
         hole_diameter=2.4,
-    )
+        info_text="kbtb/demo@{git}\npeterklein.dev")
 
     pitch = 19.05
     column_offsets = [-1, 0, 1, 0, -1, -2]
@@ -68,6 +68,11 @@ def test_layout():
     for x, y in outline.coords:
         kb.outline_polygon.add(x=x, y=y)
 
+    kb.info_pose.CopyFrom(
+        project_to_outline(
+            outline,
+            between_pose(kb.keys[25].pose, kb.keys[36].pose),
+            offset=-4))
     return kb
 
 

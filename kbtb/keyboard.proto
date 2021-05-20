@@ -129,4 +129,11 @@ message Keyboard {
 
   // TODO: move this elsewhere
   double hole_diameter = 10002;
+
+  // Position of the info text on the PCB.
+  Pose info_pose = 10;
+
+  // Identifying text that will appear in an inconspicuous place on artifacts, specifically the PCB. Instances of {git} will contain the value of `git describe` during execution.
+  string info_text = 11;
+
 }

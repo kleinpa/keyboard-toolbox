@@ -1,5 +1,7 @@
 """Helpers for working with KiCad pcb files."""
 
+from typing import NamedTuple
+
 import io
 import os
 import sys
@@ -47,6 +49,27 @@ lcsc_parts = {
 }
 
 
+class PCBPosition(NamedTuple):
+    x: int
+    y: int
+    r: int = 0
+    flip: bool = False
+
+
+def set_pcb_position(obj, pcbpos: PCBPosition):
+    obj.SetPosition(pcbnew.wxPointMM(pcbpos.x, pcbpos.y))
+    if pcbpos.flip:
+        obj.Flip(pcbnew.wxPointMM(pcbpos.x, pcbpos.y), aFlipLeftRight=True)
+    if isinstance(obj, pcbnew.FOOTPRINT):
+        obj.SetOrientationDegrees(-pcbpos.r)
+    elif isinstance(obj, pcbnew.PCB_TEXT):
+        obj.SetTextAngle(-pcbpos.r * 10)
+        #obj.SetMirrored(pcbpos.flip)
+    else:
+        raise RuntimeError(f"can't set position of type {type(obj)}")
+    return obj
+
+
 def kicad_polygon(geom,
                   x_offset=0,
                   y_offset=0,
@@ -85,6 +108,23 @@ def kicad_polygon(geom,
         for p1, p2 in [(points[i], points[(i + 1) % len(points)])
                        for i in range(len(points))]:
             yield make_seg(p1, p2)
+
+
+def kicad_add_text(board,
+                   pcbpos,
+                   text,
+                   size=1,
+                   thickness=1,
+                   layer=pcbnew.F_SilkS):
+    test_obj = pcbnew.PCB_TEXT(board)
+    test_obj.SetText(text)
+    test_obj.SetHorizJustify(pcbnew.GR_TEXT_HJUSTIFY_CENTER)
+    test_obj.SetTextSize(
+        pcbnew.wxSize(pcbnew.FromMM(size), pcbnew.FromMM(size)))
+    test_obj.SetTextThickness(pcbnew.FromMM(size * thickness * 0.15))
+    test_obj.SetLayer(layer)
+    set_pcb_position(test_obj, pcbpos)
+    board.Add(test_obj)
 
 
 def kicad_circle(x, y, diameter, layer=pcbnew.Edge_Cuts):

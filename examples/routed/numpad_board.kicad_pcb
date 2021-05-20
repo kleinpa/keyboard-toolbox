@@ -2729,6 +2729,9 @@
   (gr_line (start 91.135427 16.064589) (end 91.170522 16.075707) (layer "Edge.Cuts") (width 0.1) (tstamp fe7f65ae-fa4d-413b-8e3f-2a80ca457d74))
   (gr_line (start 91.239842 16.10051) (end 91.274025 16.11418) (layer "Edge.Cuts") (width 0.1) (tstamp fef9c090-a9a8-449f-9c5e-66e518328dc3))
   (gr_line (start 17.389653 16.004064) (end 17.426398 16.001806) (layer "Edge.Cuts") (width 0.1) (tstamp ff0d3751-bdf6-4316-9733-ed540f0a5a13))
+  (gr_text "maude (a number pad)\npeterklein.dev" (at 53.975 71.755) (layer "B.SilkS") (tstamp 2289263e-a5c0-464d-90d7-bb52edfe9345)
+    (effects (font (size 1.5 1.5) (thickness 0.3)) (justify mirror))
+  )
 
   (via (at 72.39 70.485) (size 0.8) (drill 0.4) (layers "F.Cu" "B.Cu") (free) (net 1) (tstamp 02625025-5aab-410e-95b2-c5734a82cdab))
   (via (at 58.42 51.435) (size 0.8) (drill 0.4) (layers "F.Cu" "B.Cu") (free) (net 1) (tstamp 110f3a02-07b0-4212-a07b-efc3b0aa4b04))
