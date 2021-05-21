@@ -44,7 +44,7 @@ def main(argv):
 
     elif FLAGS.format == 'kle':
         with open(FLAGS.output, 'wb') as output:
-            output.write(keyboard_to_kle_file(kb))
+            output.write(keyboard_to_kle_file(kb).encode("utf-8"))
 
     elif FLAGS.format == 'proto_text':
         save_keyboard(kb, output_path=FLAGS.output, format='text')
