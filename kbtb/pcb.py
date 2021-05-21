@@ -124,11 +124,11 @@ def add_usbc_legacy(pose: PCBPosition, board, ground_net, usb_nets):
 
     ## usb cc resistors
     item = resistor("5.1 kΩ", ground_net, net_usb_cc1)
-    set_pcb_position(item, offset(pose, -2.8, 10, -90))
+    set_pcb_position(item, offset(pose, -1.9, 10, 0))
     set_next_prefix(board, item, "R")
     board.Add(item)
-    item = resistor("5.1 kΩ", ground_net, net_usb_cc2)
-    set_pcb_position(item, offset(pose, 2.8, 10, -90))
+    item = resistor("5.1 kΩ", net_usb_cc2, ground_net)
+    set_pcb_position(item, offset(pose, 1.9, 10, 0))
     set_next_prefix(board, item, "R")
     board.Add(item)
 
@@ -137,7 +137,7 @@ def add_usbc_legacy(pose: PCBPosition, board, ground_net, usb_nets):
     item = load_footprint(
         "external/com_gitlab_kicad_libraries_kicad_footprints/Package_TO_SOT_SMD.pretty",
         "SOT-143")
-    set_pcb_position(item, offset(pose, 0, 12, 0))
+    set_pcb_position(item, offset(pose, 0, 13.25, 90))
     set_next_prefix(board, item, "U")
     item.SetValue("SR05")
     item.FindPadByName(1).SetNet(ground_net)
