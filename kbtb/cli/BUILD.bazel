@@ -2,9 +2,9 @@ load("@rules_python//python:defs.bzl", "py_binary")
 load("@com_github_kleinpa_keyboardtoolbox_py_deps//:requirements.bzl", "requirement")
 
 py_binary(
-    name = "cli",
+    name = "to_kicad",
     srcs = [
-        "cli.py",
+        "to_kicad.py",
     ],
     visibility = ["//visibility:public"],
     deps = [
@@ -12,8 +12,20 @@ py_binary(
         "//kbtb:dxf",
         "//kbtb:keyboard_pcb_lib",
         "//kbtb:kle",
-        "//kbtb:qmk",
         "//kbtb:svg",
+    ],
+)
+
+py_binary(
+    name = "to_qmk",
+    srcs = [
+        "to_qmk.py",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        requirement("absl-py"),
+        "//kbtb:keyboard_lib",
+        "//kbtb:qmk",
     ],
 )
 
@@ -53,17 +65,5 @@ py_binary(
         requirement("absl-py"),
         "//kbtb:keyboard_lib",
         "//kbtb:svg",
-    ],
-)
-
-py_binary(
-    name = "bomcpl_from_kicad",
-    srcs = [
-        "bomcpl_from_kicad.py",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        requirement("absl-py"),
-        "//kbtb:kicad",
     ],
 )

@@ -159,6 +159,7 @@ def generate_cherry_cutout(key, corner_radius=0.3, resolution=16, shift=0):
 
 
 def generate_plate(kb, padding=0, mounting_holes=False, cutouts=True):
+
     features = []
 
     # Cutouts in my first water just cut Aluminum plate made by SendCutSend were a bit tight, fudging here.

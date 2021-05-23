@@ -1,23 +1,36 @@
-load("@com_github_kleinpa_kicadbazel//tools:defs.bzl", "gerbers_from_kicad")
-load("//kbtb:defs.bzl", "bomcpl_from_kicad")
+load("@com_github_kleinpa_kicadbazel//tools:defs.bzl", "kicad_bom", "kicad_gerbers")
 
-gerbers_from_kicad(
+kicad_gerbers(
     name = "numpad",
-    src = "numpad_board.kicad_pcb",
+    src = "numpad.kicad_pcb",
     visibility = ["//visibility:public"],
 )
 
-bomcpl_from_kicad(
+kicad_bom(
     name = "numpad_bom",
-    src = "numpad_board.kicad_pcb",
+    src = "numpad.kicad_pcb",
+    fields = [
+        "Designator",
+        "Package",
+        "Value",
+        "LCSC Part Number",
+    ],
+    part_info_file = "lcsc_part_numbers.csv",
 )
 
-gerbers_from_kicad(
+kicad_bom(
+    name = "numpad_cpl",
+    src = "numpad.kicad_pcb",
+    fields = [
+        "Designator",
+        "Mid X",
+        "Mid Y",
+        "Rotation",
+        "Layer",
+    ],
+)
+
+kicad_gerbers(
     name = "atmega32u4_demo",
-    src = "atmega32u4_demo.kicad_pcb",
-)
-
-bomcpl_from_kicad(
-    name = "atmega32u4_demo_bom",
     src = "atmega32u4_demo.kicad_pcb",
 )

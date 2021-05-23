@@ -18,7 +18,9 @@ def offset(pose: PCBPosition, x, y, r=0, flip=False):
 
 # pcbnew.FootprintLoad fails silently so use this function instead.
 def load_footprint(library, name):
-    footprint = pcbnew.FootprintLoad(library, name)
+    footprint = pcbnew.FootprintLoad(
+        os.path.join(os.environ.get("RUNFILES_DIR", "external/"), library),
+        name)
     if not footprint:
         raise ValueError(
             f"can not load footprint {name} from library {library}")
@@ -35,7 +37,7 @@ def set_next_prefix(board, footprint, prefix):
 
 def resistor(val, net_a, net_b):
     item = load_footprint(
-        "external/com_gitlab_kicad_libraries_kicad_footprints/Resistor_SMD.pretty",
+        "com_gitlab_kicad_libraries_kicad_footprints/Resistor_SMD.pretty",
         "R_0603_1608Metric")
     item.SetValue(val)
     item.FindPadByName(1).SetNet(net_a)
@@ -45,7 +47,7 @@ def resistor(val, net_a, net_b):
 
 def add_pro_micro(pose: PCBPosition, board, ground_net, io_nets):
     mcu_offset = 17.78 - 9.525
-    controller = load_footprint("external/com_github_keebio_keebio_parts",
+    controller = load_footprint("com_github_keebio_keebio_parts",
                                 "ArduinoProMicro")
 
     set_pcb_position(controller, offset(pose, 0, mcu_offset, 90))
@@ -100,7 +102,7 @@ def add_usbc_legacy(pose: PCBPosition, board, ground_net, usb_nets):
 
     # usb type-c connector
     item = load_footprint(
-        "external/com_github_ai03_2725_typec",
+        "com_github_ai03_2725_typec",
         "HRO-TYPE-C-31-M-12",
     )
     set_pcb_position(item, offset(pose, 0, 0, 0))
@@ -135,7 +137,7 @@ def add_usbc_legacy(pose: PCBPosition, board, ground_net, usb_nets):
     # esd protection
     # https://www.littelfuse.com/~/media/electronics/datasheets/tvs_diode_arrays/littelfuse_tvs_diode_array_sr05_datasheet.pdf.pdf
     item = load_footprint(
-        "external/com_gitlab_kicad_libraries_kicad_footprints/Package_TO_SOT_SMD.pretty",
+        "com_gitlab_kicad_libraries_kicad_footprints/Package_TO_SOT_SMD.pretty",
         "SOT-143")
     set_pcb_position(item, offset(pose, 0, 13.25, 90))
     set_next_prefix(board, item, "U")
@@ -164,7 +166,7 @@ def add_stm32(pose: PCBPosition, board, ground_net, usb_nets, io_nets):
     # stm32f072
     # https://www.st.com/resource/en/datasheet/stm32f072c8.pdf
     item = load_footprint(
-        "external/com_gitlab_kicad_libraries_kicad_footprints/Package_QFP.pretty",
+        "com_gitlab_kicad_libraries_kicad_footprints/Package_QFP.pretty",
         "LQFP-48_7x7mm_P0.5mm")
     set_pcb_position(item, offset(pose, 0, 0, 180 + 45))
     set_next_prefix(board, item, "U")
@@ -224,7 +226,7 @@ def add_stm32(pose: PCBPosition, board, ground_net, usb_nets, io_nets):
 
     # debug connector
     item = load_footprint(
-        "external/com_gitlab_kicad_libraries_kicad_footprints/Connector.pretty",
+        "com_gitlab_kicad_libraries_kicad_footprints/Connector.pretty",
         "Tag-Connect_TC2030-IDC-FP_2x03_P1.27mm_Vertical")
     set_pcb_position(item, offset(pose, 0, 19, -90))
     set_next_prefix(board, item, "J")
@@ -257,7 +259,7 @@ def add_stm32(pose: PCBPosition, board, ground_net, usb_nets, io_nets):
 
     # voltage regulator
     item = load_footprint(
-        "external/com_gitlab_kicad_libraries_kicad_footprints/Package_TO_SOT_SMD.pretty",
+        "com_gitlab_kicad_libraries_kicad_footprints/Package_TO_SOT_SMD.pretty",
         "SOT-23")
     set_pcb_position(item, offset(pose, 0, -10, 0))
     set_next_prefix(board, item, "U")
@@ -304,7 +306,7 @@ def add_atmega32u4(pose: PCBPosition, board, ground_net, usb_nets, io_nets):
     # https://ww1.microchip.com/downloads/en/DeviceDoc/Atmel-7766-8-bit-AVR-ATmega16U4-32U4_Datasheet.pdf
     # https://cdn.sparkfun.com/datasheets/Dev/Arduino/Boards/Pro_Micro_v13b.pdf
     item = load_footprint(
-        "external/com_gitlab_kicad_libraries_kicad_footprints/Package_QFP.pretty",
+        "com_gitlab_kicad_libraries_kicad_footprints/Package_QFP.pretty",
         "TQFP-44_10x10mm_P0.8mm")
     set_pcb_position(item, offset(pose, 0, 0, 45 + 90))
     set_next_prefix(board, item, "U")
@@ -365,7 +367,7 @@ def add_atmega32u4(pose: PCBPosition, board, ground_net, usb_nets, io_nets):
     # crystal
     crystal_pose = offset(pose, 0, 13, 90)
     item = load_footprint(
-        "external/com_gitlab_kicad_libraries_kicad_footprints/Crystal.pretty",
+        "com_gitlab_kicad_libraries_kicad_footprints/Crystal.pretty",
         "Crystal_SMD_3225-4Pin_3.2x2.5mm")
     # should we use hand-solderable footprint here?
     set_pcb_position(item, offset(crystal_pose, 0, 0, 0))
@@ -387,7 +389,7 @@ def add_atmega32u4(pose: PCBPosition, board, ground_net, usb_nets, io_nets):
 
     # debug connector
     item = load_footprint(
-        "external/com_gitlab_kicad_libraries_kicad_footprints/Connector.pretty",
+        "com_gitlab_kicad_libraries_kicad_footprints/Connector.pretty",
         "Tag-Connect_TC2030-IDC-FP_2x03_P1.27mm_Vertical")
     set_pcb_position(item, offset(pose, 0, 19, -90))
     set_next_prefix(board, item, "Jx")
@@ -441,7 +443,7 @@ def add_mx_switch(pose: PCBPosition, board, key, i, net1, net2):
     board.Add(net)
 
     item = load_footprint(
-        os.path.join(os.path.dirname(__file__), "kicad_modules"),
+        "com_github_kleinpa_keyboardtoolbox/kbtb/kicad_modules",
         "SW_Cherry_MX_PCB")
     set_pcb_position(item, offset(pose, 0, 0, key.switch_r))
     item.SetReference(f"SW{i}")
@@ -453,7 +455,7 @@ def add_mx_switch(pose: PCBPosition, board, key, i, net1, net2):
     board.Add(item)
 
     item = load_footprint(
-        "external/com_gitlab_kicad_libraries_kicad_footprints/Diode_SMD.pretty",
+        "com_gitlab_kicad_libraries_kicad_footprints/Diode_SMD.pretty",
         "D_SOD-123")
     set_pcb_position(item, offset(pose, -3.5, -5.5, 180, flip=True))
     set_next_prefix(board, item, "D")
@@ -469,7 +471,7 @@ def add_mx_switch(pose: PCBPosition, board, key, i, net1, net2):
     if key.HasField("stabilizer"):
         if key.stabilizer.size == 2:
             item = load_footprint(
-                os.path.join(os.path.dirname(__file__), "kicad_modules"),
+                "com_github_kleinpa_keyboardtoolbox/kbtb/kicad_modules",
                 "Stab_Cherry_MX_2.00u_PCB")
             set_pcb_position(item, offset(pose, 0, 0, -key.stabilizer.r))
             item.SetReference(f"ST{i}")
@@ -479,7 +481,7 @@ def add_mx_switch(pose: PCBPosition, board, key, i, net1, net2):
 
         elif key.stabilizer.size == 6.25:
             item = load_footprint(
-                os.path.join(os.path.dirname(__file__), "kicad_modules"),
+                "com_github_kleinpa_keyboardtoolbox/kbtb/kicad_modules",
                 "Stab_Cherry_MX_6.25u_PCB")
             set_pcb_position(item, offset(pose, 0, 0, -key.stabilizer.r))
             item.SetReference(f"ST{i}")
