@@ -3,8 +3,8 @@
 targets=()
 files=()
 
-targets+=("//examples:demo")
-files+=("examples/demo.svg")
+targets+=("//examples:unisplit42")
+files+=("examples/unisplit42.svg")
 
 targets+=("//examples:tkl")
 files+=("examples/tkl.svg")

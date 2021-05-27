@@ -6,8 +6,8 @@ py_binary(
     srcs = ["service.py"],
     data = [
         ":service_templates",
-        "//examples:demo_layout",
-        "//examples:tkl_layout",
+        "//examples:tkl_proto",
+        "//examples:unisplit42_proto",
     ],
     deps = [
         requirement("absl-py"),
