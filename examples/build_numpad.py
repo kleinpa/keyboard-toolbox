@@ -1,5 +1,6 @@
 """A basic example keyboard layout used for testing."""
 
+import os
 from absl import app, flags
 import json
 
@@ -25,7 +26,7 @@ def main(argv):
         controller=Keyboard.CONTROLLER_ATMEGA32U4,
         switch=Keyboard.SWITCH_CHERRY_MX,
         outline_type="rectangle",
-        info_text="kbtb/numpad@{git}")
+        info_text=f"kbtb/numpad")
 
     def bottom_left_of(pose, pitch=19):
         return Position(x=pose.x + pitch / 2, y=pose.y - pitch / 2)

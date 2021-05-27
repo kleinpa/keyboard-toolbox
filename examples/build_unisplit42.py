@@ -19,7 +19,7 @@ def test_layout():
 
         # Plate parameters
         hole_diameter=2.4,
-        info_text="kbtb/demo@{git}\npeterklein.dev")
+        info_text="kbtb/unisplit42\npeterklein.dev")
 
     pitch = 19.05
     column_offsets = [-1, 0, 1, 0, -1, -2]

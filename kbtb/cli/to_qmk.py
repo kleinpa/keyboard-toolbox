@@ -10,14 +10,6 @@ flags.DEFINE_string('input', '', 'Input path.')
 flags.DEFINE_string('output', '', 'Output path.')
 flags.DEFINE_enum('format', 'qmk', ['qmk'], 'Type of output to generate.')
 
-stamp_hash = None
-import os
-if os.path.isfile("./bazel-out/stable-status.txt"):
-    with open("./bazel-out/stable-status.txt") as fn:
-        for line in fn.readlines():
-            if line.startswith("STABLE_HASH"):
-                stamp_hash = line.split(maxsplit=1)[1].strip()
-
 
 def main(argv):
     kb = load_keyboard(FLAGS.input)

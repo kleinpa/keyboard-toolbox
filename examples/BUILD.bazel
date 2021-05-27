@@ -59,7 +59,7 @@ genrule(
     outs = ["numpad.pb"],
     cmd = "./$(execpath :build_numpad) --output=\"$@\"",
     exec_tools = [":build_numpad"],
-     visibility = ["//visibility:public"],
+    visibility = ["//visibility:public"],
 )
 
 build_keyboard(

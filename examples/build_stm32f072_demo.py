@@ -20,7 +20,7 @@ def main(argv):
         controller=Keyboard.CONTROLLER_STM32F072,
         switch=Keyboard.SWITCH_CHERRY_MX,
         outline_type="rectangle",
-        info_text="kbtb/stm32f072@{git}")
+        info_text="kbtb/stm32f072")
 
     # Read the outline that kle_to_keyboard generated
     outline = shapely.geometry.polygon.LinearRing(

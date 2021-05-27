@@ -1,5 +1,0 @@
-# work around: no such target '//external:python_headers'
-filegroup(
-    name = "dummy",
-    visibility = ["//visibility:public"],
-)
