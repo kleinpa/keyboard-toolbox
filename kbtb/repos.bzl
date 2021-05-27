@@ -4,9 +4,9 @@ def kbtb_repos():
     if not native.existing_rule("com_github_kleinpa_kicadbazel"):
         http_archive(
             name = "com_github_kleinpa_kicadbazel",
-            sha256 = "fcba7160500ebff6028921792e77d043c487385ed2f12649a72a5225e4207e58",
-            url = "https://github.com/kleinpa/kicad-bazel/archive/5771f40980caff2128512a412ddffa254b804180.tar.gz",
-            strip_prefix = "kicad-bazel-5771f40980caff2128512a412ddffa254b804180",
+            sha256 = "6276e54c4e36efbf0a1c85a382a3d7ab7e5237708895af77f954635d690bb2fc",
+            url = "https://github.com/kleinpa/kicad-bazel/archive/999b9e06009229e1fced5edf14163dcfffa85507.tar.gz",
+            strip_prefix = "kicad-bazel-999b9e06009229e1fced5edf14163dcfffa85507",
         )
     if not native.existing_rule("rules_python"):
         http_archive(

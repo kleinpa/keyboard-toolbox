@@ -9,20 +9,23 @@ kicad_gerbers(
 kicad_bom(
     name = "numpad_bom",
     src = "numpad.kicad_pcb",
+    component_file = "lcsc_part_numbers.csv",
     fields = [
         "Designator",
         "Package",
         "Value",
         "LCSC Part Number",
     ],
-    part_info_file = "lcsc_part_numbers.csv",
 )
 
 kicad_bom(
     name = "numpad_cpl",
     src = "numpad.kicad_pcb",
+    component_file = "lcsc_part_numbers.csv",
     fields = [
         "Designator",
+        "Value",
+        "Package",
         "Mid X",
         "Mid Y",
         "Rotation",
