@@ -228,7 +228,7 @@ def add_stm32(pose: PCBPosition, board, ground_net, usb_nets, io_nets):
     # debug connector
     item = load_footprint(
         "com_gitlab_kicad_libraries_kicad_footprints/Connector.pretty",
-        "Tag-Connect_TC2030-IDC-FP_2x03_P1.27mm_Vertical")
+        "Tag-Connect_TC2030-IDC-NL_2x03_P1.27mm_Vertical")
     set_pcb_position(item, offset(pose, 0, 19, -90))
     set_next_prefix(board, item, "J")
     item.Value().SetVisible(False)
@@ -299,7 +299,7 @@ def add_atmega32u4(pose: PCBPosition, board, ground_net, usb_nets, io_nets):
 
     # vbus filter
     item = resistor("10 µF", ground_net, net_usb_vbus)
-    set_pcb_position(item, offset(pose, 0, -13, 0))
+    set_pcb_position(item, offset(pose, 11 - (2.12 * 4.5), -(2.12 * 4.5), 45))
     set_next_prefix(board, item, "C")
     board.Add(item)
 
@@ -391,7 +391,7 @@ def add_atmega32u4(pose: PCBPosition, board, ground_net, usb_nets, io_nets):
     # debug connector
     item = load_footprint(
         "com_gitlab_kicad_libraries_kicad_footprints/Connector.pretty",
-        "Tag-Connect_TC2030-IDC-FP_2x03_P1.27mm_Vertical")
+        "Tag-Connect_TC2030-IDC-NL_2x03_P1.27mm_Vertical")
     set_pcb_position(item, offset(pose, 0, 19, -90))
     set_next_prefix(board, item, "Jx")
     item.Value().SetVisible(False)
