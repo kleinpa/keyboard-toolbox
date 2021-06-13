@@ -45,8 +45,8 @@ build_keyboard(
 )
 
 py_binary(
-    name = "build_numpad",
-    srcs = ["build_numpad.py"],
+    name = "build_numpad17",
+    srcs = ["build_numpad17.py"],
     deps = [
         requirement("absl-py"),
         "//kbtb:keyboard_lib",
@@ -55,27 +55,27 @@ py_binary(
 )
 
 genrule(
-    name = "numpad_proto",
-    outs = ["numpad.pb"],
-    cmd = "./$(execpath :build_numpad) --output=\"$@\"",
-    exec_tools = [":build_numpad"],
+    name = "numpad17_proto",
+    outs = ["numpad17.pb"],
+    cmd = "./$(execpath :build_numpad17) --output=\"$@\"",
+    exec_tools = [":build_numpad17"],
     visibility = ["//visibility:public"],
 )
 
 build_keyboard(
-    name = "numpad",
-    src = ":numpad_proto",
+    name = "numpad17",
+    src = ":numpad17_proto",
 )
 
 pkg_tar(
-    name = "numpad_tar",
+    name = "numpad17_tar",
     srcs = [
-        "numpad.kicad_pcb",
-        "numpad.svg",
-        "numpad_plate_bottom.dxf",
-        "numpad_plate_bottom.kicad_pcb",
-        "numpad_plate_top.dxf",
-        "numpad_plate_top.kicad_pcb",
+        "numpad17.kicad_pcb",
+        "numpad17.svg",
+        "numpad17_plate_bottom.dxf",
+        "numpad17_plate_bottom.kicad_pcb",
+        "numpad17_plate_top.dxf",
+        "numpad17_plate_top.kicad_pcb",
     ],
 )
 
