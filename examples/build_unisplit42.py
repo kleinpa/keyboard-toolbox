@@ -11,7 +11,7 @@ FLAGS = flags.FLAGS
 flags.DEFINE_string('output', '', 'Output path')
 
 
-def test_layout():
+def main(argv):
     kb = Keyboard(
         name="test-layout",
         controller=Keyboard.CONTROLLER_PROMICRO,
@@ -20,6 +20,8 @@ def test_layout():
         # Plate parameters
         hole_diameter=2.4,
         info_text="kbtb/unisplit42\npeterklein.dev")
+
+    kb.url = "https://github.com/kleinpa/keyboard-toolbox"
 
     pitch = 19.05
     column_offsets = [-1, 0, 1, 0, -1, -2]
@@ -73,11 +75,8 @@ def test_layout():
             outline,
             between_pose(kb.keys[25].pose, kb.keys[36].pose),
             offset=-4))
-    return kb
 
-
-def main(argv):
-    kb = test_layout()
+    kb.qmk.layout = "split_3x6_3"
 
     with open(FLAGS.output, 'wb') as fn:
         fn.write(kb.SerializeToString())

@@ -37,6 +37,8 @@ message Keyboard {
   // The name of the keyboard. This should be url-safe.
   string name = 1;
 
+  string url = 13;
+
   message Key {
     // The location of this switch.
     Pose pose = 1;
@@ -135,4 +137,13 @@ message Keyboard {
 
   // Identifying text that will appear in an inconspicuous place on artifacts, specifically the PCB.
   string info_text = 11;
+
+  message QmkInfo {
+    // Name of the community layout to use.
+    string layout = 1;
+
+    // Mapping of positions in the layout parameter list to key indices in the keys field above.
+    repeated int32 layout_sequence = 2;
+  }
+  QmkInfo qmk = 12;
 }

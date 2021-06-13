@@ -1,6 +1,6 @@
 load("@rules_python//python:defs.bzl", "py_binary")
 load("@com_github_kleinpa_keyboardtoolbox_py_deps//:requirements.bzl", "requirement")
-load("//kbtb:defs.bzl", "build_keyboard", "kbpb_from_kle")
+load("//kbtb:defs.bzl", "build_keyboard", "kbpb_from_kle", "qmk_keyboard")
 load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_tar")
 
 py_binary(
@@ -22,6 +22,11 @@ genrule(
 
 build_keyboard(
     name = "unisplit42",
+    src = ":unisplit42_proto",
+)
+
+qmk_keyboard(
+    name = "unisplit42_qmk",
     src = ":unisplit42_proto",
 )
 
@@ -64,6 +69,11 @@ genrule(
 
 build_keyboard(
     name = "numpad17",
+    src = ":numpad17_proto",
+)
+
+qmk_keyboard(
+    name = "numpad17_qmk",
     src = ":numpad17_proto",
 )
 

@@ -1,86 +1,130 @@
 """Generate C++ headers for use in QMK firmware."""
 
 import io
+import json
 
 from kbtb.keyboard_pb2 import Keyboard
 
-generator = "github.com/kleinpa/kbtb"
 
+def make_qmk_info_file(kb):
+    data = {}
 
-def make_qmk_header_file(kb):
+    if kb.name: data['keyboard_name'] = kb.name
+    if kb.url: data['url'] = kb.url
+
+    data['usb'] = {'pid': '0x23B0', 'device_ver': '0x0001'}
+
+    # TODO: generalize...
+
     if kb.controller == Keyboard.CONTROLLER_PROMICRO:
+        data['processor'] = 'atmega32u4'
+        data['bootloader'] = 'atmel-dfu'
+        data['diode_direction'] = 'COL2ROW'
         pin_names = [
-            "D3", "D2", "D1", "D0", "D4", "C6", "D7", "E6", "B4", "B5", "B6",
-            "B2", "B3", "B1", "F7", "F6", "F5", "F4"
+            'D3', 'D2', 'D1', 'D0', 'D4', 'C6', 'D7', 'E6', 'B4', 'B5', 'B6',
+            'B2', 'B3', 'B1', 'F7', 'F6', 'F5', 'F4'
+        ]
+    elif kb.controller == Keyboard.CONTROLLER_ATMEGA32U4:
+        data['processor'] = 'atmega32u4'
+        data['bootloader'] = 'atmel-dfu'
+        data['diode_direction'] = 'COL2ROW'
+        pin_names = [
+            'B0',
+            'B7',
+            'D0',
+            'D1',
+            'D2',
+            'D3',
+            'D5',
+            'D4',
+            'D6',
+            'D7',
+            'B4',
+            'B5',
+            'B6',
+            'C6',
+            'C7',
+            'F7',
+            'F6',
+            'F5',
+            'F4',
+            'F1',
+            'F0',
+            'E6',
         ]
     else:
-        raise RuntimeError("unknown controller")
+        raise RuntimeError(f'unknown controller: {kb.controller}')
 
-    usb_vid = "0xFEED"
-    usb_pid = "0x6060"
-    usb_ver = "0x0001"
+    data['features'] = {
+        "backlight": False,
+        "command": False,
+        "console": False,
+        "extrakey": False,
+        "midi": False,
+        "mousekey": False,
+        "nkro": False,
+        "rgblight": False,
+        "unicode": False
+    }
 
     # Build sets of row and column controller pin indices
-    rows = set(k.controller_pin_low for k in kb.keys)
-    cols = set(k.controller_pin_high for k in kb.keys)
+    rows = sorted(set(k.controller_pin_low for k in kb.keys))
+    cols = sorted(set(k.controller_pin_high for k in kb.keys))
 
-    # Do a sanity check on controller pins
-    if rows & cols:
+    # Sanity check the controller pins
+    if set(rows) & set(cols):
         raise RuntimeError(
-            f"pin in both row and column list rows={rows} cols={cols}")
-    if not rows.issubset(range(len(pin_names))):
-        raise RuntimeError(f"rows contains out-of-range pin rows={rows}")
-    if not cols.issubset(range(len(pin_names))):
-        raise RuntimeError(f"Rows contains out-of-range pin cols={cols}")
+            f'pin in both row and column list rows={rows} cols={cols}')
+    if not set(rows).issubset(range(len(pin_names))):
+        raise RuntimeError(f'rows contains out-of-range pin rows={rows}')
+    if not set(cols).issubset(range(len(pin_names))):
+        raise RuntimeError(f'Rows contains out-of-range pin cols={cols}')
     if len(
             set((k.controller_pin_low, k.controller_pin_high)
                 for k in kb.keys)) != len(kb.keys):
-        raise RuntimeError(f"controller pin index assignments not unique")
+        raise RuntimeError(f'controller pin index assignments not unique')
 
-    config = {
-        "PRODUCT": kb.name,
-
-        # USB Device descriptor
-        "VENDOR_ID": usb_vid,
-        "PRODUCT_ID": usb_pid,
-        "DEVICE_VER": usb_ver,
-
-        # Matrix Definition
-        "MATRIX_ROWS": len(rows),
-        "MATRIX_ROW_PINS": "{" + ", ".join(pin_names[x] for x in rows) + "}",
-        "MATRIX_COLS": len(cols),
-        "MATRIX_COL_PINS": "{" + ", ".join(pin_names[x] for x in cols) + "}",
-        "DIODE_DIRECTION": "COL2ROW",  # COL2ROW or ROW2COL
-
-        # Other options
-        "DEBOUNCE": 5,
+    data['width'] = len(cols)
+    data['height'] = len(rows)
+    data['key_count'] = len(kb.keys)
+    data['matrix_pins'] = {
+        'cols': list(pin_names[x] for x in cols),
+        'rows': list(pin_names[x] for x in rows)
     }
 
-    def c_list(xs):
-        """Transform a nested list of numbers into a c list literal."""
-        if isinstance(xs, str):
-            return xs
-        try:
-            return "{" + ",".join(c_list(x) for x in xs) + "}"
-        except TypeError:
-            return xs
+    ku = 19.05
+    min_x = min(k.pose.x for k in kb.keys)
+    min_y = min(k.pose.y for k in kb.keys)
 
-    matrix = {}
-    layout_params = []
-    for i, k in enumerate(kb.keys):
-        p = f"k{i}"
-        layout_params.append(p)
-        matrix[(k.controller_pin_low, k.controller_pin_high)] = p
+    def make_layout(key):
+        data = {}
+        data['matrix'] = [
+            rows.index(key.controller_pin_low),
+            cols.index(key.controller_pin_high)
+        ]
+        if key.unit_width != 1: data['w'] = key.unit_width
+        if key.unit_height != 1: data['h'] = key.unit_height
+        if key.pose.r != 0: data['r'] = key.pose.r
+        data['x'] = (key.pose.x - min_x) / ku
+        data['y'] = (key.pose.y - min_y) / ku
 
-    matrix_layout = [[matrix.get((r, c), "KC_NO") for c in cols] for r in rows]
-    config[f"LAYOUT({c_list(layout_params)[1:-1]})"] = (
-        f"{c_list(matrix_layout)}")
+        return data
 
-    fn = io.StringIO()
-    print(f"/* generated by {generator} */", file=fn)
-    print("#pragma once", file=fn)
-    print("#include \"config_common.h\"", file=fn)
-    for k, v in config.items():
-        print(f"#define {k} {v}", file=fn)
-
-    return fn.getvalue().encode('utf-8')
+    if kb.qmk.layout and kb.qmk.layout_sequence:
+        data["community_layouts"] = [kb.qmk.layout]
+        data['layouts'] = {
+            f'LAYOUT_{kb.qmk.layout}': {
+                'key_count': len(kb.qmk.layout_sequence),
+                'layout':
+                [make_layout(kb.keys[i]) for i in kb.qmk.layout_sequence]
+            }
+        }
+    elif kb.qmk.layout and not kb.qmk.layout_sequence:
+        data["community_layouts"] = [kb.qmk.layout]
+        data['layouts'] = {
+            f'LAYOUT_{kb.qmk.layout}': {
+                'key_count': len(kb.keys),
+                'layout': [make_layout(k) for k in kb.keys]
+            }
+        }
+    return json.dumps(data, indent=2)

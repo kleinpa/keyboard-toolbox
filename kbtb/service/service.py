@@ -14,7 +14,7 @@ from kbtb.kicad import polygon_to_kicad_file
 from kbtb.kle import keyboard_to_kle, keyboard_to_kle_file
 from kbtb.pcb import generate_kicad_pcb_file
 from kbtb.plate import generate_plate
-from kbtb.qmk import make_qmk_header_file
+from kbtb.qmk import make_qmk_info_file
 from kbtb.svg import keyboard_to_layout_svg, svg_to_file
 
 
@@ -58,7 +58,7 @@ def render_proto_text(name=None):
 @flask_app.route('/kb/<name>/qmk')
 def render_qmk_header_file(name=None):
     return send_file(
-        make_qmk_header_file(keyboards[name]),
+        make_qmk_info_file(keyboards[name]),
         mimetype='text/plain',
         as_attachment=False,
         attachment_filename=f'{name}-config.h')

@@ -153,3 +153,34 @@ kbpb_from_kle = rule(
         ),
     },
 )
+
+def _qmk_keyboard(ctx):
+    output_file = ctx.actions.declare_file("{}.json".format(ctx.label.name))
+    ctx.actions.run(
+        inputs = [ctx.file.src],
+        outputs = [output_file],
+        arguments = [
+            "--input={}".format(ctx.file.src.path),
+            "--output={}".format(output_file.path),
+        ],
+        executable = ctx.executable._to_qmk,
+    )
+    return [DefaultInfo(
+        files = depset([output_file]),
+        runfiles = ctx.runfiles([output_file]),
+    )]
+
+qmk_keyboard = rule(
+    implementation = _qmk_keyboard,
+    attrs = {
+        "src": attr.label(
+            allow_single_file = [".pb"],
+            mandatory = True,
+        ),
+        "_to_qmk": attr.label(
+            default = Label("//kbtb/cli:to_qmk"),
+            executable = True,
+            cfg = "exec",
+        ),
+    },
+)

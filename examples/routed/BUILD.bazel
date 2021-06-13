@@ -1,14 +1,14 @@
 load("@com_github_kleinpa_kicadbazel//tools:defs.bzl", "kicad_bom", "kicad_gerbers")
 
 kicad_gerbers(
-    name = "numpad",
-    src = "numpad.kicad_pcb",
+    name = "numpad17",
+    src = "numpad17.kicad_pcb",
     visibility = ["//visibility:public"],
 )
 
 kicad_bom(
-    name = "numpad_bom",
-    src = "numpad.kicad_pcb",
+    name = "numpad17_bom",
+    src = "numpad17.kicad_pcb",
     component_file = "lcsc_part_numbers.csv",
     fields = [
         "Designator",
@@ -19,8 +19,8 @@ kicad_bom(
 )
 
 kicad_bom(
-    name = "numpad_cpl",
-    src = "numpad.kicad_pcb",
+    name = "numpad17_cpl",
+    src = "numpad17.kicad_pcb",
     component_file = "lcsc_part_numbers.csv",
     fields = [
         "Designator",

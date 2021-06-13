@@ -17,16 +17,19 @@ flags.DEFINE_string('output', '', 'Output path')
 def main(argv):
     kb = kle_to_keyboard(
         json.loads("""[
-        ["", "", "", ""],
-        ["", "", "", {"h": 2.0}, ""],
-        ["", "", ""],
-        ["", "", "", {"h": 2.0}, ""],
-        [{"w": 2.0}, "", ""]
-    ]"""),
+            {"name": "numpad17"},
+            ["", "", "", ""],
+            ["", "", "", {"h": 2.0}, ""],
+            ["", "", ""],
+            ["", "", "", {"h": 2.0}, ""],
+            [{"w": 2.0}, "", ""]
+        ]"""),
         controller=Keyboard.CONTROLLER_ATMEGA32U4,
         switch=Keyboard.SWITCH_CHERRY_MX,
         outline_type="rectangle",
-        info_text=f"kbtb/numpad")
+        info_text=f"numpad17")
+
+    kb.url = "https://github.com/kleinpa/keyboard-toolbox"
 
     def bottom_left_of(pose, pitch=19):
         return Position(x=pose.x + pitch / 2, y=pose.y - pitch / 2)
@@ -56,6 +59,11 @@ def main(argv):
             outline,
             between_pose(kb.keys[16].pose, kb.keys[14].pose),
             offset=-2))
+
+    kb.qmk.layout = "numpad_5x4"
+    kb.qmk.layout_sequence[:] = [
+        0, 1, 2, 3, 4, 5, 6, 8, 9, 10, 7, 11, 12, 13, 15, 16, 14
+    ]
 
     with open(FLAGS.output, 'wb') as fn:
         fn.write(kb.SerializeToString())
