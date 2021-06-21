@@ -119,6 +119,9 @@ message Keyboard {
     // ATMEGA32U4-AU with 22 usable IO pins. This controller uses a
     // USB Type-C connector positioned by the connector_pose field.
     CONTROLLER_ATMEGA32U4 = 3;
+
+    // ATMEGA328P-AU
+    CONTROLLER_ATMEGA328 = 4;
   }
   Controller controller = 6;
 

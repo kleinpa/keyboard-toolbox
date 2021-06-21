@@ -46,6 +46,17 @@ def resistor(val, net_a, net_b):
     return item
 
 
+def diode(val, net_a, net_b):
+    item = load_footprint(
+        "com_gitlab_kicad_libraries_kicad_footprints/Diode_SMD.pretty",
+        "D_SOD-323")
+    item.SetValue(val)
+    item.Reference().SetKeepUpright(False)
+    item.FindPadByName(1).SetNet(net_a)
+    item.FindPadByName(2).SetNet(net_b)
+    return item
+
+
 def add_pro_micro(pose: PCBPosition, board, ground_net, io_nets):
     mcu_offset = 17.78 - 9.525
     controller = load_footprint("com_github_keebio_keebio_parts",
@@ -437,6 +448,182 @@ def add_atmega32u4(pose: PCBPosition, board, ground_net, usb_nets, io_nets):
     # TODO: add power led?
 
 
+def add_atmega328p_vusb(pose: PCBPosition, board, ground_net, usb_nets,
+                        io_nets):
+    # signals for icsp debug
+    net_icsp_reset = pcbnew.NETINFO_ITEM(board, f"icsp-reset")
+    board.Add(net_icsp_reset)
+    #net_icsp_mosi = pcbnew.NETINFO_ITEM(board, f"icsp-mosi")
+    #board.Add(net_icsp_mosi)
+    #net_icsp_miso = pcbnew.NETINFO_ITEM(board, f"icsp-miso")
+    #board.Add(net_icsp_miso)
+    #net_icsp_sck = pcbnew.NETINFO_ITEM(board, f"icsp-sck")
+    #board.Add(net_icsp_sck)
+
+    net_mcu_xtal1 = pcbnew.NETINFO_ITEM(board, f"xtal1")
+    board.Add(net_mcu_xtal1)
+    net_mcu_xtal2 = pcbnew.NETINFO_ITEM(board, f"xtal2")
+    board.Add(net_mcu_xtal2)
+    net_mcu_ucap = pcbnew.NETINFO_ITEM(board, f"ucap")
+    board.Add(net_mcu_ucap)
+
+    net_mcu_dp = pcbnew.NETINFO_ITEM(board, f"vusb-dp")
+    board.Add(net_mcu_dp)
+    net_mcu_dn = pcbnew.NETINFO_ITEM(board, f"vusb-dn")
+    board.Add(net_mcu_dn)
+
+    # power
+    net_usb_dp, net_usb_dn, net_usb_vbus = usb_nets
+    net_mcu_vcc = net_usb_vbus
+
+    # vcc filter cap
+    item = resistor("10 µF", ground_net, net_mcu_vcc)
+    set_pcb_position(item, offset(pose, 1.5 * 1.46, -9, 90))
+    set_next_prefix(board, item, "C")
+    board.Add(item)
+
+    # Schematic based on https://github.com/hsgw/plaid/blob/master/pcb/plaid.pdf
+
+    # TODO:
+    # d+ resistor (68 Ω)
+    item = resistor("68 Ω", net_usb_dp, net_mcu_dp)
+    set_pcb_position(item, offset(pose, -1.5 * 1.46, -9, 90))
+    set_next_prefix(board, item, "R")
+    board.Add(item)
+
+    # d- resistor (68 Ω)
+    item = resistor("68 Ω", net_usb_dn, net_mcu_dn)
+    set_pcb_position(item, offset(pose, -.5 * 1.46, -9, 90))
+    set_next_prefix(board, item, "R")
+    board.Add(item)
+
+    # d- pullup (1k5)
+    item = resistor("1.5 kΩ", net_usb_dn, net_usb_vbus)
+    set_pcb_position(item, offset(pose, .5 * 1.46, -9, 90))
+    set_next_prefix(board, item, "R")
+    board.Add(item)
+
+    # d+ diode (3v6)
+    item = diode("3.6 V zener", net_usb_dn, ground_net)
+    set_pcb_position(item, offset(pose, -2, -12, 180))
+    set_next_prefix(board, item, "D")
+    board.Add(item)
+
+    # d- diode (3v6)
+    item = diode("3.6 V zener", net_usb_dp, ground_net)
+    set_pcb_position(item, offset(pose, 2, -12))
+    set_next_prefix(board, item, "D")
+    board.Add(item)
+
+    # reset pullup
+    item = resistor("10 kΩ", net_mcu_vcc, net_icsp_reset)
+    set_pcb_position(item, offset(pose, 2.5 * 1.46, -9, 90))
+    set_next_prefix(board, item, "R")
+    board.Add(item)
+
+    # power led?
+    # only two decoupling caps
+    # bootloader switch?
+
+    # atmega328p-au
+    mcu_pose = offset(pose, 0, 0, 45 + 90)
+    item = load_footprint(
+        "com_gitlab_kicad_libraries_kicad_footprints/Package_QFP.pretty",
+        "TQFP-32_7x7mm_P0.8mm")
+    set_pcb_position(item, mcu_pose)
+    set_next_prefix(board, item, "U")
+    item.SetValue("ATMEGA328P-AU")
+
+    for p in [8, 22]:  # GND
+        item.FindPadByName(p).SetNet(ground_net)
+    for p in [7, 20]:  # VCC
+        item.FindPadByName(p).SetNet(net_mcu_vcc)
+
+    item.FindPadByName(5).SetNet(net_mcu_dn)
+    item.FindPadByName(4).SetNet(net_mcu_dp)
+
+    # crystal pins
+    item.FindPadByName(9).SetNet(net_mcu_xtal1)
+    item.FindPadByName(10).SetNet(net_mcu_xtal2)
+
+    for i, net in enumerate(io_nets):
+        [
+            item.FindPadByName(2),  # PD0
+            item.FindPadByName(3),  # PD1
+            item.FindPadByName(6),  # PD4
+            # item.FindPadByName(11),  # PD5 and Boot
+            item.FindPadByName(12),  # PD6
+            item.FindPadByName(13),  # PD7
+            item.FindPadByName(14),  # PB0
+            item.FindPadByName(15),  # PB1
+            item.FindPadByName(16),  # PB2
+            item.FindPadByName(17),  # PB3 and MOSI
+            item.FindPadByName(18),  # PB4 and MISO
+            item.FindPadByName(19),  # PB5 and SCK
+            item.FindPadByName(23),  # PC0
+            item.FindPadByName(24),  # PC1
+            item.FindPadByName(25),  # PC2
+            item.FindPadByName(26),  # PC3
+            item.FindPadByName(27),  # PC4
+            item.FindPadByName(28),  # PC5
+        ][i].SetNet(net)
+    board.Add(item)
+
+    # icsp pins
+    net_icsp_sck = item.FindPadByName(19).GetNet()
+    net_icsp_mosi = item.FindPadByName(17).GetNet()
+    net_icsp_miso = item.FindPadByName(18).GetNet()
+    item.FindPadByName(1).SetNet(net_icsp_reset)
+
+    # crystal
+    crystal_pose = offset(pose, 0, 13, 90)
+    item = load_footprint(
+        "com_gitlab_kicad_libraries_kicad_footprints/Crystal.pretty",
+        "Crystal_SMD_3225-4Pin_3.2x2.5mm")
+    set_pcb_position(item, offset(crystal_pose, 0, 0, 0))
+    set_next_prefix(board, item, "X")
+    item.SetValue("16 MHz")
+    item.FindPadByName(1).SetNet(net_mcu_xtal1)
+    item.FindPadByName(2).SetNet(ground_net)
+    item.FindPadByName(3).SetNet(net_mcu_xtal2)
+    item.FindPadByName(4).SetNet(ground_net)
+    board.Add(item)
+    item = resistor("22 pF", net_mcu_xtal1, ground_net)
+    set_pcb_position(item, offset(crystal_pose, 0, -2.45))
+    set_next_prefix(board, item, "C")
+    board.Add(item)
+    item = resistor("22 pF", net_mcu_xtal2, ground_net)
+    set_pcb_position(item, offset(crystal_pose, 2.83, 0, -90))
+    set_next_prefix(board, item, "C")
+    board.Add(item)
+
+    # debug connector
+    item = load_footprint(
+        "com_gitlab_kicad_libraries_kicad_footprints/Connector.pretty",
+        "Tag-Connect_TC2030-IDC-NL_2x03_P1.27mm_Vertical")
+    set_pcb_position(item, offset(pose, 0, 19, -90))
+    set_next_prefix(board, item, "J")
+    item.Value().SetVisible(False)
+    item.Reference().SetVisible(False)
+    item.FindPadByName(1).SetNet(net_icsp_miso)
+    item.FindPadByName(2).SetNet(net_mcu_vcc)
+    item.FindPadByName(3).SetNet(net_icsp_sck)
+    item.FindPadByName(4).SetNet(net_icsp_mosi)
+    item.FindPadByName(5).SetNet(net_icsp_reset)
+    item.FindPadByName(6).SetNet(ground_net)
+    board.Add(item)
+
+    # mcu decoupling
+    item = resistor("0.1 µF", ground_net, net_mcu_vcc)
+    set_pcb_position(item, offset(mcu_pose, 6.5, .5, 90))
+    set_next_prefix(board, item, "C")
+    board.Add(item)
+    item = resistor("0.1 µF", net_mcu_vcc, ground_net)
+    set_pcb_position(item, offset(mcu_pose, -6.5, -2.5, -90))
+    set_next_prefix(board, item, "C")
+    board.Add(item)
+
+
 def add_mx_switch(pose: PCBPosition, board, key, i, net1, net2):
 
     # net to connect diode to switch
@@ -457,17 +644,14 @@ def add_mx_switch(pose: PCBPosition, board, key, i, net1, net2):
 
     item = load_footprint(
         "com_gitlab_kicad_libraries_kicad_footprints/Diode_SMD.pretty",
-        "D_SOD-123")
-    set_pcb_position(item, offset(pose, -3.5, -5.5, 180, flip=True))
+        "D_SOD-323")
+    set_pcb_position(item, offset(pose, -5, -5.5, 180, flip=True))
     set_next_prefix(board, item, "D")
     item.SetValue("4148")
     item.Reference().SetKeepUpright(False)
     item.FindPadByName(1).SetNet(net)
     item.FindPadByName(2).SetNet(net2)
     board.Add(item)
-
-    # Stabilizers are still a WIP. Orientation is hard to get right
-    # automatically so it should probably be pushed up into keyboard.proto
 
     if key.HasField("stabilizer"):
         if key.stabilizer.size == 2:
@@ -604,6 +788,21 @@ def generate_kicad_pcb_file(kb):
             scale(kb.connector_pose, flip=True), board, ground_net, usb_nets)
 
         add_atmega32u4(
+            scale(kb.controller_pose, flip=True), board, ground_net, usb_nets,
+            matrix_nets.values())
+    elif kb.controller == Keyboard.CONTROLLER_ATMEGA328:
+        net_usb_dp = pcbnew.NETINFO_ITEM(board, f"usb-dp")
+        board.Add(net_usb_dp)
+        net_usb_dn = pcbnew.NETINFO_ITEM(board, f"usb-dn")
+        board.Add(net_usb_dn)
+        net_usb_vbus = pcbnew.NETINFO_ITEM(board, f"usb-vcc")
+        board.Add(net_usb_vbus)
+        usb_nets = net_usb_dp, net_usb_dn, net_usb_vbus
+
+        add_usbc_legacy(
+            scale(kb.connector_pose, flip=True), board, ground_net, usb_nets)
+
+        add_atmega328p_vusb(
             scale(kb.controller_pose, flip=True), board, ground_net, usb_nets,
             matrix_nets.values())
     else:

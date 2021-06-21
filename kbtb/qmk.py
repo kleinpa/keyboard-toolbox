@@ -52,6 +52,29 @@ def make_qmk_info_file(kb):
             'F0',
             'E6',
         ]
+    elif kb.controller == Keyboard.CONTROLLER_ATMEGA328:
+        data['processor'] = 'atmega328p'
+        data['bootloader'] = 'USBasp'
+        data['diode_direction'] = 'COL2ROW'
+        pin_names = [
+            "D0",
+            "D1",
+            "D4",
+            "D6",
+            "D7",
+            "B0",
+            "B1",
+            "B2",
+            "B3",
+            "B4",
+            "B5",
+            "C0",
+            "C1",
+            "C2",
+            "C3",
+            "C4",
+            "C5",
+        ]
     else:
         raise RuntimeError(f'unknown controller: {kb.controller}')
 
