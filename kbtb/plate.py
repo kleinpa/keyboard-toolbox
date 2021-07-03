@@ -147,10 +147,10 @@ def generate_cherry_cutout(key, corner_radius=0.3, resolution=16, shift=0):
     if key.HasField("stabilizer"):
         stab_geom = cherry_stabilizer(key.stabilizer.size)
         if stab_geom:
-            shape = shape.union(stab_geom)
-        shape = shapely.affinity.rotate(shape, key.stabilizer.r)
+            shape = shape.union(
+                shapely.affinity.rotate(stab_geom, key.stabilizer.r, (0, 0)))
 
-    shape = shapely.affinity.rotate(shape, r)
+    shape = shapely.affinity.rotate(shape, r, (0, 0))
     shape = shapely.affinity.translate(shape, x, y)
 
     return shapely_round(
@@ -162,7 +162,7 @@ def generate_plate(kb, padding=0, mounting_holes=False, cutouts=True):
 
     features = []
 
-    # Cutouts in my first water just cut Aluminum plate made by SendCutSend were a bit tight, fudging here.
+    # Cutouts in my first waterjet cut Aluminum plate made by SendCutSend were a bit tight, fudging here.
     cutout_padding = 0.05
 
     if cutouts:
