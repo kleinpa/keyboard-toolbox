@@ -25,18 +25,19 @@ message Position {
 //
 // * Switch mounting plates
 // * PCBs populated with the right outline, switches, and mounting
-// * holes Enclosures
+// * Mounting hole positions
 // * Firmware header files
 //
-// All physical coordinates use a positive-is-up-right orientation and
-// are defined in milimeters.
+// All physical coordinates are defined in milimeters and use a
+// positive-is-up-right orientation.
 //
-// Details like an intended keymap are outside the scope of this
-// definition.
+// Keymaps are outside the scope of this definition.
+//
 message Keyboard {
   // The name of the keyboard. This should be url-safe.
   string name = 1;
 
+  // An optional url for more information about the described keyboard.
   string url = 13;
 
   message Key {
@@ -49,7 +50,7 @@ message Keyboard {
     // The height of the key relative to the width of a standard key.
     double unit_height = 3;
 
-    // The index of the controller pins this switch (and it's diode)
+    // The index of the controller pins this switch and it's diode
     // should be connected to.
     int32 controller_pin_high = 4;
     int32 controller_pin_low = 5;
@@ -104,7 +105,7 @@ message Keyboard {
   enum Controller {
     CONTROLLER_UNKNOWN = 0;
 
-    // An "Pro Micro" compatible microcontroller with 18 IO pins.
+    // A "Pro Micro" compatible microcontroller with 18 IO pins.
     //
     // When controller_pose is set to the pose of top-row key, the
     // footprint will be positioned correctly so that the USB port is
@@ -120,7 +121,8 @@ message Keyboard {
     // USB Type-C connector positioned by the connector_pose field.
     CONTROLLER_ATMEGA32U4 = 3;
 
-    // ATMEGA328P-AU
+    // ATMEGA328P-AU with 17 usable IO pins. This is a work in
+    // progress and will not currently produce a working schematic.
     CONTROLLER_ATMEGA328 = 4;
   }
   Controller controller = 6;

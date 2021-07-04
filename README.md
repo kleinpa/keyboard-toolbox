@@ -15,7 +15,10 @@ neat keyboards. There's lots of fun stuff inside:
 * Generate QMK headers from the same source of truth as the schematic.
 
 My [kicad-bazel](https://github.com/kleinpa/kicad-bazel) project was
-originally built as a part of this project then spun off and
-generalized. There's still lots of work to do before this is ready for
-casual use but I have already used it to produce one real-world
-keyboard.
+originally a part of this project before being seperated and generalized.
+There's still lots of work to do before I'd trust the output of this
+tool, but it has already proven itself at least partially working.
+
+The 'numpad17' example was routed by hand and then built using a PCBA
+service. Some pictures of the final product can be found
+[on imgur](https://imgur.com/a/V2k2rSG).

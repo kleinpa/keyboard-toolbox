@@ -121,23 +121,6 @@ def cherry_stabilizer(length):
     ])
 
     return stab_path
-    # if vertical {
-
-
-# 	stab_path.RotatePath(90, Point{0, 0})
-# }
-# if flip_stab {
-# 	stab_path.RotatePath(180, Point{0, 0})
-# }
-# if key.RotateStab != 0 {
-# 	stab_path.RotatePath(key.RotateStab, Point{0, 0})
-# }
-
-# stab_path.Rel(c)
-# if ctx.RotateCluster != 0 {
-# 	stab_path.RotatePath(ctx.RotateCluster, Point{ctx.Xabs*k.U1 + k.DMZ + k.LeftPad, ctx.Yabs*k.U1 + k.DMZ + k.TopPad})
-# }
-# k.Layers[SWITCHLAYER].CutPolys = append(k.Layers[SWITCHLAYER].CutPolys, stab_path)
 
 
 def generate_cherry_cutout(key, corner_radius=0.3, resolution=16, shift=0):

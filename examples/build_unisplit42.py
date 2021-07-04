@@ -3,7 +3,7 @@
 from absl import app, flags
 
 from kbtb.keyboard_pb2 import Keyboard
-from kbtb.layout import between, between_pose, project_to_outline, mirror_keys, rotate_keys, grid
+from kbtb.layout import between, between_pose, project_to_outline, mirror_keys, rotate_keys, grid, pose_closest_point
 from kbtb.matrix import fill_matrix_rows
 from kbtb.outline import generate_outline_tight
 
@@ -14,7 +14,7 @@ flags.DEFINE_string('output', '', 'Output path')
 def main(argv):
     kb = Keyboard(
         name="test-layout",
-        controller=Keyboard.CONTROLLER_PROMICRO,
+        controller=Keyboard.CONTROLLER_ATMEGA328,
         switch=Keyboard.SWITCH_CHERRY_MX,
 
         # Plate parameters
@@ -58,7 +58,6 @@ def main(argv):
         between(kb.keys[42 + (rows - 5) * 12].pose,
                 kb.keys[51 + (rows - 5) * 12].pose)
     ])
-    kb.controller_pose.CopyFrom(kb.keys[3].pose)
     fill_matrix_rows(kb)
 
     outline = generate_outline_tight(
@@ -69,6 +68,13 @@ def main(argv):
 
     for x, y in outline.coords:
         kb.outline_polygon.add(x=x, y=y)
+
+    kb.connector_pose.CopyFrom(
+        pose_closest_point(outline,
+                           between_pose(kb.keys[5].pose, kb.keys[6].pose)))
+
+    kb.controller_pose.CopyFrom(
+        between_pose(kb.keys[17].pose, kb.keys[18].pose))
 
     kb.info_pose.CopyFrom(
         project_to_outline(

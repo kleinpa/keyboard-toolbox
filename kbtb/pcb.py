@@ -65,7 +65,6 @@ def add_pro_micro(pose: PCBPosition, board, ground_net, io_nets):
     set_pcb_position(controller, offset(pose, 0, mcu_offset, 90))
     set_next_prefix(board, controller, "U")
 
-    # TODO: make this change to actual footprint instead of hacking it here
     for g in controller.GraphicalItems():
         layer = g.GetLayer()
         # delete everything from top
@@ -170,7 +169,6 @@ def add_stm32(pose: PCBPosition, board, ground_net, usb_nets, io_nets):
     net_swd_swdclk = pcbnew.NETINFO_ITEM(board, f"swdclk")
     board.Add(net_swd_swdclk)
 
-    # this section is powered by usb and includes a voltage regulator
     net_usb_dp, net_usb_dn, net_usb_vbus = usb_nets
     net_mcu_vcc = pcbnew.NETINFO_ITEM(board, f"vcc")
     board.Add(net_mcu_vcc)
@@ -302,11 +300,9 @@ def add_atmega32u4(pose: PCBPosition, board, ground_net, usb_nets, io_nets):
     net_mcu_ucap = pcbnew.NETINFO_ITEM(board, f"ucap")
     board.Add(net_mcu_ucap)
 
-    # this section is powered by usb
     net_usb_dp, net_usb_dn, net_usb_vbus = usb_nets
     # TODO: directly connecing vbus to vcc seems non-ideal
     net_mcu_vcc = net_usb_vbus  # pcbnew.NETINFO_ITEM(board, f"vcc")
-    #board.Add(net_mcu_vcc)
 
     # vbus filter
     item = resistor("10 µF", ground_net, net_usb_vbus)
@@ -445,20 +441,12 @@ def add_atmega32u4(pose: PCBPosition, board, ground_net, usb_nets, io_nets):
     set_next_prefix(board, item, "C")
     board.Add(item)
 
-    # TODO: add power led?
-
 
 def add_atmega328p_vusb(pose: PCBPosition, board, ground_net, usb_nets,
                         io_nets):
     # signals for icsp debug
     net_icsp_reset = pcbnew.NETINFO_ITEM(board, f"icsp-reset")
     board.Add(net_icsp_reset)
-    #net_icsp_mosi = pcbnew.NETINFO_ITEM(board, f"icsp-mosi")
-    #board.Add(net_icsp_mosi)
-    #net_icsp_miso = pcbnew.NETINFO_ITEM(board, f"icsp-miso")
-    #board.Add(net_icsp_miso)
-    #net_icsp_sck = pcbnew.NETINFO_ITEM(board, f"icsp-sck")
-    #board.Add(net_icsp_sck)
 
     net_mcu_xtal1 = pcbnew.NETINFO_ITEM(board, f"xtal1")
     board.Add(net_mcu_xtal1)
@@ -521,10 +509,6 @@ def add_atmega328p_vusb(pose: PCBPosition, board, ground_net, usb_nets,
     set_next_prefix(board, item, "R")
     board.Add(item)
 
-    # power led?
-    # only two decoupling caps
-    # bootloader switch?
-
     # atmega328p-au
     mcu_pose = offset(pose, 0, 0, 45 + 90)
     item = load_footprint(
@@ -551,7 +535,6 @@ def add_atmega328p_vusb(pose: PCBPosition, board, ground_net, usb_nets,
             item.FindPadByName(2),  # PD0
             item.FindPadByName(3),  # PD1
             item.FindPadByName(6),  # PD4
-            # item.FindPadByName(11),  # PD5 and Boot
             item.FindPadByName(12),  # PD6
             item.FindPadByName(13),  # PD7
             item.FindPadByName(14),  # PB0
