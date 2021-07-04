@@ -37,8 +37,9 @@ def main(argv):
     kb.hole_positions.extend([
         bottom_left_of(kb.keys[0].pose),
         bottom_left_of(kb.keys[2].pose),
-        bottom_left_of(kb.keys[11].pose),
-        bottom_left_of(kb.keys[13].pose),
+        bottom_left_of(kb.keys[8].pose),
+        bottom_left_of(kb.keys[12].pose),
+        bottom_left_of(kb.keys[10].pose),
     ])
 
     # Read the outline that kle_to_keyboard generated
