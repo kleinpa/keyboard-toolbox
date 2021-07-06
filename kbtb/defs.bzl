@@ -70,13 +70,13 @@ def _build_keyboard(ctx):
         env = {"LD_LIBRARY_PATH": ctx.executable._to_kicad.path + ".runfiles/com_gitlab_kicad_kicad"},
         executable = ctx.executable._to_kicad,
     )
-    output_qmk_h = ctx.actions.declare_file("{}.h".format(ctx.label.name))
+    output_qmk_info = ctx.actions.declare_file("{}-info.json".format(ctx.label.name))
     ctx.actions.run(
         inputs = [ctx.file.src],
-        outputs = [output_qmk_h],
+        outputs = [output_qmk_info],
         arguments = [
             "--input={}".format(ctx.file.src.path),
-            "--output={}".format(output_qmk_h.path),
+            "--output={}".format(output_qmk_info.path),
             "--format=qmk",
         ],
         executable = ctx.executable._to_qmk,
@@ -119,7 +119,7 @@ build_keyboard = rule(
         "kicad_pcb": "%{name}.kicad_pcb",
         "plate_top_pcb": "%{name}_plate_top.kicad_pcb",
         "plate_bottom_pcb": "%{name}_plate_bottom.kicad_pcb",
-        "qmk_header": "%{name}.h",
+        "qmk_header": "%{name}-info.json",
     },
 )
 

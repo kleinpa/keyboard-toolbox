@@ -27,7 +27,7 @@ def main(argv):
         controller=Keyboard.CONTROLLER_ATMEGA32U4,
         switch=Keyboard.SWITCH_CHERRY_MX,
         outline_type="rectangle",
-        info_text=f"numpad17")
+        info_text="numpad17")
 
     kb.url = "https://github.com/kleinpa/keyboard-toolbox"
 

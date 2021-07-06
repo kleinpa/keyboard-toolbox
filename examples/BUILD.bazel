@@ -33,9 +33,9 @@ qmk_keyboard(
 pkg_tar(
     name = "unisplit42_tar",
     srcs = [
-        "unisplit42.h",
         "unisplit42.kicad_pcb",
         "unisplit42.svg",
+        "unisplit42-info.json",
     ],
 )
 
