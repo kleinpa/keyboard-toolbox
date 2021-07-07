@@ -1,73 +1,54 @@
-"""A basic example keyboard layout used for testing."""
+import sys
 
 from absl import app, flags
 
+from kbtb.keyboard import save_keyboard
 from kbtb.keyboard_pb2 import Keyboard
-from kbtb.layout import between, between_pose, project_to_outline, mirror_keys, rotate_keys, grid, pose_closest_point
-from kbtb.matrix import fill_matrix_rows
+from kbtb.layout import holes_between_keys, project_to_outline, mirror_keys, rotate_keys, grid, pose_closest_point, between_pose, pose_closest_point
 from kbtb.outline import generate_outline_tight
 
 FLAGS = flags.FLAGS
-flags.DEFINE_string('output', '', 'Output path')
+flags.DEFINE_string('output', None, 'Output path.')
+flags.DEFINE_enum('format', 'bin', ['bin', 'text'], 'Protobuf output format.')
 
 
-def main(argv):
+def layout():
+
     kb = Keyboard(
-        name="test-layout",
-        controller=Keyboard.CONTROLLER_ATMEGA328,
+        name="unisplit42",
+        info_text="unisplit42\npeterklein.dev",
+        controller=Keyboard.CONTROLLER_ATMEGA32U4,
         switch=Keyboard.SWITCH_CHERRY_MX,
-
-        # Plate parameters
-        hole_diameter=2.4,
-        info_text="kbtb/unisplit42\npeterklein.dev")
-
-    kb.url = "https://github.com/kleinpa/keyboard-toolbox"
+    )
 
     pitch = 19.05
-    column_offsets = [-1, 0, 1, 0, -1, -2]
-    keys = []
 
-    rows = 4
+    column_offsets = [-1.6, 0.0, 8.0, 3.6, -7.68, -10.08]
 
-    for row in range(rows - 1, 0, -1):
-        for x in range(6):
-            keys.append(grid(x, row, y_offset=column_offsets[x]))
+    keys = [
+        *(grid(x, 3, y_offset=column_offsets[x]) for x in range(6)),
+        *(grid(x, 2, y_offset=column_offsets[x]) for x in range(6)),
+        *(grid(x, 1, y_offset=column_offsets[x]) for x in range(6)),
+        *(grid(
+            x,
+            arc_radius=90,
+            x_offset=-0.65 * pitch,
+            y_offset=column_offsets[0] + 1) for x in range(3)),
+    ]
 
-    for x in range(3):
-        keys.append(
-            grid(
-                x,
-                0,
-                arc_radius=120,
-                x_offset=-1 / 3 * pitch,
-                y_offset=column_offsets[1]))
-
-    for key in mirror_keys(rotate_keys(keys, angle=19), middle_space=0):
+    for key in mirror_keys(rotate_keys(keys, angle=51)):
         kb.keys.append(key)
-    kb.hole_positions.extend([
-        between(kb.keys[0].pose, kb.keys[13].pose),
-        between(kb.keys[11].pose, kb.keys[22].pose),
-        between(kb.keys[4].pose, kb.keys[17].pose),
-        between(kb.keys[7].pose, kb.keys[18].pose),
-        between(kb.keys[25 + (rows - 5) * 12].pose,
-                kb.keys[36 + (rows - 5) * 12].pose),
-        between(kb.keys[35 + (rows - 5) * 12].pose,
-                kb.keys[46 + (rows - 5) * 12].pose),
-        between(kb.keys[41 + (rows - 5) * 12].pose,
-                kb.keys[50 + (rows - 5) * 12].pose),
-        between(kb.keys[42 + (rows - 5) * 12].pose,
-                kb.keys[51 + (rows - 5) * 12].pose)
-    ])
-    fill_matrix_rows(kb)
+
+    for hole in holes_between_keys(kb.keys,
+                                   ((1, 12), (12, 25), (5, 16), (29, 38),
+                                    (30, 39), (6, 19), (10, 23), (23, 34))):
+        kb.hole_positions.append(hole)
 
     outline = generate_outline_tight(
         kb,
-        outline_concave=120,
+        outline_concave=80,
         outline_convex=1.5,
-    ).simplify(0.001)
-
-    for x, y in outline.coords:
-        kb.outline_polygon.add(x=x, y=y)
+    )
 
     kb.connector_pose.CopyFrom(
         pose_closest_point(outline,
@@ -76,6 +57,17 @@ def main(argv):
     kb.controller_pose.CopyFrom(
         between_pose(kb.keys[17].pose, kb.keys[18].pose))
 
+    # TODO: un-hardcode
+    row_nets = (0, 5, 6, 7)
+    col_nets = list(reversed((1, 2, 3, 4, 8, 9, 10, 11, 12, 13, 14, 15)))
+    for i, key in enumerate(kb.keys):
+        key.controller_pin_low = row_nets[i // 12]
+        key.controller_pin_high = col_nets[(i % 12) +
+                                           (3 if i // 12 == 3 else 0)]
+
+    for x, y in outline.coords:
+        kb.outline_polygon.add(x=x, y=y)
+
     kb.info_pose.CopyFrom(
         project_to_outline(
             outline,
@@ -83,9 +75,17 @@ def main(argv):
             offset=-4))
 
     kb.qmk.layout = "split_3x6_3"
+    kb.qmk.layout_sequence[:] = [
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+        20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37,
+        38, 39, 40, 41
+    ]
 
-    with open(FLAGS.output, 'wb') as fn:
-        fn.write(kb.SerializeToString())
+    return kb
+
+
+def main(argv):
+    save_keyboard(layout(), FLAGS.output, FLAGS.format)
 
 
 if __name__ == "__main__":

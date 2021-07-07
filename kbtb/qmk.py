@@ -91,8 +91,8 @@ def make_qmk_info_file(kb):
     }
 
     # Build sets of row and column controller pin indices
-    rows = sorted(set(k.controller_pin_low for k in kb.keys))
-    cols = sorted(set(k.controller_pin_high for k in kb.keys))
+    rows = list(dict.fromkeys(k.controller_pin_low for k in kb.keys))
+    cols = list(dict.fromkeys(k.controller_pin_high for k in kb.keys))
 
     # Sanity check the controller pins
     if set(rows) & set(cols):

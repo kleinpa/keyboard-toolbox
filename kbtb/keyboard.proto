@@ -2,6 +2,13 @@ syntax = "proto3";
 
 // A pose represents a position and rotation such as the location of a
 // key on a keyboard.
+//
+// Note on controller pins:
+//
+// A key's controller_pin_high and controller_pin_high fields describe
+// it's position in the matrix. Those fields are indexes into a
+// controller's useful IO pins.
+//
 message Pose {
   double x = 1;
   double y = 2;

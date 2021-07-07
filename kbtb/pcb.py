@@ -79,24 +79,24 @@ def add_pro_micro(pose: PCBPosition, board, ground_net, io_nets):
 
     for i, net in enumerate(io_nets):
         [
-            controller.FindPadByName(1),
-            controller.FindPadByName(2),
-            controller.FindPadByName(5),
-            controller.FindPadByName(6),
-            controller.FindPadByName(7),
-            controller.FindPadByName(8),
-            controller.FindPadByName(9),
-            controller.FindPadByName(10),
-            controller.FindPadByName(11),
-            controller.FindPadByName(12),
-            controller.FindPadByName(13),
-            controller.FindPadByName(14),
-            controller.FindPadByName(15),
-            controller.FindPadByName(16),
-            controller.FindPadByName(17),
-            controller.FindPadByName(18),
-            controller.FindPadByName(19),
-            controller.FindPadByName(20),
+            controller.FindPadByName(1),  # D3
+            controller.FindPadByName(2),  # D2
+            controller.FindPadByName(5),  # D1
+            controller.FindPadByName(6),  # D0
+            controller.FindPadByName(7),  # D4
+            controller.FindPadByName(8),  # C6
+            controller.FindPadByName(9),  # D7
+            controller.FindPadByName(10),  # E6
+            controller.FindPadByName(11),  # B4
+            controller.FindPadByName(12),  # B5
+            controller.FindPadByName(13),  # B6
+            controller.FindPadByName(14),  # B2
+            controller.FindPadByName(15),  # B3
+            controller.FindPadByName(16),  # B1
+            controller.FindPadByName(17),  # F7
+            controller.FindPadByName(18),  # F6
+            controller.FindPadByName(19),  # F5
+            controller.FindPadByName(20),  # F4
         ][i].SetNet(net)
 
     board.Add(controller)
@@ -195,7 +195,8 @@ def add_stm32(pose: PCBPosition, board, ground_net, usb_nets, io_nets):
     item.FindPadByName(32).SetNet(net_usb_dn)  # PA11
     item.FindPadByName(33).SetNet(net_usb_dp)  # PA12
 
-    for i, net in enumerate(io_nets):
+    for net, pad in zip(
+            io_nets,
         [
             item.FindPadByName(2),  # C13 pin 2
             item.FindPadByName(3),  # C14
@@ -232,7 +233,8 @@ def add_stm32(pose: PCBPosition, board, ground_net, usb_nets, io_nets):
             item.FindPadByName(43),  # B7
             item.FindPadByName(45),  # B8 pin 45
             item.FindPadByName(46),  # B9
-        ][i].SetNet(net)
+        ]):
+        pad.SetNet(net)
 
     # debug connector
     item = load_footprint(
@@ -342,7 +344,8 @@ def add_atmega32u4(pose: PCBPosition, board, ground_net, usb_nets, io_nets):
     item.FindPadByName(17).SetNet(net_mcu_xtal1)
     item.FindPadByName(16).SetNet(net_mcu_xtal2)
 
-    for i, net in enumerate(io_nets):
+    for net, pad in zip(
+            io_nets,
         [
             item.FindPadByName(8),  # PB0
             item.FindPadByName(12),  # PB7
@@ -366,7 +369,8 @@ def add_atmega32u4(pose: PCBPosition, board, ground_net, usb_nets, io_nets):
             item.FindPadByName(40),  # PF1
             item.FindPadByName(41),  # PF0
             item.FindPadByName(1),  # PE6
-        ][i].SetNet(net)
+        ]):
+        pad.SetNet(net)
     board.Add(item)
 
     # stack of 0603 components on the right
@@ -530,7 +534,8 @@ def add_atmega328p_vusb(pose: PCBPosition, board, ground_net, usb_nets,
     item.FindPadByName(9).SetNet(net_mcu_xtal1)
     item.FindPadByName(10).SetNet(net_mcu_xtal2)
 
-    for i, net in enumerate(io_nets):
+    for net, pad in zip(
+            io_nets,
         [
             item.FindPadByName(2),  # PD0
             item.FindPadByName(3),  # PD1
@@ -549,7 +554,8 @@ def add_atmega328p_vusb(pose: PCBPosition, board, ground_net, usb_nets,
             item.FindPadByName(26),  # PC3
             item.FindPadByName(27),  # PC4
             item.FindPadByName(28),  # PC5
-        ][i].SetNet(net)
+        ]):
+        pad.SetNet(net)
     board.Add(item)
 
     # icsp pins
@@ -724,25 +730,17 @@ def generate_kicad_pcb_file(kb):
         *[key.controller_pin_high for key in kb.keys]
     ])
 
-    matrix_nets = dict(
-        (p, pcbnew.NETINFO_ITEM(board, f"matrix-{p}")) for p in matrix_pins)
-    for x in matrix_nets.values():
-        board.Add(x)
-
-    if kb.switch == Keyboard.SWITCH_CHERRY_MX:
-        for i, key in enumerate(kb.keys):
-            add_mx_switch(
-                scale(key.pose), board, key, i,
-                matrix_nets[key.controller_pin_low],
-                matrix_nets[key.controller_pin_high])
-    else:
-        raise RuntimeError(f"unknown footprint")
+    matrix_nets = []
 
     if kb.controller == Keyboard.CONTROLLER_PROMICRO:
-        # For the pro
+        matrix_nets = list(
+            pcbnew.NETINFO_ITEM(board, f"matrix-{i}") for i in range(18))
+        for x in matrix_nets:
+            board.Add(x)
+
         add_pro_micro(
             scale(kb.controller_pose, flip=True), board, ground_net,
-            matrix_nets.values())
+            matrix_nets)
     elif kb.controller == Keyboard.CONTROLLER_STM32F072:
         net_usb_dp = pcbnew.NETINFO_ITEM(board, f"usb-dp")
         board.Add(net_usb_dp)
@@ -752,12 +750,17 @@ def generate_kicad_pcb_file(kb):
         board.Add(net_usb_vbus)
         usb_nets = net_usb_dp, net_usb_dn, net_usb_vbus
 
+        matrix_nets = list(
+            pcbnew.NETINFO_ITEM(board, f"matrix-{i}") for i in range(35))
+        for x in matrix_nets:
+            board.Add(x)
+
         add_usbc_legacy(
             scale(kb.connector_pose, flip=True), board, ground_net, usb_nets)
 
         add_stm32(
             scale(kb.controller_pose, flip=True), board, ground_net, usb_nets,
-            matrix_nets.values())
+            matrix_nets)
     elif kb.controller == Keyboard.CONTROLLER_ATMEGA32U4:
         net_usb_dp = pcbnew.NETINFO_ITEM(board, f"usb-dp")
         board.Add(net_usb_dp)
@@ -767,12 +770,17 @@ def generate_kicad_pcb_file(kb):
         board.Add(net_usb_vbus)
         usb_nets = net_usb_dp, net_usb_dn, net_usb_vbus
 
+        matrix_nets = list(
+            pcbnew.NETINFO_ITEM(board, f"matrix-{i}") for i in range(22))
+        for x in matrix_nets:
+            board.Add(x)
+
         add_usbc_legacy(
             scale(kb.connector_pose, flip=True), board, ground_net, usb_nets)
 
         add_atmega32u4(
             scale(kb.controller_pose, flip=True), board, ground_net, usb_nets,
-            matrix_nets.values())
+            matrix_nets)
     elif kb.controller == Keyboard.CONTROLLER_ATMEGA328:
         net_usb_dp = pcbnew.NETINFO_ITEM(board, f"usb-dp")
         board.Add(net_usb_dp)
@@ -787,9 +795,18 @@ def generate_kicad_pcb_file(kb):
 
         add_atmega328p_vusb(
             scale(kb.controller_pose, flip=True), board, ground_net, usb_nets,
-            matrix_nets.values())
+            matrix_nets)
     else:
         raise RuntimeError("unknown controller")
+
+    if kb.switch == Keyboard.SWITCH_CHERRY_MX:
+        for i, key in enumerate(kb.keys):
+            add_mx_switch(
+                scale(key.pose), board, key, i,
+                matrix_nets[key.controller_pin_low],
+                matrix_nets[key.controller_pin_high])
+    else:
+        raise RuntimeError(f"unknown footprint")
 
     if kb.info_text:
         kicad_add_text(
