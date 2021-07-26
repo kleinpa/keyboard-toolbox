@@ -1,19 +1,12 @@
 import sys
 
-from absl import app, flags
-
 from kbtb.keyboard import save_keyboard
 from kbtb.keyboard_pb2 import Keyboard
 from kbtb.layout import holes_between_keys, project_to_outline, mirror_keys, rotate_keys, grid, pose_closest_point, between_pose, pose_closest_point
 from kbtb.outline import generate_outline_tight
 
-FLAGS = flags.FLAGS
-flags.DEFINE_string('output', None, 'Output path.')
-flags.DEFINE_enum('format', 'bin', ['bin', 'text'], 'Protobuf output format.')
 
-
-def layout():
-
+def main():
     kb = Keyboard(
         name="unisplit42",
         info_text="unisplit42\npeterklein.dev",
@@ -81,12 +74,9 @@ def layout():
         38, 39, 40, 41
     ]
 
-    return kb
-
-
-def main(argv):
-    save_keyboard(layout(), FLAGS.output, FLAGS.format)
+    with open(sys.argv[1], 'wb') as fn:
+        fn.write(kb.SerializeToString())
 
 
 if __name__ == "__main__":
-    app.run(main)
+    main()

@@ -122,34 +122,3 @@ build_keyboard = rule(
         "qmk_header": "%{name}-info.json",
     },
 )
-
-def _kbpb_from_kle(ctx):
-    output_file = ctx.actions.declare_file("{}.pb".format(ctx.label.name))
-    ctx.actions.run(
-        inputs = [ctx.file.src],
-        outputs = [output_file],
-        arguments = [
-            "--input={}".format(ctx.file.src.path),
-            "--output={}".format(output_file.path),
-        ],
-        executable = ctx.executable._from_kle,
-    )
-    return [DefaultInfo(
-        files = depset([output_file]),
-        runfiles = ctx.runfiles([output_file]),
-    )]
-
-kbpb_from_kle = rule(
-    implementation = _kbpb_from_kle,
-    attrs = {
-        "src": attr.label(
-            allow_single_file = [".json"],
-            mandatory = True,
-        ),
-        "_from_kle": attr.label(
-            default = Label("//kbtb/cli:from_kle"),
-            executable = True,
-            cfg = "exec",
-        ),
-    },
-)

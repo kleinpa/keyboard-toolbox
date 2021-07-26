@@ -1,0 +1,40 @@
+load("@rules_python//python:defs.bzl", "py_binary")
+load("@com_github_kleinpa_keyboardtoolbox_py_deps//:requirements.bzl", "requirement")
+load("//kbtb:defs.bzl", "build_keyboard")
+load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_tar")
+
+py_binary(
+    name = "build_all",
+    srcs = ["build_all.py"],
+    deps = [
+        requirement("absl-py"),
+        "//kbtb:keyboard_lib",
+        "//kbtb:kle",
+    ],
+)
+
+variants = [
+    ("atmega32u4_mx", "atmega32u4", "mx"),
+    ("promicro_mx", "promicro", "mx"),
+]
+
+[genrule(
+    name = "all_" + name + "_proto",
+    outs = ["all_" + name + ".pb"],
+    cmd = "./$(execpath :build_all) --output=\"$@\" --mcu " + mcu + " --description " + name,
+    exec_tools = [":build_all"],
+) for name, mcu, switch in variants]
+
+[build_keyboard(
+    name = "all_" + name,
+    src = ":all_" + name + "_proto",
+) for name, mcu, switch in variants]
+
+[pkg_tar(
+    name = "all_" + name + "_tar",
+    srcs = [
+        "all_" + name + ".kicad_pcb",
+        "all_" + name + ".svg",
+        "all_" + name + "-info.json",
+    ],
+) for name, mcu, switch in variants]
