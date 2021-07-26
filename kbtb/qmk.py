@@ -75,6 +75,29 @@ def make_qmk_info_file(kb):
             "C4",
             "C5",
         ]
+    elif kb.controller == Keyboard.CONTROLLER_STM32F072:
+        data['processor'] = 'STM32F072'
+        data['bootloader'] = 'stm32-dfu'
+        data['diode_direction'] = 'COL2ROW'
+        pin_names = [  # TODO: fix
+            "D0",
+            "D1",
+            "D4",
+            "D6",
+            "D7",
+            "B0",
+            "B1",
+            "B2",
+            "B3",
+            "B4",
+            "B5",
+            "C0",
+            "C1",
+            "C2",
+            "C3",
+            "C4",
+            "C5",
+        ]
     else:
         raise RuntimeError(f'unknown controller: {kb.controller}')
 
