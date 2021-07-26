@@ -137,26 +137,31 @@ def add_usbc_legacy(pose: PCBPosition, board, ground_net, usb_nets):
 
     ## usb cc resistors
     item = resistor("5.1 kΩ", ground_net, net_usb_cc1)
-    set_pcb_position(item, offset(pose, -1.9, 10, 0))
+    set_pcb_position(item, offset(pose, -2.3, 10.5, 90))
     set_next_prefix(board, item, "R")
     board.Add(item)
     item = resistor("5.1 kΩ", net_usb_cc2, ground_net)
-    set_pcb_position(item, offset(pose, 1.9, 10, 0))
+    set_pcb_position(item, offset(pose, 2.3, 10.5, 90))
     set_next_prefix(board, item, "R")
     board.Add(item)
 
     # esd protection
-    # https://www.littelfuse.com/~/media/electronics/datasheets/tvs_diode_arrays/littelfuse_tvs_diode_array_sr05_datasheet.pdf.pdf
     item = load_footprint(
-        "com_gitlab_kicad_libraries_kicad_footprints/Package_TO_SOT_SMD.pretty",
-        "SOT-143")
-    set_pcb_position(item, offset(pose, 0, 13.25, 90))
+        "com_gitlab_kicad_libraries_kicad_footprints/Package_SON.pretty",
+        "USON-10_2.5x1.0mm_P0.5mm")
+    set_pcb_position(item, offset(pose, 0, 9.6, 90 + 180))
     set_next_prefix(board, item, "U")
-    item.SetValue("SR05")
-    item.FindPadByName(1).SetNet(ground_net)
+    item.SetValue("TPD4E05U06DQAR")
+    item.FindPadByName(3).SetNet(ground_net)
+    item.FindPadByName(8).SetNet(ground_net)
     item.FindPadByName(2).SetNet(net_usb_dn)
-    item.FindPadByName(3).SetNet(net_usb_dp)
-    item.FindPadByName(4).SetNet(net_usb_vbus)
+    item.FindPadByName(5).SetNet(net_usb_dn)
+    item.FindPadByName(6).SetNet(net_usb_dn)
+    item.FindPadByName(9).SetNet(net_usb_dn)
+    item.FindPadByName(1).SetNet(net_usb_dp)
+    item.FindPadByName(4).SetNet(net_usb_dp)
+    item.FindPadByName(7).SetNet(net_usb_dp)
+    item.FindPadByName(10).SetNet(net_usb_dp)
     board.Add(item)
 
 
