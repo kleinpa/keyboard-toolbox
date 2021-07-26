@@ -91,9 +91,15 @@ message Keyboard {
   enum SwitchCompatibility {
     SWITCH_UNKNOWN = 0;
 
-    // Compatible with standard Cherry MX switches. Supports both
+    // Compatible with Cherry MX switches and clones. Supports both
     // plate mounted and PCB-mounted stabilizers.
     SWITCH_CHERRY_MX = 1;
+
+    // Compatible with Alps SKCM series switches and clones.
+    SWITCH_ALPS = 2;
+
+    //* Kailh PG1350 (https://deskthority.net/wiki/Kailh_PG1350_series)
+    SWITCH_KAILH_PG1350 = 3;
   }
   SwitchCompatibility switch = 4;
 
