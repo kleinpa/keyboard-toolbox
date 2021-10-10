@@ -12,6 +12,7 @@ def main():
         info_text="unisplit42\npeterklein.dev",
         controller=Keyboard.CONTROLLER_ATMEGA32U4,
         switch=Keyboard.SWITCH_CHERRY_MX,
+        hole_diameter=2.4,
     )
 
     pitch = 19.05
