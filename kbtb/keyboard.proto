@@ -137,6 +137,10 @@ message Keyboard {
     // ATMEGA328P-AU with 17 usable IO pins. This is a work in
     // progress and will not currently produce a working schematic.
     CONTROLLER_ATMEGA328 = 4;
+
+    // ATMEGA32U4-AU with 22 usable IO pins. This controller uses a
+    // USB Type-C connector positioned by the connector_pose field.
+    CONTROLLER_ATMEGA32U4_HUB2 = 5;
   }
   Controller controller = 6;
 
@@ -164,4 +168,9 @@ message Keyboard {
     repeated int32 layout_sequence = 2;
   }
   QmkInfo qmk = 12;
+
+  // A map of textually labeled poses for additional component positions like
+  // extra connectors or LEDs.
+  // TODO: is this a good idea?
+  map<string, Pose> reference_pose = 14;
 }

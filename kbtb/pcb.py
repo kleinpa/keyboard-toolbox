@@ -166,6 +166,144 @@ def mx_stabilizer(size: float, pose: PcbPosition):
 # TODO: move elsewhere
 
 
+def usbc_legacy_hub(id: str,
+                    pose: PcbPosition,
+                    ds_poses: 'list[PcbPosition]' = []):
+    cmp = PcbSection(id, {"ground", "u_vbus", "mcu_dp", "mcu_dn"}, {
+        "u_dp", "u_dn", "u_cc1", "u_cc2", "d1_dp", "d1_dn", "d2_dp", "d2_dn",
+        "vdd18_cap", "vdd33_cap", "d1_cc1", "d1_cc2", "d2_cc1", "d2_cc2",
+        "xtal1", "xtal2"
+    })
+
+    cmp = cmp.add(
+        usbc_connector(pose), {
+            "ground": "ground",
+            "vbus": "u_vbus",
+            "dp": "u_dp",
+            "dn": "u_dn",
+            "cc1": "u_cc1",
+            "cc2": "u_cc2",
+        })
+
+    # usb cc resistors
+    cmp = cmp.add(
+        resistor_0603("5.1 kΩ", pose.offset(-2.3, 10.5, 90)), {
+            "a": "ground",
+            "b": "u_cc1",
+        })
+    cmp = cmp.add(
+        resistor_0603("5.1 kΩ", pose.offset(2.3, 10.5, 90)), {
+            "b": "ground",
+            "a": "u_cc2",
+        })
+    cmp = cmp.add(
+        usb_esd_protection(pose.offset(0, 9.6, 90 + 180)), {
+            "ground": "ground",
+            "dp": "u_dp",
+            "dn": "u_dn",
+        })
+
+    if len(ds_poses) >= 1:
+        cmp = cmp.add(
+            usbc_connector(ds_poses[0]), {
+                "ground": "ground",
+                "vbus": "u_vbus",
+                "dp": "d1_dp",
+                "dn": "d2_dn",
+                "cc1": "d2_cc1",
+                "cc2": "d2_cc2",
+            })
+        cmp = cmp.add(
+            resistor_0603("56 kΩ", ds_poses[0].offset(-2.3, 10.5, 90)), {
+                "a": "u_vbus",
+                "b": "d2_cc1",
+            })
+        cmp = cmp.add(
+            resistor_0603("56 kΩ", ds_poses[0].offset(2.3, 10.5, 90)), {
+                "b": "u_vbus",
+                "a": "d2_cc2",
+            })
+    if len(ds_poses) >= 2:
+        cmp = cmp.add(
+            usbc_connector(ds_poses[1]), {
+                "ground": "ground",
+                "vbus": "u_vbus",
+                "dp": "d2_dp",
+                "dn": "d2_dn",
+                "cc1": "d2_cc1",
+                "cc2": "d2_cc2",
+            })
+        cmp = cmp.add(
+            resistor_0603("56 kΩ", ds_poses[1].offset(-2.3, 10.5, 90)), {
+                "a": "ground",
+                "b": "d2_cc1",
+            })
+        cmp = cmp.add(
+            resistor_0603("56 kΩ", ds_poses[1].offset(2.3, 10.5, 90)), {
+                "b": "ground",
+                "a": "d2_cc2",
+            })
+    if len(ds_poses) >= 3:
+        raise RuntimeError("unsupported number of downstream usb ports")
+
+    def sl21a(pose: PcbComponent):
+        return PcbComponent(
+            "com_gitlab_kicad_libraries_kicad_footprints/Package_SO.pretty:SOP-16_3.9x9.9mm_P1.27mm",
+            "X",
+            pose=pose,
+            value="SL2.1A",
+            pins=[
+                "dn4", "dp4", "dn3", "dp3", "dn2", "dp2", "dn1", "dp1", "dn",
+                "dp", "vdd5", "gnd", "vdd33", "vdd18", "xout", "xin"
+            ])
+
+    hub_pose = pose.offset(x=10)
+    cmp = cmp.add(  # hub chip SL2.1A
+        sl21a(hub_pose), {
+            "gnd": "ground",
+            "vdd5": "u_vbus",
+            "dp":"u_dp",
+            "dn":"u_dn",
+            "dp1": "mcu_dp",
+            "dn1": "mcu_dn",
+            "dp2": "d1_dp",
+            "dn2": "d1_dn",
+            "dp3": "d2_dp",
+            "dn3": "d2_dn",
+            "vdd18":"vdd18_cap",
+            "vdd33":"vdd33_cap",
+            "xout": "xtal1",
+            "xin": "xtal2",
+        })
+    cmp = cmp.add(
+        crystal_3225("12 MHz", hub_pose.offset(x=5)), {
+            "ground": "ground",
+            "in": "xtal1",
+            "out": "xtal2",
+        })
+
+    cmp = cmp.add(
+        capacitor_0603("10 µF", pose.offset(15)), {
+            "a": "vdd18_cap",
+            "b": "ground",
+        })
+
+    cmp = cmp.add(
+        capacitor_0603("10 µF", pose.offset(20)), {
+            "a": "vdd33_cap",
+            "b": "ground",
+        })
+    cmp = cmp.add(
+        capacitor_0603("10 µF", pose.offset(20)), {
+            "a": "u_vbus",
+            "b": "ground",
+        })
+
+    # TODO: downstream port power cap
+
+    return cmp
+
+
 def controller_pro_micro(id: str, pose: PcbPosition):
     matrix = ["matrix-{i}" for i in range(18)]
     cmp = PcbSection(id, {"ground"} | set(matrix))
@@ -536,14 +674,40 @@ def generate_kicad_pcb_file(kb):
             })
         cmp = cmp.add(
             controller_atmega32u4("controller",
-                                  scale(kb.controller_pose, flip=True)), {
-                                      "ground": "ground",
-                                      "usb_dp": "usb_dp",
-                                      "usb_dn": "usb_dn",
-                                      "usb_vbus": "usb_vbus",
-                                      **{s: s
-                                         for s in matrix},
-                                  })
+                                  scale(kb.controller_pose, flip=True)),
+            {
+                "ground": "ground",
+                "usb_dp": "usb_dp",
+                "usb_dn": "usb_dn",
+                "usb_vbus": "usb_vbus",
+                **{s: s
+                   for s in matrix},
+            },
+        )
+    elif kb.controller == Keyboard.CONTROLLER_ATMEGA32U4_HUB2:
+        cmp = cmp.add(
+            usbc_legacy_hub("usb", scale(kb.connector_pose, flip=True), [
+                scale(kb.reference_pose["usb_ds_1"], flip=True),
+                scale(kb.reference_pose["usb_ds_2"], flip=True),
+            ]), {
+                "ground": "ground",
+                "mcu_dp": "usb_dp",
+                "mcu_dn": "usb_dn",
+                "u_vbus": "usb_vbus",
+            })
+        cmp = cmp.add(
+            controller_atmega32u4("controller",
+                                  scale(kb.controller_pose, flip=True)),
+            {
+                "ground": "ground",
+                "usb_dp": "usb_dp",
+                "usb_dn": "usb_dn",
+                "usb_vbus": "usb_vbus",
+                **{s: s
+                   for s in matrix},
+            },
+        )
+
     else:
         raise RuntimeError("unknown controller")
 

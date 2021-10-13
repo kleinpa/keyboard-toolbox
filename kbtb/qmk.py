@@ -24,7 +24,8 @@ def make_qmk_info_file(kb):
             'D3', 'D2', 'D1', 'D0', 'D4', 'C6', 'D7', 'E6', 'B4', 'B5', 'B6',
             'B2', 'B3', 'B1', 'F7', 'F6', 'F5', 'F4'
         ]
-    elif kb.controller == Keyboard.CONTROLLER_ATMEGA32U4:
+    elif (kb.controller == Keyboard.CONTROLLER_ATMEGA32U4
+          or kb.controller == Keyboard.CONTROLLER_ATMEGA32U4_HUB2):
         data['processor'] = 'atmega32u4'
         data['bootloader'] = 'atmel-dfu'
         data['diode_direction'] = 'COL2ROW'
