@@ -81,6 +81,17 @@ def _build_keyboard(ctx):
         ],
         executable = ctx.executable._to_qmk,
     )
+    output_kle_info = ctx.actions.declare_file("{}-kle.json".format(ctx.label.name))
+    ctx.actions.run(
+        inputs = [ctx.file.src],
+        outputs = [output_kle_info],
+        arguments = [
+            "--input={}".format(ctx.file.src.path),
+            "--output={}".format(output_kle_info.path),
+            "--format=kle",
+        ],
+        executable = ctx.executable._to_kle,
+    )
 
     return [DefaultInfo(files = depset([output_svg]))]
 
@@ -111,6 +122,11 @@ build_keyboard = rule(
             executable = True,
             cfg = "exec",
         ),
+        "_to_kle": attr.label(
+            default = Label("//kbtb/cli:to_kle"),
+            executable = True,
+            cfg = "exec",
+        ),
     },
     outputs = {
         "svg": "%{name}.svg",
@@ -120,5 +136,6 @@ build_keyboard = rule(
         "plate_top_pcb": "%{name}_plate_top.kicad_pcb",
         "plate_bottom_pcb": "%{name}_plate_bottom.kicad_pcb",
         "qmk_header": "%{name}-info.json",
+        "kle": "%{name}-kle.json",
     },
 )

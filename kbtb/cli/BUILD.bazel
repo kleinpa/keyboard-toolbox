@@ -30,6 +30,19 @@ py_binary(
 )
 
 py_binary(
+    name = "to_kle",
+    srcs = [
+        "to_kle.py",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        requirement("absl-py"),
+        "//kbtb:keyboard_lib",
+        "//kbtb:kle",
+    ],
+)
+
+py_binary(
     name = "from_kle",
     srcs = [
         "from_kle.py",
