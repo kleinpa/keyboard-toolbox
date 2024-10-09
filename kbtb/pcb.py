@@ -8,7 +8,7 @@ from kbtb.kicad import PcbPosition, PcbComponent, PcbSection, PcbCircle, PcbText
 
 def package_0603(val: str, pose: PcbPosition, ref):
     return PcbComponent(
-        "com_gitlab_kicad_libraries_kicad_footprints/Resistor_SMD.pretty:R_0603_1608Metric",
+        "_main~repos_bzlmod~com_gitlab_kicad_libraries_kicad_footprints/Resistor_SMD.pretty:R_0603_1608Metric",
         reference_prefix=ref,
         pose=pose,
         value=val,
@@ -25,7 +25,7 @@ def capacitor_0603(val: str, pose: PcbPosition):
 
 def diode_sod323(val: str, pose: PcbPosition):
     return PcbComponent(
-        "com_gitlab_kicad_libraries_kicad_footprints/Diode_SMD.pretty:D_SOD-323",
+        "_main~repos_bzlmod~com_gitlab_kicad_libraries_kicad_footprints/Diode_SMD.pretty:D_SOD-323",
         reference_prefix="D",
         pose=pose,
         value=val,
@@ -35,7 +35,7 @@ def diode_sod323(val: str, pose: PcbPosition):
 
 def crystal_3225(value: str, pose: PcbPosition):
     return PcbComponent(
-        "com_gitlab_kicad_libraries_kicad_footprints/Crystal.pretty:Crystal_SMD_3225-4Pin_3.2x2.5mm",
+        "_main~repos_bzlmod~com_gitlab_kicad_libraries_kicad_footprints/Crystal.pretty:Crystal_SMD_3225-4Pin_3.2x2.5mm",
         "X",
         pose=pose,
         value=value,
@@ -45,7 +45,7 @@ def crystal_3225(value: str, pose: PcbPosition):
 
 def tagconnect_2030(id: str, pose: PcbPosition):
     return PcbComponent(
-        "com_gitlab_kicad_libraries_kicad_footprints/Connector.pretty:Tag-Connect_TC2030-IDC-NL_2x03_P1.27mm_Vertical",
+        "_main~repos_bzlmod~com_gitlab_kicad_libraries_kicad_footprints/Connector.pretty:Tag-Connect_TC2030-IDC-NL_2x03_P1.27mm_Vertical",
         reference_prefix="J",
         pose=pose,
         reference_visible=False,
@@ -55,7 +55,7 @@ def tagconnect_2030(id: str, pose: PcbPosition):
 
 def promicro(pose: PcbPosition):
     return PcbComponent(
-        "com_github_keebio_keebio_parts:ArduinoProMicro",
+        "_main~repos_bzlmod~com_github_keebio_keebio_parts:ArduinoProMicro",
         reference_prefix="U",
         pose=pose,
         pins=[
@@ -68,7 +68,7 @@ def promicro(pose: PcbPosition):
 
 def usbc_connector(pose: PcbPosition):
     return PcbComponent(
-        "com_github_ai03_2725_typec:HRO-TYPE-C-31-M-12",
+        "_main~repos_bzlmod~com_github_ai03_2725_typec:HRO-TYPE-C-31-M-12",
         "J",
         pose,
         reference_visible=False,
@@ -81,7 +81,7 @@ def usbc_connector(pose: PcbPosition):
 
 def usb_esd_protection(pose: PcbPosition):
     return PcbComponent(
-        "com_gitlab_kicad_libraries_kicad_footprints/Package_SON.pretty:USON-10_2.5x1.0mm_P0.5mm",
+        "_main~repos_bzlmod~com_gitlab_kicad_libraries_kicad_footprints/Package_SON.pretty:USON-10_2.5x1.0mm_P0.5mm",
         "U",
         pose=pose,
         value="TPD4E05U06DQAR",
@@ -95,7 +95,7 @@ def usb_esd_protection(pose: PcbPosition):
 
 def voltage_regulator_sot23(pose: PcbPosition):
     return PcbComponent(
-        "com_gitlab_kicad_libraries_kicad_footprints/Package_TO_SOT_SMD.pretty:SOT-23",
+        "_main~repos_bzlmod~com_gitlab_kicad_libraries_kicad_footprints/Package_TO_SOT_SMD.pretty:SOT-23",
         "U",
         pose=pose,
         value="MCP1700T-3302E/TT",
@@ -104,7 +104,7 @@ def voltage_regulator_sot23(pose: PcbPosition):
 
 def atmega32u(pose: PcbPosition):
     return PcbComponent(
-        "com_gitlab_kicad_libraries_kicad_footprints/Package_QFP.pretty:TQFP-44_10x10mm_P0.8mm",
+        "_main~repos_bzlmod~com_gitlab_kicad_libraries_kicad_footprints/Package_QFP.pretty:TQFP-44_10x10mm_P0.8mm",
         "U",
         pose=pose,
         value="ATMEGA32U4-AU",
@@ -120,7 +120,7 @@ def atmega32u(pose: PcbPosition):
 
 def stm32f072(pose: PcbPosition):
     return PcbComponent(
-        "com_gitlab_kicad_libraries_kicad_footprints/Package_QFP.pretty:LQFP-48_7x7mm_P0.5mm",
+        "_main~repos_bzlmod~com_gitlab_kicad_libraries_kicad_footprints/Package_QFP.pretty:LQFP-48_7x7mm_P0.5mm",
         "U",
         pose,
         value="STM32F072C8T6",
@@ -134,26 +134,25 @@ def stm32f072(pose: PcbPosition):
 
 
 def mx_switch(pose: PcbPosition):
-    return PcbComponent(
-        "com_github_kleinpa_keyboardtoolbox/kbtb/kicad_modules:SW_Cherry_MX_PCB",
-        "SW",
-        pose=pose,
-        value_visible=False,
-        reference_visible=False,
-        pins=["a", "b"])
+    return PcbComponent("keyboard_toolbox/kbtb/kicad_modules:SW_Cherry_MX_PCB",
+                        "SW",
+                        pose=pose,
+                        value_visible=False,
+                        reference_visible=False,
+                        pins=["a", "b"])
 
 
 def mx_stabilizer(size: float, pose: PcbPosition):
     if size == 2:
         return PcbComponent(
-            "com_github_kleinpa_keyboardtoolbox/kbtb/kicad_modules:Stab_Cherry_MX_2.00u_PCB",
+            "_main/kbtb/kicad_modules:Stab_Cherry_MX_2.00u_PCB",
             "ST",
             pose=pose,
             value_visible=False,
             reference_visible=False)
     elif size == 6.25:
         return PcbComponent(
-            "com_github_kleinpa_keyboardtoolbox/kbtb/kicad_modules:Stab_Cherry_MX_6.25u_PCB",
+            "_main/kbtb/kicad_modules:Stab_Cherry_MX_6.25u_PCB",
             "ST",
             pose=pose,
             value_visible=False,
@@ -186,22 +185,19 @@ def usbc_legacy_hub(id: str,
         })
 
     # usb cc resistors
-    cmp = cmp.add(
-        resistor_0603("5.1 kΩ", pose.offset(-2.3, 10.5, 90)), {
-            "a": "ground",
-            "b": "u_cc1",
-        })
-    cmp = cmp.add(
-        resistor_0603("5.1 kΩ", pose.offset(2.3, 10.5, 90)), {
-            "b": "ground",
-            "a": "u_cc2",
-        })
-    cmp = cmp.add(
-        usb_esd_protection(pose.offset(0, 9.6, 90 + 180)), {
-            "ground": "ground",
-            "dp": "u_dp",
-            "dn": "u_dn",
-        })
+    cmp = cmp.add(resistor_0603("5.1 kΩ", pose.offset(-2.3, 10.5, 90)), {
+        "a": "ground",
+        "b": "u_cc1",
+    })
+    cmp = cmp.add(resistor_0603("5.1 kΩ", pose.offset(2.3, 10.5, 90)), {
+        "b": "ground",
+        "a": "u_cc2",
+    })
+    cmp = cmp.add(usb_esd_protection(pose.offset(0, 9.6, 90 + 180)), {
+        "ground": "ground",
+        "dp": "u_dp",
+        "dn": "u_dn",
+    })
 
     if len(ds_poses) >= 1:
         cmp = cmp.add(
@@ -275,29 +271,25 @@ def usbc_legacy_hub(id: str,
             "xout": "xtal1",
             "xin": "xtal2",
         })
-    cmp = cmp.add(
-        crystal_3225("12 MHz", hub_pose.offset(x=5)), {
-            "ground": "ground",
-            "in": "xtal1",
-            "out": "xtal2",
-        })
+    cmp = cmp.add(crystal_3225("12 MHz", hub_pose.offset(x=5)), {
+        "ground": "ground",
+        "in": "xtal1",
+        "out": "xtal2",
+    })
 
-    cmp = cmp.add(
-        capacitor_0603("10 µF", pose.offset(15)), {
-            "a": "vdd18_cap",
-            "b": "ground",
-        })
+    cmp = cmp.add(capacitor_0603("10 µF", pose.offset(15)), {
+        "a": "vdd18_cap",
+        "b": "ground",
+    })
 
-    cmp = cmp.add(
-        capacitor_0603("10 µF", pose.offset(20)), {
-            "a": "vdd33_cap",
-            "b": "ground",
-        })
-    cmp = cmp.add(
-        capacitor_0603("10 µF", pose.offset(20)), {
-            "a": "u_vbus",
-            "b": "ground",
-        })
+    cmp = cmp.add(capacitor_0603("10 µF", pose.offset(20)), {
+        "a": "vdd33_cap",
+        "b": "ground",
+    })
+    cmp = cmp.add(capacitor_0603("10 µF", pose.offset(20)), {
+        "a": "u_vbus",
+        "b": "ground",
+    })
 
     # TODO: downstream port power cap
 
@@ -351,22 +343,19 @@ def usbc_legacy(id: str, pose: PcbPosition):
         })
 
     # usb cc resistors
-    cmp = cmp.add(
-        resistor_0603("5.1 kΩ", pose.offset(-2.3, 10.5, 90)), {
-            "a": "ground",
-            "b": "cc1",
-        })
-    cmp = cmp.add(
-        resistor_0603("5.1 kΩ", pose.offset(2.3, 10.5, 90)), {
-            "b": "ground",
-            "a": "cc2",
-        })
-    cmp = cmp.add(
-        usb_esd_protection(pose.offset(0, 9.6, 90 + 180)), {
-            "ground": "ground",
-            "dp": "usb_dp",
-            "dn": "usb_dn",
-        })
+    cmp = cmp.add(resistor_0603("5.1 kΩ", pose.offset(-2.3, 10.5, 90)), {
+        "a": "ground",
+        "b": "cc1",
+    })
+    cmp = cmp.add(resistor_0603("5.1 kΩ", pose.offset(2.3, 10.5, 90)), {
+        "b": "ground",
+        "a": "cc2",
+    })
+    cmp = cmp.add(usb_esd_protection(pose.offset(0, 9.6, 90 + 180)), {
+        "ground": "ground",
+        "dp": "usb_dp",
+        "dn": "usb_dn",
+    })
     return cmp
 
 
@@ -417,26 +406,22 @@ def controller_stm32(id: str, pose: PcbPosition):
         })
 
     # mcu decoupling
-    cmp = cmp.add(
-        capacitor_0603("0.1 µF", pose.offset(7, 0, 90)), {
-            "a": "mcu_vcc",
-            "b": "ground",
-        })
-    cmp = cmp.add(
-        capacitor_0603("0.1 µF", pose.offset(-7, 0, 90)), {
-            "a": "ground",
-            "b": "mcu_vcc",
-        })
-    cmp = cmp.add(
-        capacitor_0603("0.1 µF", pose.offset(0, -7, 0)), {
-            "a": "mcu_vcc",
-            "b": "ground",
-        })
-    cmp = cmp.add(
-        capacitor_0603("0.1 µF", pose.offset(0, 7, 0)), {
-            "a": "ground",
-            "b": "mcu_vcc",
-        })
+    cmp = cmp.add(capacitor_0603("0.1 µF", pose.offset(7, 0, 90)), {
+        "a": "mcu_vcc",
+        "b": "ground",
+    })
+    cmp = cmp.add(capacitor_0603("0.1 µF", pose.offset(-7, 0, 90)), {
+        "a": "ground",
+        "b": "mcu_vcc",
+    })
+    cmp = cmp.add(capacitor_0603("0.1 µF", pose.offset(0, -7, 0)), {
+        "a": "mcu_vcc",
+        "b": "ground",
+    })
+    cmp = cmp.add(capacitor_0603("0.1 µF", pose.offset(0, 7, 0)), {
+        "a": "ground",
+        "b": "mcu_vcc",
+    })
 
     cmp = cmp.add(  # voltage regulator
         voltage_regulator_sot23(pose.offset(y=-10)), {
@@ -518,22 +503,19 @@ def controller_atmega32u4(id: str, pose: PcbPosition):
 
     # crystal
     crystal_pose = pose.offset(0, 13, 90)
-    cmp = cmp.add(
-        crystal_3225("16 MHz", crystal_pose), {
-            "ground": "ground",
-            "in": "xtal1",
-            "out": "xtal2",
-        })
-    cmp = cmp.add(
-        capacitor_0603("22 pF", crystal_pose.offset(y=-2.45)), {
-            "a": "xtal1",
-            "b": "ground",
-        })
-    cmp = cmp.add(
-        capacitor_0603("22 pF", crystal_pose.offset(0, 2.45)), {
-            "a": "xtal2",
-            "b": "ground",
-        })
+    cmp = cmp.add(crystal_3225("16 MHz", crystal_pose), {
+        "ground": "ground",
+        "in": "xtal1",
+        "out": "xtal2",
+    })
+    cmp = cmp.add(capacitor_0603("22 pF", crystal_pose.offset(y=-2.45)), {
+        "a": "xtal1",
+        "b": "ground",
+    })
+    cmp = cmp.add(capacitor_0603("22 pF", crystal_pose.offset(0, 2.45)), {
+        "a": "xtal2",
+        "b": "ground",
+    })
 
 
     cmp=cmp.add(  # debug connector
@@ -589,16 +571,15 @@ def controller_atmega32u4(id: str, pose: PcbPosition):
 
 def mx_switch_set(id: str, pose: PcbPosition, key, i):
     cmp = PcbSection(id, {"a", "b", "switch-to-diode"})
-    cmp = cmp.add(
-        mx_switch(pose.offset(r=key.switch_r)), {
-            "a": "a",
-            "b": "switch-to-diode"
-        })
-    cmp = cmp.add(
-        diode_sod323("4148", pose.offset(-5, -5.5, 180, flip=True)), {
-            "b": "b",
-            "a": "switch-to-diode",
-        })
+    cmp = cmp.add(mx_switch(pose.offset(r=key.switch_r)), {
+        "a": "a",
+        "b": "switch-to-diode"
+    })
+    cmp = cmp.add(diode_sod323("4148", pose.offset(-5, -5.5, 180, flip=True)),
+                  {
+                      "b": "b",
+                      "a": "switch-to-diode",
+                  })
 
     if key.HasField("stabilizer"):
         cmp = cmp.add(
@@ -622,9 +603,9 @@ def generate_kicad_pcb_file(kb):
                   x_scale * cos(radians(pose.r))))
         return PcbPosition(x, y, r, flip)
 
-    outline = shapely.geometry.polygon.Polygon((x_offset + x_scale * o.x,
-                                                y_offset + y_scale * o.y)
-                                               for o in kb.outline_polygon)
+    outline = shapely.geometry.polygon.Polygon(
+        (x_offset + x_scale * o.x, y_offset + y_scale * o.y)
+        for o in kb.outline_polygon)
 
     matrix = {f"matrix-{k.controller_pin_low}"
               for k in kb.keys
@@ -643,8 +624,10 @@ def generate_kicad_pcb_file(kb):
             controller_pro_micro("controller",
                                  scale(kb.controller_pose, flip=True)), {
                                      "ground": "ground",
-                                     **{s: s
-                                        for s in matrix},
+                                     **{
+                                         s: s
+                                         for s in matrix
+                                     },
                                  })
     elif kb.controller == Keyboard.CONTROLLER_STM32F072:
         cmp = cmp.add(
@@ -655,15 +638,17 @@ def generate_kicad_pcb_file(kb):
                 "usb_vbus": "usb_vbus",
             })
         cmp = cmp.add(
-            controller_stm32("controller", scale(
-                kb.controller_pose, flip=True)), {
-                    "ground": "ground",
-                    "usb_dp": "usb_dp",
-                    "usb_dn": "usb_dn",
-                    "usb_vbus": "usb_vbus",
-                    **{s: s
-                       for s in matrix}
-                })
+            controller_stm32("controller", scale(kb.controller_pose,
+                                                 flip=True)), {
+                                                     "ground": "ground",
+                                                     "usb_dp": "usb_dp",
+                                                     "usb_dn": "usb_dn",
+                                                     "usb_vbus": "usb_vbus",
+                                                     **{
+                                                         s: s
+                                                         for s in matrix
+                                                     }
+                                                 })
     elif kb.controller == Keyboard.CONTROLLER_ATMEGA32U4:
         cmp = cmp.add(
             usbc_legacy("usb", scale(kb.connector_pose, flip=True)), {
@@ -680,8 +665,10 @@ def generate_kicad_pcb_file(kb):
                 "usb_dp": "usb_dp",
                 "usb_dn": "usb_dn",
                 "usb_vbus": "usb_vbus",
-                **{s: s
-                   for s in matrix},
+                **{
+                    s: s
+                    for s in matrix
+                },
             },
         )
     elif kb.controller == Keyboard.CONTROLLER_ATMEGA32U4_HUB2:
@@ -703,8 +690,10 @@ def generate_kicad_pcb_file(kb):
                 "usb_dp": "usb_dp",
                 "usb_dn": "usb_dn",
                 "usb_vbus": "usb_vbus",
-                **{s: s
-                   for s in matrix},
+                **{
+                    s: s
+                    for s in matrix
+                },
             },
         )
 

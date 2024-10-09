@@ -1,7 +1,8 @@
-load("@rules_python//python:defs.bzl", "py_binary")
-load("@com_github_kleinpa_keyboardtoolbox_py_deps//:requirements.bzl", "requirement")
-load("//kbtb:defs.bzl", "build_keyboard")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_tar")
+load("@keyboard_toolbox_pip//:requirements.bzl", "requirement")
+load("@rules_python//python:defs.bzl", "py_binary")
+load("//kbtb:defs.bzl", "build_keyboard")
 
 py_binary(
     name = "build_all",
@@ -22,7 +23,7 @@ variants = [
     name = "all_" + name + "_proto",
     outs = ["all_" + name + ".pb"],
     cmd = "./$(execpath :build_all) --output=\"$@\" --mcu " + mcu + " --description " + name,
-    exec_tools = [":build_all"],
+    tools = [":build_all"],
 ) for name, mcu, switch in variants]
 
 [build_keyboard(
@@ -38,3 +39,8 @@ variants = [
         "all_" + name + "-info.json",
     ],
 ) for name, mcu, switch in variants]
+
+build_test(
+    name = "build_test",
+    targets = ["all_" + name + "_tar" for name, mcu, switch in variants],
+)

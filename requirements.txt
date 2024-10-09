@@ -2,3 +2,4 @@ absl-py
 ezdxf
 shapely
 Flask
+bazel-runfiles
