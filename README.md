@@ -28,29 +28,32 @@ provided by this reposiory.
 ## Features
 
 ### Output Generation
-* Generate Switch plates in DXF, SVG formats
-* Generate unrouted PCBs with all required components
-* [QMK info.json files](https://beta.docs.qmk.fm/developing-qmk/qmk-reference/reference_info_json)
-* Generate [KLE JSON](http://www.keyboard-layout-editor.com/) data
-* (Untested) Generate FR4 switch plates
+
+- Generate Switch plates in DXF, SVG formats
+- Generate unrouted PCBs with all required components
+- [QMK info.json files](https://beta.docs.qmk.fm/developing-qmk/qmk-reference/reference_info_json)
+- Generate [KLE JSON](http://www.keyboard-layout-editor.com/) data
+- (Untested) Generate FR4 switch plates
 
 ### Input and Processing
-* Load [KLE JSON](http://www.keyboard-layout-editor.com/) data
-* Generate form-fitting PCBs and Plates based on the key arrangment
-* Configure switch matrix positions based on the key arrangment
+
+- Load [KLE JSON](http://www.keyboard-layout-editor.com/) data
+- Generate form-fitting PCBs and Plates based on the key arrangment
+- Configure switch matrix positions based on the key arrangment
 
 ### Microcontrollers
-* ATmega32u4
-* Pro Micro
-* (Untested) STM32F072
+
+- ATmega32u4
+- Pro Micro
+- (Untested) STM32F072
 
 ### Switchs
 
 For now this project is focused on switch-specific PCBs.
 
-* [Cherry MX](https://deskthority.net/wiki/Cherry_MX) compatible
-* (WIP) [Kailh PG1350](https://deskthority.net/wiki/Kailh_PG1350_series)
-* (WIP) [ALPS](https://deskthority.net/wiki/Alps_SKCL/SKCM_series) compatible
+- [Cherry MX](https://deskthority.net/wiki/Cherry_MX) compatible
+- (WIP) [Kailh PG1350](https://deskthority.net/wiki/Kailh_PG1350_series)
+- (WIP) [ALPS](https://deskthority.net/wiki/Alps_SKCL/SKCM_series) compatible
 
 ### Cases
 
@@ -101,7 +104,7 @@ genrule(
 This is the main entry point to the output generation tools provided by this repository.
 
 ```python
-load("@com_github_kleinpa_keyboardtoolbox//kbtb:defs.bzl", "build_keyboard")
+load("@keyboard_toolbox//kbtb:defs.bzl", "build_keyboard")
 
 build_keyboard(
     name = "kbxyz",
@@ -111,13 +114,13 @@ build_keyboard(
 
 The following files can be requested from this rule:
 
-* `kbxyz.svg`
-* `kbxyz.kicad_pcb`
-* `kbxyz-info.json`
-* `kbxyz_plate_top.dxf`
-* `kbxyz_plate_top.kicad_pcb`
-* `kbxyz_plate_bottom.dxf`
-* `kbxyz_plate_bottom.kicad_pcb`
+- `kbxyz.svg`
+- `kbxyz.kicad_pcb`
+- `kbxyz-info.json`
+- `kbxyz_plate_top.dxf`
+- `kbxyz_plate_top.kicad_pcb`
+- `kbxyz_plate_bottom.dxf`
+- `kbxyz_plate_bottom.kicad_pcb`
 
 ### kbpb_from_kle
 
@@ -126,7 +129,7 @@ from a kle file is also provided. It's probably more flexible to just
 do this via python like in the genrule example above.
 
 ```python
-load("@com_github_kleinpa_keyboardtoolbox//kbtb:defs.bzl", "kbpb_from_kle")
+load("@keyboard_toolbox//kbtb:defs.bzl", "kbpb_from_kle")
 
 kbpb_from_kle(
     name = "kbxyz_proto",

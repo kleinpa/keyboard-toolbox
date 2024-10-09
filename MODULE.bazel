@@ -1,0 +1,33 @@
+module(name = "keyboard_toolbox")
+
+bazel_dep(name = "protobuf", version = "29.0-rc1")
+bazel_dep(name = "rules_python", version = "0.36.0")
+bazel_dep(name = "bazel_skylib", version = "1.7.1")
+
+bazel_dep(name = "rules_kicad")
+git_override(
+    module_name = "rules_kicad",
+    remote = "https://github.com/kleinpa/rules_kicad",
+    commit = "cbab3f6948f80fc5fa1c9bda4ca64904dc56f589",
+)
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(python_version = "3.12")
+pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+pip.parse(
+    hub_name = "keyboard_toolbox_pip",
+    python_version = "3.12",
+    requirements_lock = "//:requirements_lock.txt",
+)
+use_repo(pip, "keyboard_toolbox_pip")
+
+repos = use_extension("//:deps.bzl", "repos_bzlmod")
+use_repo(
+    repos,
+    "com_github_ai03_2725_typec",
+    "com_github_keebio_keebio_parts",
+    "com_gitlab_kicad_libraries_kicad_footprints",
+)
+
+# Use /usr/bin/python for Kicad
+register_toolchains("@rules_kicad//:python_toolchain")

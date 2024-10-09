@@ -1,6 +1,6 @@
+load("@keyboard_toolbox_pip//:requirements.bzl", "requirement")
+load("@protobuf//:protobuf.bzl", "py_proto_library")
 load("@rules_python//python:defs.bzl", "py_library")
-load("@com_github_kleinpa_keyboardtoolbox_py_deps//:requirements.bzl", "requirement")
-load("@com_google_protobuf//:protobuf.bzl", "py_proto_library")
 
 py_proto_library(
     name = "keyboard_py_proto",
@@ -38,7 +38,6 @@ py_library(
     deps = [
         ":keyboard_lib",
         ":kicad",
-        "@com_github_kleinpa_kicadbazel//:pcbnew",
     ],
 )
 
@@ -50,7 +49,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         requirement("shapely"),
-        "@com_gitlab_kicad_kicad//:pcbnew",
+        requirement("bazel-runfiles"),
     ],
 )
 
