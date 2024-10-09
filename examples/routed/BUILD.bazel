@@ -1,4 +1,4 @@
-load("@com_github_kleinpa_kicadbazel//tools:defs.bzl", "kicad_bom", "kicad_gerbers")
+load("@rules_kicad//tools:defs.bzl", "kicad_bom", "kicad_gerbers")
 
 kicad_gerbers(
     name = "numpad17",

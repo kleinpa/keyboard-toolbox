@@ -1,0 +1,19 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Install KiCad
+        run: |
+          sudo add-apt-repository ppa:kicad/kicad-8.0-releases -y
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends kicad
+      - uses: actions/checkout@v4
+      - run: bazel test //...

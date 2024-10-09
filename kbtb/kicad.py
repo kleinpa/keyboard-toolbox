@@ -8,6 +8,9 @@ import tempfile
 
 import pcbnew
 import shapely
+from runfiles import Runfiles
+
+runfiles = Runfiles.Create()
 
 
 class Board(NamedTuple):
@@ -56,10 +59,11 @@ class Board(NamedTuple):
             board.Add(fill_net)
             signals[self.fill_name] = fill_net
 
-            item = pcbnew.ZONE(board, False)
-            poly = pcbnew.wxPoint_Vector()
-            for x, y in self.outline.exterior.coords:
-                poly.append(pcbnew.wxPointMM(x, y))
+            item = pcbnew.ZONE(board)
+            poly = pcbnew.VECTOR_VECTOR2I(
+                pcbnew.VECTOR2I(int(x), int(y))
+                for x, y in self.outline.exterior.coords)
+
             item.AddPolygon(poly)
             item.SetNet(fill_net)
             lset = pcbnew.LSET()
@@ -94,13 +98,16 @@ class PcbPosition(NamedTuple):
 
 
 def set_pcb_position(obj, pcbpos: PcbPosition):
-    obj.SetPosition(pcbnew.wxPointMM(pcbpos.x, pcbpos.y))
-    if pcbpos.flip:
-        obj.Flip(pcbnew.wxPointMM(pcbpos.x, pcbpos.y), aFlipLeftRight=True)
+    obj.SetPosition(pcbnew.VECTOR2I(int(pcbpos.x), int(pcbpos.y)))
+    # causes segfault?
+    #if pcbpos.flip:
+    #    obj.Flip(pcbnew.VECTOR2I(int(pcbpos.x), int(pcbpos.y)),
+    #             aFlipLeftRight=True)
     if isinstance(obj, pcbnew.FOOTPRINT):
         obj.SetOrientationDegrees(-pcbpos.r)
-    elif isinstance(obj, pcbnew.PCB_TEXT):
-        obj.SetTextAngle(-pcbpos.r * 10)
+    #TODO
+    # #elif isinstance(obj, pcbnew.PCB_TEXT):
+    #    obj.SetTextAngle(-pcbpos.r * 10)
     else:
         raise RuntimeError(f"can't set position of type {type(obj)}")
 
@@ -125,7 +132,7 @@ class PcbPolygon(NamedTuple):
 
         def make_point(p):
             x, y = p
-            return pcbnew.wxPointMM(x, y)
+            return pcbnew.VECTOR2I(int(x), int(y))
 
         def make_seg(p1, p2):
             seg = pcbnew.PCB_SHAPE()
@@ -160,12 +167,12 @@ class PcbText(NamedTuple):
               path: list[str] = []):
         o = pcbnew.PCB_TEXT(board)
         o.SetText(self.text)
-        o.SetHorizJustify(pcbnew.GR_TEXT_HJUSTIFY_CENTER)
-        o.SetTextSize(
-            pcbnew.wxSize(pcbnew.FromMM(self.size), pcbnew.FromMM(self.size)))
+        #o.SetHorizJustify(pcbnew.GR_TEXT_HJUSTIFY_CENTER)
+        #o.SetTextSize(
+        #    pcbnew.wxSize(pcbnew.FromMM(self.size), pcbnew.FromMM(self.size)))
         o.SetTextThickness(pcbnew.FromMM(self.size * self.thickness * 0.15))
         o.SetLayer(self.layer)
-        set_pcb_position(o, self.pcbpos)
+        #set_pcb_position(o, self.pcbpos) TODO
         board.Add(o)
 
 
@@ -182,8 +189,9 @@ class PcbCircle(NamedTuple):
         """Create and return a KiCad circle centered at x, y."""
         item = pcbnew.PCB_SHAPE()
         item.SetShape(pcbnew.S_CIRCLE)
-        item.SetStart(pcbnew.wxPointMM(self.x, self.y))
-        item.SetEnd(pcbnew.wxPointMM(self.x + self.diameter / 2, self.y))
+        item.SetStart(pcbnew.VECTOR2I(int(self.x), int(self.y)))
+        item.SetEnd(
+            pcbnew.VECTOR2I(int(self.x + self.diameter / 2), int(self.y)))
         item.SetLayer(self.layer)
         board.Add(item)
 
@@ -208,13 +216,12 @@ class PcbComponent(NamedTuple):
               board: pcbnew.BOARD,
               external_signals: dict[str, pcbnew.NETINFO_ITEM] = {},
               path: list[str] = []):
+
         def load_footprint(ref: str):
             """Load a footprint otherwise raise exception"""
             library, name = ref.split(":")
-            footprint = pcbnew.FootprintLoad(
-                os.path.join(
-                    os.environ.get("RUNFILES_DIR", "external/"), library),
-                name)
+            board = pcbnew.GetBoard()
+            footprint = pcbnew.FootprintLoad(runfiles.Rlocation(library), name)
             if not footprint:
                 raise ValueError(
                     f"can not load footprint {name} from library {library}")
@@ -244,7 +251,7 @@ class PcbComponent(NamedTuple):
 
         for i, pin_name in enumerate(self.pins, start=1):
             if pin_name in external_signals:
-                fp.FindPadByName(i).SetNet(external_signals[pin_name])
+                fp.FindPadByNumber(i).SetNet(external_signals[pin_name])
         for name in external_signals.keys():
             if name not in self.pins:
                 raise RuntimeError(
@@ -259,8 +266,8 @@ class PcbSection(NamedTuple):
     components: list[tuple[Any, map[str, str]]] = []
 
     def add(self, component, signal_mapping: dict[str, str] = {}):
-        return self._replace(
-            components=self.components + [(component, signal_mapping)])
+        return self._replace(components=self.components +
+                             [(component, signal_mapping)])
         self.components.append((component, signal_mapping))
 
     def build(self,
@@ -273,8 +280,8 @@ class PcbSection(NamedTuple):
             if name in external_signals:
                 local_signals[name] = external_signals[name]
             else:
-                net = pcbnew.NETINFO_ITEM(board, "/".join((*path, self.id,
-                                                           name)))
+                net = pcbnew.NETINFO_ITEM(board, "/".join(
+                    (*path, self.id, name)))
                 board.Add(net)
                 local_signals[name] = net
         for name in self.private_signals:
